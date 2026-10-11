@@ -1,22 +1,22 @@
-assumption,value,range,unit,rationale,notes
-physiological_lumen_pressure,13.3,10.7-18.7 (80-140 mmHg),kPa,Baseline load case (100 mmHg). Standard physiological value; citation to be added if required by reviewers.,MODEL ASSUMPTION
-plane_strain_2D,yes,,-,Full cohort solved as 2D plane-strain cross-sections; 3D subset checks the effect of calcium length and end effects.,MODEL ASSUMPTION
-wall_constitutive_model,Yeoh (lumped wall),,-,Uses verified media Yeoh constants for the whole wall because layer-specific HGO constants could not be verified.,MODEL ASSUMPTION; limitation
-fibrous_tissue_model,"neo-Hookean, mu=E/3, E=2312 kPa",927-4492 kPa,-,Small-strain modulus from Loree 1994 hypocellular tissue.,MODEL ASSUMPTION built on verified value
-lipid_model,"neo-Hookean, mu=E/3, E=5.5 kPa",2.0-9.0 kPa,-,AFM value (provisional citation).,MODEL ASSUMPTION built on provisional value
-near_incompressibility_soft_tissue,bulk/shear ratio K/mu,50-1000 (sensitivity),-,Penalty or mixed formulation; ratio tested for effect on outputs.,MODEL ASSUMPTION
-calcium_model,"linear elastic, brittle, phase-field AT1",,-,Linear behaviour supported by Holzapfel 2004.,MODEL ASSUMPTION
-calcium_modulus_baseline,8.95,1.47 MPa - 10 GPa (log-uniform),MPa,Secant modulus implied by verified failure stress and stretch of the same tissue (179 kPa / 0.02). Range spans Loree 1994 tissue-level mean to nanoindentation lower bound.,DERIVED from verified values
-calcium_failure_criterion_primary,strain-controlled: eps_f=0.02,0.015-0.025,-,Failure strain is the quantity measured directly (stretch 1.02). Critical stress = E*eps_f so that stiffness and strength scale together across the modulus range.,MODEL ASSUMPTION; alternative stress-controlled scenario (sigma_c=179 kPa fixed) run as sensitivity
-phase_field_length_scale,set from mesh and AT1 strength relation,at least 3 values (sensitivity),mm,"Gc derived from sigma_c, E and ell via AT1 nucleation relation; ell >= 2-3 element sizes.",MODEL ASSUMPTION
-phase_field_energy_split,volumetric-deviatoric (compression does not drive cracking),spectral split as check,-,Prevents crack growth under pure compression.,MODEL ASSUMPTION
-ivl_load_model_primary,quasi-static: 4 atm balloon + equivalent pulse pressure p_eq = T * 5 MPa,T from transient subset,-,T (dynamic transfer factor) computed from transient elastodynamic runs on a subset; quasi-static and transient results compared.,MODEL ASSUMPTION
-ivl_pulse_amplitude_sensitivity,5,2.5-5 (x0.5 to x1),MPa,Lower bound represents unknown attenuation between emitter and tissue.,MODEL ASSUMPTION
-ivl_attenuation_law,none (baseline); geometric 1/sqrt(r) and 1/r as sensitivity,,-,No verified attenuation data.,MODEL ASSUMPTION
-ivl_pulse_count_fatigue,not modelled,,-,No fatigue data for calcified plaque.,OMITTED; stated in Methods
-stent_model,"rigid-then-elastic cylindrical envelope, displacement-controlled to target diameter, then released",,-,"Outputs: lumen gain, acute recoil, stent expansion %, malapposition proxy.",MODEL ASSUMPTION
-stent_target_diameter,reference lumen diameter (1:1 sizing),1.0-1.1 x reference (sensitivity),-,Sizing ratio is a design assumption.,MODEL ASSUMPTION
-stent_envelope_radial_stiffness,to be set in Phase 3,sensitivity over one order of magnitude,N/mm,Controls recoil; no verified device value.,MODEL ASSUMPTION
-perivascular_support,elastic foundation k,0 (free) and 3 nonzero values over 2 orders of magnitude,MPa/mm,Rigid-body constraints only otherwise; no outer-wall clamping.,MODEL ASSUMPTION
-random_seed,20261009,,-,"Single global seed for sampling, bootstrap and cross-validation.",REPRODUCIBILITY
-mesh_density,"coarse (per user request), verified by 3-level convergence/GCI",,-,Element size chosen so GCI on peak calcium stress and SED is reported.,MODEL ASSUMPTION
+assumption,value,sensitivity_values,unit,basis,status
+geometry.stent_target_diameter_mm,3.0,,,ASSUMPTION: nominal 3.0 mm stent/balloon; reference area = pi*1.5^2. Disrupt CAD III MSA 6.5 mm^2 is of this order.,ASSUMPTION
+geometry.plaque_thickness_mm,0.8,,,PENDING verified intima/plaque thickness; must exceed deep-calcium depth + 0.4 mm + 0.1 mm,PENDING
+geometry.wall_thickness_mm,0.6,,,PENDING verified media+adventitia thickness,PENDING
+geometry.depth_superficial_mm,0.05,,,PENDING verified superficial-calcium depth (thin fibrous covering),PENDING
+geometry.depth_deep_mm,0.3,,,PENDING verified deep-calcium depth,PENDING
+geometry.nodule_height_mm,0.3,,,PENDING verified calcified-nodule protrusion height,PENDING
+geometry.nodule_base_arc_deg,60,,,ASSUMPTION: nodule protrusion spans 60 deg at the centre of the calcium arc,ASSUMPTION
+geometry.fragment_pitch_deg,45,,,"ASSUMPTION: one deposit per 45 deg of arc (n = arc/45, min 2)",ASSUMPTION
+geometry.fragment_fill,0.6,,,ASSUMPTION: each deposit fills 60% of its pitch,ASSUMPTION
+geometry.margin_3d_mm,2.0,,,ASSUMPTION: calcium-free segment length at each end of 3D models,ASSUMPTION
+materials.calcium.E,calcification_fracture_stress / (calcification_fracture_stretch - 1),,,DERIVED: secant modulus at failure of the same tissue (Holzapfel 2004),DERIVED
+materials.bulk_to_shear_soft,50,20 | 200,,ASSUMPTION: near-incompressibility penalty K/mu for soft tissues,ASSUMPTION
+fracture.eps_f,calcification_fracture_stretch - 1,,,failure stretch 1.02 -> strain 0.02,DERIVED
+fracture.ell_over_h,2.0,1.5 | 3.0,,ASSUMPTION: regularisation length = 2 calcium element sizes,ASSUMPTION
+loads.physiological_pressure_kPa,13.3,10.7 | 18.7,,ASSUMPTION: 100 mmHg mean pressure (80-140 mmHg); citation to be added,ASSUMPTION
+loads.ivl_pulse_scale,1.0,0.5 | 1.0,,ASSUMPTION: unknown attenuation between emitter and tissue,ASSUMPTION
+loads.balloon_rated_pressure_atm,18,,,PENDING verified rated burst pressure of stent delivery balloons,PENDING
+loads.stent_radial_stiffness_MPa_per_mm,0.5,,,PENDING verified stent radial stiffness,PENDING
+loads.perivascular_k_MPa_per_mm,0.0001,0.001 | 0.01 | 0.1,,ASSUMPTION: negligible support; stabilises rigid-body modes only,ASSUMPTION
+loads.contact_penalty_MPa_per_mm,1.0e3,,,NUMERICAL: penalty stiffness; sensitivity in verification,NUMERICAL
+loads.malapposition_gap_mm,0.1,,,PENDING verified OCT malapposition distance threshold,PENDING

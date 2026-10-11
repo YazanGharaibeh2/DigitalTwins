@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dtivl"
+version = "0.1.0"
+description = "In silico digital twins of calcified coronary lesions under intravascular lithotripsy and stenting"
+requires-python = ">=3.11"
+
+[tool.setuptools]
+package-dir = {"dtivl" = "src"}
+packages = ["dtivl", "dtivl.geometry", "dtivl.meshing", "dtivl.materials", "dtivl.solvers", "dtivl.fracture", "dtivl.metrics", "dtivl.stats"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: long-running FE tests (deselect with -m 'not slow')"]

@@ -1,0 +1,189 @@
+"""Constitutive models (UFL) and the material parameter set.
+
+All parameter values come from :mod:`dtivl.params` (literature table + study
+config). Units: mm, MPa.
+
+Finite-strain energies (reference configuration):
+  wall      Yeoh:      W = c10(I1b-3) + c20(I1b-3)^2 + c30(I1b-3)^3 + U(J)
+  fibrous   neo-Hooke: W = mu/2 (I1b-3) + U(J),  mu = E/3, K = k_over_mu * mu
+  lipid     neo-Hooke: same form
+  calcium   compressible neo-Hooke with volumetric-deviatoric split:
+            psi+ = mu/2 (I1b-3) + U(J)[J>=1],  psi- = U(J)[J<1]
+            W = g(d) psi+ + psi-,  g(d) = (1-d)^2 + k_res
+  U(J) = K/4 (J^2 - 1 - 2 ln J)   (U''(1) = K)
+I1b = J^(-2/3) tr(C). Plane strain embeds the 2x2 deformation gradient in
+3x3 with F33 = 1.
+
+Small-strain limits used by the linear predictor analysis:
+  mu_wall = 2 c10, mu_soft = E/3, K_soft = k_over_mu * mu, calcium (E, nu).
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+
+import ufl
+
+from dtivl import params as P
+from dtivl.geometry.labels import TAG_CALCIUM, TAG_FIBROUS, TAG_LIPID, TAG_WALL
+
+
+@dataclass(frozen=True)
+class MaterialSet:
+    wall_c10: float
+    wall_c20: float
+    wall_c30: float
+    fibrous_E: float
+    lipid_E: float
+    ca_E: float
+    ca_nu: float
+    k_over_mu: float
+    eps_f: float
+    sigma_c: float
+    failure_mode: str = "strain"          # "strain" (primary, D5) or "stress"
+    k_res: float = 1e-6
+    provenance: dict = field(default_factory=dict, compare=False)
+
+    @classmethod
+    def baseline(cls, **overrides) -> "MaterialSet":
+        q = {
+            "wall_c10": P.get("materials.wall.c10"),
+            "wall_c20": P.get("materials.wall.c20"),
+            "wall_c30": P.get("materials.wall.c30"),
+            "fibrous_E": P.get("materials.fibrous.E"),
+            "lipid_E": P.get("materials.lipid.E"),
+            "ca_E": P.get("materials.calcium.E"),
+            "ca_nu": P.get("materials.calcium.nu"),
+            "k_over_mu": P.get("materials.bulk_to_shear_soft"),
+            "eps_f": P.get("fracture.eps_f"),
+            "sigma_c": P.get("fracture.sigma_c_stress_controlled"),
+        }
+        vals = {k: v.value for k, v in q.items()}
+        prov = {k: v.provenance for k, v in q.items()}
+        vals["k_res"] = float(P.raw("fracture.k_residual"))
+        ms = cls(**vals, provenance=prov)
+        if overrides:
+            ms = replace(ms, **overrides)
+            ms.provenance.update({k: "override" for k in overrides})
+        return ms
+
+    # --- derived small-strain constants -------------------------------
+    @property
+    def mu_wall0(self) -> float:
+        return 2.0 * self.wall_c10
+
+    @property
+    def mu_fibrous(self) -> float:
+        return self.fibrous_E / 3.0
+
+    @property
+    def mu_lipid(self) -> float:
+        return self.lipid_E / 3.0
+
+    @property
+    def ca_mu(self) -> float:
+        return self.ca_E / (2.0 * (1.0 + self.ca_nu))
+
+    @property
+    def ca_K(self) -> float:
+        return self.ca_E / (3.0 * (1.0 - 2.0 * self.ca_nu))
+
+    def soft_shear_bulk(self, tag: int) -> tuple[float, float]:
+        mu = {TAG_WALL: self.mu_wall0, TAG_FIBROUS: self.mu_fibrous, TAG_LIPID: self.mu_lipid}[tag]
+        return mu, self.k_over_mu * mu
+
+    def lame(self, tag: int) -> tuple[float, float]:
+        """Small-strain (lambda, mu) for a cell tag."""
+        if tag == TAG_CALCIUM:
+            mu, K = self.ca_mu, self.ca_K
+        else:
+            mu, K = self.soft_shear_bulk(tag)
+        return K - 2.0 * mu / 3.0, mu
+
+    # --- fracture ------------------------------------------------------
+    @property
+    def psi_crit(self) -> float:
+        """Damage-onset energy density (uniaxial-tension equivalence).
+
+        strain-controlled: E eps_f^2 / 2 ; stress-controlled: sigma_c^2 / (2E).
+        """
+        if self.failure_mode == "strain":
+            return 0.5 * self.ca_E * self.eps_f ** 2
+        if self.failure_mode == "stress":
+            return 0.5 * self.sigma_c ** 2 / self.ca_E
+        raise ValueError(self.failure_mode)
+
+    @property
+    def sigma_crit(self) -> float:
+        return (2.0 * self.ca_E * self.psi_crit) ** 0.5
+
+    def gc(self, ell: float) -> float:
+        """AT1: onset when psi+ = 3 Gc / (16 ell)  =>  Gc = 16 ell psi_crit / 3."""
+        return 16.0 * ell * self.psi_crit / 3.0
+
+
+# ----------------------------------------------------------------------
+# Kinematics and energies (UFL)
+# ----------------------------------------------------------------------
+def deformation_gradient(u, plane_strain: bool):
+    """Return (F_var, F3): the ufl.variable to differentiate and its 3x3 embedding."""
+    gdim = u.ufl_shape[0]
+    Fv = ufl.variable(ufl.Identity(gdim) + ufl.grad(u))
+    if gdim == 2:
+        if not plane_strain:
+            raise NotImplementedError("2D requires plane strain")
+        F3 = ufl.as_matrix([[Fv[0, 0], Fv[0, 1], 0], [Fv[1, 0], Fv[1, 1], 0], [0, 0, 1]])
+    else:
+        F3 = Fv
+    return Fv, F3
+
+
+def _invariants(F3):
+    C = F3.T * F3
+    J = ufl.det(F3)
+    I1b = J ** (-2.0 / 3.0) * ufl.tr(C)
+    return J, I1b
+
+
+def U_vol(J, K):
+    return K / 4.0 * (J ** 2 - 1.0 - 2.0 * ufl.ln(J))
+
+
+def psi_yeoh(F3, c10, c20, c30, K):
+    J, I1b = _invariants(F3)
+    x = I1b - 3.0
+    return c10 * x + c20 * x ** 2 + c30 * x ** 3 + U_vol(J, K)
+
+
+def psi_neo_hookean(F3, mu, K):
+    J, I1b = _invariants(F3)
+    return mu / 2.0 * (I1b - 3.0) + U_vol(J, K)
+
+
+def psi_calcium_split(F3, mu, K):
+    """Return (psi_plus, psi_minus) with the volumetric-deviatoric split."""
+    J, I1b = _invariants(F3)
+    dev = mu / 2.0 * (I1b - 3.0)
+    vol = U_vol(J, K)
+    psi_p = dev + ufl.conditional(ufl.ge(J, 1.0), vol, 0.0)
+    psi_m = ufl.conditional(ufl.lt(J, 1.0), vol, 0.0)
+    return psi_p, psi_m
+
+
+def degradation(d, k_res):
+    return (1.0 - d) ** 2 + k_res
+
+
+def soft_energy(tag: int, F3, ms: MaterialSet):
+    if tag == TAG_WALL:
+        mu0, K = ms.soft_shear_bulk(TAG_WALL)
+        return psi_yeoh(F3, ms.wall_c10, ms.wall_c20, ms.wall_c30, K)
+    mu, K = ms.soft_shear_bulk(tag)
+    return psi_neo_hookean(F3, mu, K)
+
+
+def linear_stress(u, lam, mu, plane_strain: bool = True):
+    """Small-strain Cauchy stress (in-plane block for 2D) and strain."""
+    eps = ufl.sym(ufl.grad(u))
+    gdim = u.ufl_shape[0]
+    sig = lam * ufl.tr(eps) * ufl.Identity(gdim) + 2.0 * mu * eps
+    return sig, eps
