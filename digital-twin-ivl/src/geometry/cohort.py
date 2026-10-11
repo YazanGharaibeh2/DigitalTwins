@@ -249,6 +249,8 @@ def _min_local_plaque(r_lumen: float, plaque: float, offset: float, arc_deg: flo
 _DEPTH_RULE_SAMPLES = 721
 #: bisection steps used when the plaque offset must be reduced to fit the calcium
 _OFFSET_BISECTION_STEPS = 60
+#: tolerance (mm) when checking that the depth rule is met after the offset bisection
+_DEPTH_RULE_TOL = 1e-9
 #: minimum angular gap (deg) between a hold-out lipid pool and the calcium arc
 LIPID_CALCIUM_GAP_DEG = 10.0
 
@@ -278,7 +280,9 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
     thickness over the calcium arc minus the clearance parsed from the rule
     text, depth is reduced to fit; if that would push depth below the lower
     bound of the depth range, the depth is set to that bound and the IEL
-    offset is reduced by bisection until the calcium fits). Lipid pools are
+    offset is reduced by bisection until the calcium fits; a sample that
+    still violates the rule at zero offset is invalid, see ``on_invalid``).
+    ``lipid_fraction > 0`` requires a ``lipid_arc_deg`` entry. Lipid pools are
     centred opposite the calcium; their arc is clipped to the angular room
     left (``360 - arc - 2*LIPID_CALCIUM_GAP_DEG``) and dropped when the room is
     below the lower bound of the lipid-arc range. Every adjustment is logged
@@ -319,6 +323,8 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
     lipid_fraction = (_number(ranges["lipid_fraction"], "lipid_fraction", allow_pending)
                       if "lipid_fraction" in ranges else 0.0)
     if lipid_fraction > 0:
+        if "lipid_arc_deg" not in dims:
+            raise KeyError("design.holdout_lhs.ranges: lipid_fraction > 0 requires a lipid_arc_deg entry")
         dims["_lipid_u"] = ("cont", 0.0, 1.0)
     clearance = _depth_clearance(ranges.get("depth_rule"))
 
@@ -351,6 +357,7 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
         if ecc is not None:
             notes["ecc_index_target"] = ecc
 
+        invalid_reason = None
         if clearance is not None:
             need = t + clearance
             t_min = _min_local_plaque(r_lumen, plaque, offset, arc, center)
@@ -373,6 +380,11 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
                         f"depth {depth:.4f} -> {new_depth:.4f} mm and plaque offset {offset:.4f} -> "
                         f"{lo_o:.4f} mm (depth_rule: calcium does not fit otherwise)")
                     depth, offset = new_depth, lo_o
+                    t_fit = _min_local_plaque(r_lumen, plaque, offset, arc, center)
+                    if depth + need > t_fit + _DEPTH_RULE_TOL:
+                        invalid_reason = (f"depth_rule cannot be met: depth {depth:.4f} + thickness {t:.4f} + "
+                                          f"clearance {clearance:.4f} mm exceeds the minimum local plaque "
+                                          f"thickness {t_fit:.4f} mm even with plaque offset {offset:.4f} mm")
 
         has_lipid = lipid_fraction > 0 and vals.pop("_lipid_u") < lipid_fraction
         vals.pop("_lipid_u", None)
@@ -399,6 +411,8 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
         vals.update(r_lumen=r_lumen, plaque_thickness=plaque, plaque_offset=offset, ca_depth=depth,
                     notes=notes)
         try:
+            if invalid_reason is not None:
+                raise ValueError(invalid_reason)
             spec = make_spec(lid, morph, arc, t, geo, set_name="holdout",
                              length_mm=vals.pop("ca_length", None), **vals)
             lesion_polygons(spec)

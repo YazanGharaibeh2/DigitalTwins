@@ -38,6 +38,9 @@ Geometric conventions (implementation choices, see also ``LesionSpec``)
   ``r_ci(phi) = r1 - nodule_height * b(phi)`` with the C1 bump
   ``b = cos^2(pi*dphi/nodule_base_arc)`` for ``|dphi| <= base_arc/2`` (0
   elsewhere), so the calcium protrudes by ``nodule_height`` at the arc centre.
+  The bump must fit between the cap centres of the deposit
+  (``nodule_base_arc_deg <= ca_arc_deg - 2*delta``, see
+  :func:`check_nodule_fits`); otherwise ``lesion_polygons`` raises.
   The covering layer has uniform *normal* thickness ``ca_depth``: the lumen
   is the set of points of the ``r_lumen`` disc farther than ``ca_depth``
   from the calcium inner surface (computed per ray, exactly up to the curve
@@ -146,6 +149,23 @@ def nodule_bump(spec: LesionSpec, phi: np.ndarray) -> np.ndarray:
     beta = math.radians(spec.nodule_base_arc_deg)
     d = np.mod(phi - math.radians(spec.ca_center_deg) + math.pi, 2 * math.pi) - math.pi
     return np.where(np.abs(d) <= beta / 2, np.cos(math.pi * d / beta) ** 2, 0.0)
+
+
+def check_nodule_fits(spec: LesionSpec) -> None:
+    """Raise ``ValueError`` if a nodule's protrusion is wider than its calcium sheet.
+
+    The bump support ``[c - base/2, c + base/2]`` must lie within the inner
+    arc between the two cap centres, ``[lo + delta, hi - delta]``, i.e.
+    ``nodule_base_arc_deg <= ca_arc_deg - 2*delta``. Otherwise the lumen
+    would be indented where there is no calcium underneath and the inner
+    calcium surface would jump radially at the caps. Closed rings always fit.
+    """
+    if spec.morphology != "nodule" or spec.nodule_height <= 0 or is_ring(spec):
+        return
+    avail = spec.ca_arc_deg - 2 * math.degrees(cap_half_angle(spec))
+    if spec.nodule_base_arc_deg > avail:
+        raise ValueError(f"{spec.lesion_id}: nodule base arc {spec.nodule_base_arc_deg:.2f} deg exceeds the "
+                         f"calcium inner arc between the rounded ends ({avail:.2f} deg)")
 
 
 def calcium_inner_radius(spec: LesionSpec, phi: np.ndarray) -> np.ndarray:
@@ -293,6 +313,7 @@ def lesion_polygons(spec: LesionSpec) -> dict:
     with each other).
     """
     spec.validate()
+    check_nodule_fits(spec)
     c = iel_center(spec)
     outer = Polygon(circle_coords(c, outer_radius(spec)))
     iel = Polygon(circle_coords(c, iel_radius(spec)))

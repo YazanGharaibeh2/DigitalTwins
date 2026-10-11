@@ -367,3 +367,41 @@ def test_build_cohort(tmp_path):
     assert img.ndim == 3 and img.shape[2] == 3
     with pytest.raises(ValueError):
         cohort.build_cohort(specs + specs[:1], tmp_path / "dup")
+
+
+# ------------------------------------------------------- review regressions
+@pytest.mark.parametrize("arc", [40, 60])
+def test_nodule_wider_than_calcium_raises(geo, arc):
+    """A protrusion wider than the calcium inner arc would indent the lumen over no calcium."""
+    s = _spec(geo, "nodule", 90, 0.2)
+    s.ca_arc_deg = float(arc)
+    assert s.nodule_base_arc_deg > arc - 2 * math.degrees(cap_half_angle(s))
+    with pytest.raises(ValueError, match="nodule base arc"):
+        lesion_polygons(s)
+    # a closed ring always accommodates the bump; the core arcs fit
+    for a in ARCS:
+        build.check_nodule_fits(_spec(geo, "nodule", a, 0.4))
+
+
+def test_holdout_depth_rule_never_silently_violated(monkeypatch):
+    """If the calcium cannot meet the depth rule even at zero plaque offset, the sample is invalid."""
+    cfg = _patched_config(monkeypatch)
+    rule = params.raw("design.holdout_lhs.ranges.depth_rule")
+    P = cohort.fixed_geometry(allow_pending=True)["plaque_thickness"]
+    clearance = cohort._depth_clearance(rule)
+    d_lo = 0.16  # numerical test setting (not a literature value)
+    t_lo = P - d_lo - clearance + 0.005   # fits geometrically, but not with the clearance
+    cfg["design"]["holdout_lhs"]["ranges"] = {
+        "arc_deg": [340, 360], "thickness_mm": [t_lo, t_lo + 0.01], "depth_mm": [d_lo, d_lo + 0.04],
+        "ecc_index": [0.3, 0.4], "morphology": ["superficial_sheet"], "depth_rule": rule}
+    with pytest.raises(ValueError, match="depth_rule cannot be met"):
+        cohort.holdout_specs(n=3, seed=1, allow_pending=True)
+    assert cohort.holdout_specs(n=3, seed=1, allow_pending=True, on_invalid="skip") == []
+
+
+def test_holdout_lipid_fraction_requires_lipid_arc(monkeypatch):
+    cfg = _patched_config(monkeypatch)
+    cfg["design"]["holdout_lhs"]["ranges"] = {"arc_deg": [90, 180], "thickness_mm": [0.2, 0.3],
+                                              "lipid_fraction": 1.0, "lipid_thickness_mm": 0.2}
+    with pytest.raises(KeyError, match="lipid_arc_deg"):
+        cohort.holdout_specs(n=2, seed=1, allow_pending=True)
