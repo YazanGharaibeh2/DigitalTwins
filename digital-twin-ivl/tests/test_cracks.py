@@ -84,6 +84,49 @@ def test_crack_classification_synthetic(sector):
     assert comps  # components carry angles
 
 
+def test_end_damage_is_not_a_fracture(sector):
+    """Damage at a deposit end touches both surfaces through the end face but does not cut the
+    deposit; a band that detaches a tip fragment does."""
+    md = sector
+    n, th, r = _cells(md)
+    is_ca = np.zeros(n, bool)
+    is_ca[md.cell_tags.find(TAG_CALCIUM)] = True
+    tip = np.zeros(n)
+    tip[is_ca & (th > 84.0)] = 1.0                                     # the whole end region
+    out = crack_analysis(md, tip, _plm([(-90.0, 90.0)]))
+    assert out["n_fractures"] == 0 and out["n_partial"] == 1 and not out["fracture"]
+    c = out["components"][0]
+    assert c["spans_surfaces"] and not c["cuts_deposit"]
+    detach = np.zeros(n)
+    detach[is_ca & (th > 78.0) & (th < 82.0)] = 1.0                   # band leaving an intact tip
+    out = crack_analysis(md, detach, _plm([(-90.0, 90.0)]))
+    assert out["fracture"] and out["n_fractures"] == 1
+
+
+def test_ring_cut_counts_as_fracture():
+    """A closed 360-degree ring: one radial through band cuts it open (fracture); a partial-depth
+    band does not."""
+    from dtivl.solvers.nonlinear import annulus_meshdata
+
+    md = annulus_meshdata(A, B, 0.2, ca_sector=(R1, R2, 360.0), h_ca=0.05)
+    n, th, r = _cells(md)
+    is_ca = np.zeros(n, bool)
+    is_ca[md.cell_tags.find(TAG_CALCIUM)] = True
+    plm = _plm([(0.0, 359.99)])
+    band = np.zeros(n)
+    band[is_ca & (np.abs(th - 120.0) < 3.0)] = 1.0
+    out = crack_analysis(md, band, plm)
+    assert out["fracture"] and out["n_fractures"] == 1
+    assert out["location_frac"] == [None]
+    two = band.copy()
+    two[is_ca & (np.abs(th + 60.0) < 3.0)] = 1.0
+    assert crack_analysis(md, two, plm)["n_fractures"] == 2
+    part = np.zeros(n)
+    part[is_ca & (np.abs(th - 120.0) < 3.0) & (r < 1.0)] = 1.0
+    out = crack_analysis(md, part, plm)
+    assert not out["fracture"] and out["n_partial"] == 1
+
+
 def test_no_crack_and_function_input(sector):
     from dolfinx import fem
 

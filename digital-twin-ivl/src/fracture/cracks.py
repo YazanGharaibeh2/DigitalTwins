@@ -16,8 +16,16 @@ Definitions
   ``n . e_r <= -SURFACE_NORMAL_COS`` and *abluminal* if
   ``n . e_r >= SURFACE_NORMAL_COS``; other facets (deposit ends, 3D end
   faces) are lateral.
-* ``fracture``: some component touches both a luminal and an abluminal
-  surface (through-thickness); ``n_fractures`` counts such components and
+* ``fracture``: some component is through-thickness, i.e. it touches both a
+  luminal and an abluminal surface (``spans_surfaces``) AND cuts its
+  calcium region (``cuts_deposit``): removing the component's cells from
+  the facet-connected calcium region either splits it into more pieces of
+  at least ``MIN_PIECE_CELLS`` cells, removes its closed loop around the
+  vessel axis (a ring is cut open; detected by the winding of the cell
+  centroids along the cell graph), or leaves nothing. The second condition
+  excludes damage confined to a deposit end (rounded cap, or the axial end
+  in 3D), which touches both surfaces through the end without fracturing
+  the deposit. ``n_fractures`` counts the through-thickness components and
   ``n_partial`` the others.
 * Depth: on the A-line of each cell centroid (``theta`` -> row of the label
   map) the calcium spans ``[r_in, r_out]`` (first sample start to last
@@ -55,6 +63,7 @@ from dtivl.geometry.labels import LABEL_CALCIUM, TAG_CALCIUM
 SURFACE_NORMAL_COS = 0.5     #: |n . e_r| threshold for luminal/abluminal facets (60 deg)
 PATTERN_ANGLE_DEG = 45.0     #: radial if the principal axis is within 45 deg of e_r
 MIN_CELLS_PATTERN = 2        #: smaller components have no pattern
+MIN_PIECE_CELLS = 3          #: intact pieces smaller than this do not count as separated fragments
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +238,65 @@ def _surface_flags(mesh, ca_cells: np.ndarray, is_ca: np.ndarray):
     return lum, abl
 
 
+def _calcium_graph(mesh, ca_cells: np.ndarray):
+    """Facet adjacency (scipy CSR, symmetric) between the calcium cells ``ca_cells``."""
+    from scipy.sparse import coo_matrix
+
+    tdim = mesh.topology.dim
+    mesh.topology.create_connectivity(tdim, tdim - 1)
+    mesh.topology.create_connectivity(tdim - 1, tdim)
+    f2c = mesh.topology.connectivity(tdim - 1, tdim)
+    off, arr = f2c.offsets, f2c.array
+    interior = np.where(off[1:] - off[:-1] == 2)[0]
+    a, b = arr[off[interior]], arr[off[interior] + 1]
+    n_all = mesh.topology.index_map(tdim).size_local + mesh.topology.index_map(tdim).num_ghosts
+    loc = np.full(n_all, -1, dtype=np.int64)
+    loc[ca_cells] = np.arange(ca_cells.size)
+    keep = (loc[a] >= 0) & (loc[b] >= 0)
+    i, j = loc[a[keep]], loc[b[keep]]
+    n = ca_cells.size
+    return coo_matrix((np.ones(2 * i.size), (np.r_[i, j], np.r_[j, i])), shape=(n, n)).tocsr()
+
+
+def _has_axis_loop(graph, nodes: np.ndarray, theta: np.ndarray) -> bool:
+    """True if the subgraph on ``nodes`` (one connected piece) winds around the vessel axis.
+
+    The polar angle is unwrapped along a breadth-first spanning tree; an edge
+    whose unwrapped angles disagree with its wrapped difference by more than
+    pi closes a cycle around the axis.
+    """
+    from scipy.sparse.csgraph import breadth_first_order
+
+    sub = graph[nodes][:, nodes]
+    order, pred = breadth_first_order(sub, 0, directed=False, return_predecessors=True)
+    th = theta[nodes]
+    phi = np.full(nodes.size, np.nan)
+    phi[order[0]] = th[order[0]]
+    for k in order[1:]:
+        p = pred[k]
+        phi[k] = phi[p] + _wrap(th[k] - th[p])
+    coo = sub.tocoo()
+    jump = np.abs(phi[coo.col] - phi[coo.row] - _wrap(th[coo.col] - th[coo.row]))
+    return bool((jump > math.pi).any())
+
+
+def _cuts_region(graph, region: np.ndarray, removed: np.ndarray, theta: np.ndarray) -> bool:
+    """Whether removing ``removed`` from the connected calcium ``region`` cuts it (see module docstring)."""
+    from scipy.sparse.csgraph import connected_components
+
+    rest = np.setdiff1d(region, removed)
+    if rest.size == 0:
+        return True
+    ncomp, lab = connected_components(graph[rest][:, rest], directed=False)
+    sizes = np.bincount(lab, minlength=ncomp)
+    if int((sizes >= MIN_PIECE_CELLS).sum()) >= 2:
+        return True
+    if _has_axis_loop(graph, region, theta):
+        big = np.argmax(sizes)
+        return not _has_axis_loop(graph, rest[lab == big], theta)
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Main entry
 # ---------------------------------------------------------------------------
@@ -244,7 +312,6 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
     history : optional step records (for ``onset_load``).
     d_crack : threshold (default ``fracture.d_crack``).
     """
-    from scipy.sparse import coo_matrix
     from scipy.sparse.csgraph import connected_components
 
     d_crack = float(P.raw("fracture.d_crack")) if d_crack is None else float(d_crack)
@@ -271,22 +338,10 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
     comps = []
     if cracked_mask.any():
         lum, abl = _surface_flags(mesh, ca, is_ca)
-        loc = np.full(n_all, -1, dtype=np.int64)
         sel = np.where(cracked_mask)[0]                        # indices into ca
-        loc[ca[sel]] = np.arange(sel.size)
-        mesh.topology.create_connectivity(tdim, tdim - 1)
-        mesh.topology.create_connectivity(tdim - 1, tdim)
-        c2f = mesh.topology.connectivity(tdim, tdim - 1).array.reshape(-1, tdim + 1)
-        f2c = mesh.topology.connectivity(tdim - 1, tdim)
-        rows, cols = [], []
-        for k, c in enumerate(ca[sel]):
-            for f in c2f[c]:
-                for nb in f2c.links(f):
-                    if nb != c and loc[nb] >= 0:
-                        rows.append(k)
-                        cols.append(loc[nb])
-        g = coo_matrix((np.ones(len(rows)), (rows, cols)), shape=(sel.size, sel.size))
-        ncomp, lab = connected_components(g, directed=False)
+        g_ca = _calcium_graph(mesh, ca)
+        ncomp, lab = connected_components(g_ca[sel][:, sel], directed=False)
+        _, region_of = connected_components(g_ca, directed=False)   # facet-connected calcium regions
 
         r_in_al, r_out_al = _aline_extent(plm)
         dep_lab, deposits = calcium_deposits(plm)
@@ -300,7 +355,12 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
         for k in range(ncomp):
             idx = sel[lab == k]
             w = meas[idx]
-            through = bool(lum[idx].any() and abl[idx].any())
+            spans = bool(lum[idx].any() and abl[idx].any())
+            cuts = False
+            if spans:
+                region = np.where(region_of == region_of[idx[0]])[0]
+                cuts = _cuts_region(g_ca, region, idx, th)
+            through = spans and cuts
             if through:
                 depth = 1.0
             elif lum[idx].any():
@@ -335,6 +395,7 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
                 if not dep["closed"]:
                     locf = float(min(abs(_wrap(ang - dep["theta_center"])) / dep["half_span"], 1.0))
             comps.append({"n_cells": int(idx.size), "measure": float(w.sum()), "through": through,
+                          "spans_surfaces": spans, "cuts_deposit": cuts,
                           "touches_luminal": bool(lum[idx].any()), "touches_abluminal": bool(abl[idx].any()),
                           "depth_frac": depth, "pattern": pattern, "axis_cos_radial": cosang,
                           "anisotropy": aniso, "angle_deg": math.degrees(ang), "deposit": dep_id,

@@ -37,11 +37,14 @@ displacing one end (symmetry rollers on the other faces) and reports the
 tensile energy and the applied strain at damage onset against
 ``3 Gc / (16 ell)`` and against the small-strain onset strain (``eps_f`` for
 the 3D uniaxial-stress bar; ``eps_f sqrt(1 - nu^2)`` for the plane-strain
-plate, whose uniaxial modulus is ``E / (1 - nu^2)``). The onset energy is
-estimated from the first damaged step with the homogeneous AT1 relation
-``1 - d = psi_c / psi+`` (exact for a homogeneous ``d`` at a converged
-alternate-minimisation state) and bracketed by the last undamaged and the
-first damaged step.
+plate, whose uniaxial modulus is ``E / (1 - nu^2)``). The onset is bracketed
+by the last undamaged and the first damaged step; ``rel_err_psi`` is the
+larger relative distance of the two bracket ends from ``3 Gc / (16 ell)``
+(an upper bound of the onset error, so it shrinks only with the load step).
+The homogeneous AT1 relation ``psi+ (1 - d) = 3 Gc / (16 ell)`` at the first
+damaged step is reported separately (``psi_equilibrium_MPa``): it holds for
+any damaged homogeneous equilibrium and so checks the damage solver, not the
+onset.
 """
 from __future__ import annotations
 
@@ -273,14 +276,20 @@ def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | N
         out.update(passed=False, error="no damage onset bracketed")
         return out
     lo, hi = rows[first - 1], rows[first]
-    psi_est = hi["psi_plus"] * (1.0 - hi["d_mean"])            # homogeneous AT1: 1 - d = psi_c / psi+
+    # The observed onset lies in [lo, hi]; the error bound is the farther bracket end from theory.
+    # (psi+ (1 - d) at the first damaged step equals 3 Gc / (16 ell) for ANY homogeneous damaged
+    # equilibrium, wherever the onset happened, so it only checks the damage solver, not the onset.)
+    psi_equil = hi["psi_plus"] * (1.0 - hi["d_mean"])
+    psi_est = 0.5 * (lo["psi_plus"] + hi["psi_plus"])
     eps_est = hi["strain"] * np.sqrt(1.0 - hi["d_mean"])       # psi+ ~ strain^2 near onset
     out.update({
         "psi_bracket_MPa": [lo["psi_plus"], hi["psi_plus"]],
         "strain_bracket": [lo["strain"], hi["strain"]],
         "psi_onset_measured_MPa": float(psi_est),
+        "psi_equilibrium_MPa": float(psi_equil),
+        "rel_err_psi_equilibrium": float(abs(psi_equil / psi_c - 1.0)),
         "strain_onset_measured": float(eps_est),
-        "rel_err_psi": float(abs(psi_est / psi_c - 1.0)),
+        "rel_err_psi": float(max(abs(lo["psi_plus"] / psi_c - 1.0), abs(hi["psi_plus"] / psi_c - 1.0))),
         "rel_err_strain": float(abs(eps_est / eps_pred - 1.0)),
         "bracket_contains_theory": bool(lo["psi_plus"] <= psi_c <= hi["psi_plus"]),
         "d_uniformity": float(hi["d_max"] - hi["d_mean"]),

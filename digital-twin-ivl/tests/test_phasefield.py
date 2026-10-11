@@ -53,6 +53,20 @@ def test_at1_onset_homogeneous_plate(phasefield_report):
     assert case3d["strain_onset_measured"] == pytest.approx(MaterialSet.baseline().eps_f, rel=0.05)
 
 
+def test_onset_error_reflects_step_resolution(monkeypatch):
+    """A coarse load step widens the bracket; the reported error must grow with it and fail
+    (the AT1 equilibrium value psi+ (1 - d) equals the theory at any damaged step)."""
+    monkeypatch.setattr(PF, "VERIF_PRE_FRAC", 0.6)
+    monkeypatch.setattr(PF, "VERIF_PRE_STEPS", 1)
+    monkeypatch.setattr(PF, "VERIF_FINE_STEP", 0.15)
+    c = PF.onset_check(2)
+    lo, hi = c["psi_bracket_MPa"]
+    assert lo <= c["psi_onset_theory_MPa"] <= hi
+    assert c["rel_err_psi_equilibrium"] < 1e-8           # damage solver consistency only
+    assert c["rel_err_psi"] > PF.VERIF_TOL               # bracket is about 20 % wide
+    assert not c["passed"]
+
+
 def _bimaterial_plate():
     """2 x 0.5 mm plate, left half calcium, right half fibrous (no facet tags)."""
     from mpi4py import MPI
