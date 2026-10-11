@@ -22,6 +22,15 @@ Keys
   for closed rings (``has_edges = False``); NaN if the mean is <= 0 or no
   cell lies in an end window.
 * ``has_edges`` - True if any deposit has angular ends.
+* ``sigma1_p99`` - area-weighted 99th percentile of sigma1.
+* ``sigma1_peak_nl`` / ``sed_peak_nl`` / ``scf_edge_nl`` - *nonlocal* versions
+  of the peak quantities: each cell value is replaced by the area-weighted
+  mean over calcium cells whose centroids lie within ``rho_nl`` of its
+  centroid (area method of critical-distance theory), then the maximum is
+  taken. ``rho_nl`` = ``fracture.ell_over_h`` x ``discretisation.h_calcium_mm``,
+  i.e. the nominal phase-field regularisation length, so the averaging scale
+  does not change with mesh refinement. Raw cell peaks grow under refinement
+  near image-derived boundary kinks (see results/verification_mesh_convergence.json).
 * ``min_thickness_high_stress`` - min local calcium thickness (calcium
   sample count of the A-line through the cell centroid x dr) over the cells
   with sigma1 >= the area-weighted ``HIGH_STRESS_PERCENTILE`` percentile.
@@ -53,6 +62,7 @@ import math
 
 import numpy as np
 from scipy import ndimage
+from scipy.spatial import cKDTree
 
 from dtivl import params as P
 from dtivl.geometry.labels import LABEL_CALCIUM
@@ -62,10 +72,27 @@ from dtivl.materials.constitutive import MaterialSet
 EDGE_MIN_WINDOW_DEG = 10.0     #: minimum angular half-window around deposit ends (design §4)
 HIGH_STRESS_PERCENTILE = 90.0  #: percentile defining "high-stress" cells
 SIGMA1_PERCENTILE = 95.0       #: percentile reported as sigma1_p95
+SIGMA1_PERCENTILE_HIGH = 99.0  #: percentile reported as sigma1_p99
 
 PREDICTOR_KEYS = ("sigma1_peak", "sigma1_p95", "sed_mean", "sed_peak", "frac_eps_gt_half_epsf",
                   "frac_eps_gt_epsf", "frac_sig_gt_half_sigc", "frac_sig_gt_sigc", "scf_edge",
-                  "has_edges", "min_thickness_high_stress")
+                  "has_edges", "min_thickness_high_stress", "sigma1_p99", "sigma1_peak_nl",
+                  "sed_peak_nl", "scf_edge_nl")
+
+
+def nonlocal_radius() -> float:
+    """Averaging radius of the nonlocal peaks: nominal phase-field length (mm)."""
+    return float(P.raw("fracture.ell_over_h")["value"]) * P.get("discretisation.h_calcium_mm").value
+
+
+def nonlocal_average(values: np.ndarray, weights: np.ndarray, centroids: np.ndarray, radius: float) -> np.ndarray:
+    """Area-weighted mean of ``values`` over cells within ``radius`` of each cell centroid."""
+    tree = cKDTree(centroids)
+    out = np.empty_like(values, dtype=float)
+    for i, nb in enumerate(tree.query_ball_point(centroids, r=radius)):
+        nb = np.asarray(nb, dtype=int)
+        out[i] = float((values[nb] * weights[nb]).sum() / weights[nb].sum())
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -224,10 +251,17 @@ def predictors(linres, plm: PolarLabelMap, ms: MaterialSet) -> dict:
     s1_mean = float((s1 * w).sum() / wt)
     out["sigma1_mean"] = s1_mean
     out["ca_measure_fe"] = float(wt)
+    out["sigma1_p99"] = weighted_quantile(s1, w, SIGMA1_PERCENTILE_HIGH / 100.0)
+    rho = nonlocal_radius()
+    s1_nl = nonlocal_average(s1, w, linres.centroid, rho)
+    out["sigma1_peak_nl"] = float(s1_nl.max())
+    out["sed_peak_nl"] = float(nonlocal_average(sed, w, linres.centroid, rho).max())
+    out["rho_nl"] = rho
 
     phi = np.arctan2(linres.centroid[:, 1], linres.centroid[:, 0])
     if not has_edges:
         out["scf_edge"] = 1.0
+        out["scf_edge_nl"] = 1.0
         out["n_edge_cells"] = 0
     else:
         near = np.zeros(s1.size, dtype=bool)
@@ -237,6 +271,7 @@ def predictors(linres, plm: PolarLabelMap, ms: MaterialSet) -> dict:
                 near |= _angdist(phi, th_end) <= win
         out["n_edge_cells"] = int(near.sum())
         out["scf_edge"] = float(s1[near].max() / s1_mean) if near.any() and s1_mean > 0 else math.nan
+        out["scf_edge_nl"] = float(s1_nl[near].max() / s1_mean) if near.any() and s1_mean > 0 else math.nan
 
     thr = weighted_quantile(s1, w, HIGH_STRESS_PERCENTILE / 100.0)
     high = s1 >= thr

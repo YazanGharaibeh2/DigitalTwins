@@ -18,8 +18,12 @@ from dtivl.metrics.predictors import predictor_analysis
 GCI_LESIONS = ("C-A180-T0.2-SUP", "C-A360-T0.4-NOD")
 #: Refinement factors applied to the default (coarse) mesh sizes; ratio 2 between levels.
 GCI_FACTORS = (2.0, 1.0, 0.5)
-GCI_QUANTITIES = ("sigma1_peak", "sigma1_p95", "sigma1_mean", "sed_mean", "sed_peak")
+GCI_QUANTITIES = ("sigma1_peak", "sigma1_peak_nl", "sigma1_p99", "sigma1_p95", "sigma1_mean", "sed_mean", "sed_peak", "sed_peak_nl", "scf_edge_nl")
 FOUNDATION_LEVELS_KEY = "loads.perivascular_k_MPa_per_mm"
+#: Relative-change acceptance between the default (coarse) and the finest mesh.
+REL_CHANGE_ACCEPT = 0.02
+#: Predictors reported as mesh-dependent (cell-level peaks); not used as primary predictors.
+MESH_DEPENDENT = ("sigma1_peak", "sed_peak")
 
 
 def lame() -> dict:
@@ -69,7 +73,13 @@ def mesh_convergence(lesions=GCI_LESIONS, factors=GCI_FACTORS) -> dict:
             ext = gci[q]["phi_ext"]
             gci[q]["rel_err_default_vs_extrapolated"] = (abs(default[q] - ext) / abs(ext)
                                                          if ext not in (None, 0) and math.isfinite(ext) else None)
+        for q in GCI_QUANTITIES:
+            gci[q]["accepted_rel_change"] = bool(gci[q]["rel_diff_default_vs_fine"] < REL_CHANGE_ACCEPT)
         out["lesions"][lid] = {"levels": levels, "gci": gci}
+    out["rel_change_accept"] = REL_CHANGE_ACCEPT
+    out["mesh_dependent_quantities"] = list(MESH_DEPENDENT)
+    out["max_rel_change_default_vs_fine"] = {
+        q: max(d["gci"][q]["rel_diff_default_vs_fine"] for d in out["lesions"].values()) for q in GCI_QUANTITIES}
     write_json("verification_mesh_convergence", out)
     return out
 

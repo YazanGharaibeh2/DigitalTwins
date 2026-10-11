@@ -219,3 +219,18 @@ def test_wobbly_ring_and_fragments():
     for x in d:
         lo, hi = np.degrees(x["ends"])
         assert hi - lo == pytest.approx(27.0, abs=1.0)
+
+
+def test_nonlocal_average_uniform_and_spike():
+    """Nonlocal averaging preserves a uniform field and smooths an isolated spike."""
+    import numpy as np
+    from dtivl.metrics.predictors import nonlocal_average
+
+    rng = np.random.default_rng(0)
+    c = rng.uniform(0.0, 1.0, size=(400, 2))
+    w = np.full(400, 1.0 / 400)
+    assert np.allclose(nonlocal_average(np.full(400, 3.0), w, c, 0.1), 3.0)
+    v = np.zeros(400)
+    v[0] = 100.0
+    nl = nonlocal_average(v, w, c, 0.2)
+    assert nl.max() < 100.0 and nl[0] > 0.0

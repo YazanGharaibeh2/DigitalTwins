@@ -1,0 +1,137 @@
+{
+  "check": "plane-strain thick-walled cylinder vs Lame (design.md section 4)",
+  "tolerance_rel": 0.01,
+  "foundation_tolerance": 0.001,
+  "dolfinx_version": "0.11.0",
+  "cases": [
+    {
+      "material": "calcium",
+      "lambda_MPa": 5.163461538461533,
+      "mu_MPa": 3.4423076923076894,
+      "nu": 0.29999999999999993,
+      "a_mm": 1.0,
+      "b_mm": 2.0,
+      "p_MPa": 0.1,
+      "h_mm": 0.025,
+      "degree": 2,
+      "k_found_MPa_per_mm": 0.0001,
+      "ndofs": 142338,
+      "ncells": 35207,
+      "sample_radii_mm": [
+        1.1,
+        1.25,
+        1.5,
+        1.75,
+        1.9
+      ],
+      "n_sample_angles": 12,
+      "max_rel_err_ur": 0.0001469878398380946,
+      "max_rel_err_hoop": 0.00036483815355959427,
+      "max_rel_err_hoop_cellavg": 0.00020831462543933007,
+      "foundation_ratio": 2.7110279382361632e-05,
+      "per_radius": [
+        {
+          "r_mm": 1.1,
+          "ur_exact": 0.01973658371423736,
+          "ur_num_mean": 0.01973372881424099,
+          "hoop_exact": 0.14352617079889804,
+          "hoop_num_mean": 0.14351266280486355
+        },
+        {
+          "r_mm": 1.25,
+          "ur_exact": 0.017914338919925527,
+          "ur_num_mean": 0.017911739081100973,
+          "hoop_exact": 0.11866666666666667,
+          "hoop_num_mean": 0.11865102059808863
+        },
+        {
+          "r_mm": 1.5,
+          "ur_exact": 0.01581626319056488,
+          "ur_num_mean": 0.015813957870224337,
+          "hoop_exact": 0.09259259259259259,
+          "hoop_num_mean": 0.09257795133644638
+        },
+        {
+          "r_mm": 1.75,
+          "ur_exact": 0.014455972333067318,
+          "ur_num_mean": 0.014453854688712802,
+          "hoop_exact": 0.07687074829931972,
+          "hoop_num_mean": 0.07685939610653332
+        },
+        {
+          "r_mm": 1.9,
+          "ur_exact": 0.013872782514946596,
+          "ur_num_mean": 0.013870744570550755,
+          "hoop_exact": 0.07026777469990766,
+          "hoop_num_mean": 0.07025780260902165
+        }
+      ],
+      "passed": true
+    },
+    {
+      "material": "fibrous",
+      "lambda_MPa": 38.019555555555556,
+      "mu_MPa": 0.7706666666666666,
+      "nu": 0.490066225165563,
+      "a_mm": 1.0,
+      "b_mm": 2.0,
+      "p_MPa": 0.1,
+      "h_mm": 0.025,
+      "degree": 2,
+      "k_found_MPa_per_mm": 0.0001,
+      "ndofs": 142338,
+      "ncells": 35207,
+      "sample_radii_mm": [
+        1.1,
+        1.25,
+        1.5,
+        1.75,
+        1.9
+      ],
+      "n_sample_angles": 12,
+      "max_rel_err_ur": 0.00017574243393171822,
+      "max_rel_err_hoop": 0.005733839145896849,
+      "max_rel_err_hoop_cellavg": 0.0006827783182839578,
+      "foundation_ratio": 8.821113716986442e-05,
+      "per_radius": [
+        {
+          "r_mm": 1.1,
+          "ur_exact": 0.07911370979669978,
+          "ur_num_mean": 0.07909992631122646,
+          "hoop_exact": 0.14352617079889804,
+          "hoop_num_mean": 0.14356569193036314
+        },
+        {
+          "r_mm": 1.25,
+          "ur_exact": 0.0697412291757373,
+          "ur_num_mean": 0.06972903909550934,
+          "hoop_exact": 0.11866666666666667,
+          "hoop_num_mean": 0.1186780993693521
+        },
+        {
+          "r_mm": 1.5,
+          "ur_exact": 0.05831461918620195,
+          "ur_num_mean": 0.05830441523370305,
+          "hoop_exact": 0.09259259259259259,
+          "hoop_num_mean": 0.09255561560154936
+        },
+        {
+          "r_mm": 1.75,
+          "ur_exact": 0.050183445018053975,
+          "ur_num_mean": 0.05017464327287758,
+          "hoop_exact": 0.07687074829931972,
+          "hoop_num_mean": 0.07685645863612599
+        },
+        {
+          "r_mm": 1.9,
+          "ur_exact": 0.04634540446076121,
+          "ur_num_mean": 0.046337265939546256,
+          "hoop_exact": 0.07026777469990766,
+          "hoop_num_mean": 0.07026135125160031
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true
+}
