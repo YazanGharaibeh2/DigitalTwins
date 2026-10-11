@@ -103,3 +103,21 @@ def test_no_crack_and_function_input(sector):
     full = crack_analysis(md, d, _plm([(-90.0, 90.0)]))
     assert full["fracture"] and full["n_fractures"] == 1
     assert full["cracked_measure"] == pytest.approx(full["ca_measure"])
+
+
+def test_crack_analysis_3d_tube():
+    """3D: a radial through-thickness band over the whole length is one radial fracture."""
+    from dtivl.solvers.nonlinear import tube_meshdata
+
+    md = tube_meshdata(A, B, 0.6, 0.12, ca_sector=(R1, R2, ARC))
+    msh = md.mesh
+    n = msh.topology.index_map(3).size_local
+    cen = msh.geometry.x[msh.geometry.dofmaps[0][:n]].mean(axis=1)
+    th = np.degrees(np.arctan2(cen[:, 1], cen[:, 0]))
+    is_ca = np.zeros(n, bool)
+    is_ca[md.cell_tags.find(TAG_CALCIUM)] = True
+    dval = np.where(is_ca & (np.abs(th - 30.0) < 3.0), 1.0, 0.0)
+    out = crack_analysis(md, dval, _plm([(-90.0, 90.0)]))
+    assert out["fracture"] and out["n_fractures"] == 1 and out["n_partial"] == 0
+    assert out["pattern"] == ["radial"]
+    assert out["location_frac"][0] == pytest.approx(30.0 / 90.0, abs=0.06)

@@ -13,8 +13,8 @@ Pipeline (design.md section 3)
    ``SMOOTH_FRAC * dr``) to remove the 1-A-line staircase (which would
    otherwise create spurious corner stress concentrations), contoured with
    ``skimage.measure.find_contours`` at 0.5, assembled into shapely polygons
-   (even-odd nesting), ``simplify``-ed (``SIMPLIFY_FRAC * dr``) and made
-   valid. Components smaller than ``MIN_AREA_PX`` polar pixels are dropped.
+   (even-odd nesting) and made valid. Components smaller than
+   ``MIN_AREA_PX`` polar pixels are dropped.
    The outer boundary is the polygon through ``(r_out_i, theta_i)`` and the
    IEL the polygon through ``(r_iel_i, theta_i)``.
 2. **Conforming partition.** Precedence: calcium > lipid > lumen > tissue.
@@ -22,9 +22,14 @@ Pipeline (design.md section 3)
    (holes filled, other label-1 islands treated as tissue), minus calcium and
    lipid. Tissue components not connected to the main vessel wall (e.g.
    calcium floating in the lumen) are discarded. All boundaries are snapped
-   to a ``GRID_MM`` grid, noded by ``shapely.union_all`` and ``polygonize``-d into
-   faces, so neighbouring faces share *identical* vertex chains. Each face is
-   classified by ``point_on_surface`` into lumen (not meshed), calcium,
+   to a ``GRID_MM`` grid and noded by ``shapely.union_all``; the noded network
+   is merged into chains between junctions (``line_merge``) and each chain is
+   Douglas-Peucker ``simplify``-ed once (``SIMPLIFY_FRAC * dr``), so a
+   boundary shared by two regions is simplified identically for both (no
+   sliver faces where calcium/lipid touches the lumen). The chains are
+   re-noded and ``polygonize``-d into faces, so neighbouring faces share
+   *identical* vertex chains. Each face is classified by majority area
+   overlap with the unsimplified regions into lumen (not meshed), calcium,
    lipid, fibrous (inside the IEL) or wall (outside the IEL).
 3. **gmsh geometry.** The faces are written to the gmsh *built-in* (geo)
    kernel with one point per unique vertex and one line per unique edge, so
@@ -41,9 +46,9 @@ Real segmentations (``plm.r_iel is None``, labels {0, 1, 4})
 -------------------------------------------------------------
 The IEL is then ``r_out - wall_thickness`` with ``wall_thickness`` from
 ``params.get('geometry.wall_thickness_mm')``, unless ``r_iel_default`` is
-given explicitly (scalar or per-A-line radius array). That config entry is
-currently PENDING, so callers must either pass ``r_iel_default`` or
-``allow_pending=True``. Calcium crossing the IEL stays calcium.
+given explicitly (scalar or per-A-line radius array). If that config entry
+is PENDING, callers must pass ``r_iel_default`` or ``allow_pending=True``.
+Calcium crossing the IEL stays calcium (its faces are split by the IEL line).
 
 gmsh session handling: if gmsh is already initialised by the caller, a
 temporary model is created and removed again (the caller's current model is
@@ -94,9 +99,11 @@ class Partition:
     """Conforming planar partition of one cross-section (all units mm).
 
     ``faces`` are polygons whose shared edges have identical vertex chains;
-    ``face_class`` holds ``LUMEN`` (0, not meshed) or a cell tag ``TAG_*``.
+    ``face_class`` holds ``LUMEN`` (0, not meshed) or a cell tag ``TAG_*``;
+    ``face_in_iel`` flags faces inside the IEL (calcium/lipid faces are split
+    by the IEL line, so a deposit crossing the IEL has faces on both sides).
     ``outer`` / ``iel`` / ``lumen`` / ``calcium`` / ``lipid`` are the region
-    geometries the partition was built from.
+    geometries as unions of the (simplified) faces.
     """
 
     faces: list[Polygon]
@@ -107,6 +114,7 @@ class Partition:
     calcium: MultiPolygon
     lipid: MultiPolygon
     info: dict = field(default_factory=dict)
+    face_in_iel: list[bool] = field(default_factory=list)
 
     def tag_areas(self) -> dict[int, float]:
         """Geometric area per cell tag (lumen excluded)."""
@@ -220,9 +228,11 @@ def build_partition(plm: PolarLabelMap, *, r_iel_default=None, allow_pending: bo
     def snap(g):
         return shapely.set_precision(shapely.make_valid(g), GRID_MM)
 
-    outer = snap(_profile_polygon(np.asarray(plm.r_out, float), theta).simplify(simplify_tol))
-    iel = snap(_profile_polygon(r_iel, theta).simplify(simplify_tol)).intersection(outer, grid_size=GRID_MM)
-    kw = dict(pixel=pixel, smooth=smooth, simplify_tol=simplify_tol, min_area=min_area)
+    # region geometries are built UNSIMPLIFIED; simplification acts once on the
+    # noded boundary network below (shared boundaries stay identical)
+    outer = snap(_profile_polygon(np.asarray(plm.r_out, float), theta))
+    iel = snap(_profile_polygon(r_iel, theta)).intersection(outer, grid_size=GRID_MM)
+    kw = dict(pixel=pixel, smooth=smooth, simplify_tol=0.0, min_area=min_area)
     ca = _label_region(plm, plm.labels == LABEL_CALCIUM, **kw)
     lip = _label_region(plm, plm.labels == LABEL_LIPID, **kw)
     lum = _label_region(plm, plm.labels == LABEL_LUMEN, **kw)
@@ -245,37 +255,69 @@ def build_partition(plm: PolarLabelMap, *, r_iel_default=None, allow_pending: bo
     dropped = sum(p.area for p in tissue.geoms) - main_tissue.area
     ca = _drop_small(ca.intersection(main_tissue, grid_size=GRID_MM), min_area)
     lip = _drop_small(lip.intersection(main_tissue, grid_size=GRID_MM), min_area)
-    # every region boundary, noded once -> faces share identical edges
+    # Every (unsimplified) region boundary, noded once. The noded network is
+    # merged into chains between junctions and each chain is simplified ONCE,
+    # so a boundary shared by two regions (e.g. calcium touching the lumen)
+    # gets identical vertices on both sides. Simplifying each region polygon
+    # separately leaves sub-micron sliver faces between them.
     lines = [outer.exterior, iel.exterior, lumen.exterior]
     for g in (ca, lip, iel):
         for p in _as_multipolygon(g).geoms:
             lines.append(p.exterior)
             lines.extend(p.interiors)
     noded = shapely.union_all([LineString(l.coords) for l in lines], grid_size=GRID_MM)
-    faces, classes = [], []
+    chains = shapely.get_parts(shapely.line_merge(noded))
+    chains = shapely.simplify(chains, simplify_tol, preserve_topology=True)
+    noded = shapely.union_all(chains, grid_size=GRID_MM)
+    regions = {"ca": ca, "lip": lip, "lumen": lumen, "tissue": main_tissue, "iel": iel}
+
+    def frac(face, key):
+        return face.intersection(regions[key], grid_size=GRID_MM).area / face.area
+
+    faces, classes, in_iel = [], [], []
     for face in polygonize(noded):
         if face.area <= 0:
             continue
-        pt = face.point_on_surface()
-        if not main_tissue.contains(pt):
-            if lumen.contains(pt):
+        # classification by majority overlap with the unsimplified regions
+        # (robust to the <= simplify_tol displacement of the face boundary)
+        if frac(face, "tissue") <= 0.5:
+            if frac(face, "lumen") > 0.5:
                 faces.append(face)
                 classes.append(LUMEN)
+                in_iel.append(True)
             continue  # outside the vessel or a discarded island
-        if ca.contains(pt):
+        inside_iel = frac(face, "iel") > 0.5
+        if frac(face, "ca") > 0.5:
             cls = TAG_CALCIUM
-        elif lip.contains(pt):
+        elif frac(face, "lip") > 0.5:
             cls = TAG_LIPID
-        elif iel.contains(pt):
+        elif inside_iel:
             cls = TAG_FIBROUS
         else:
             cls = TAG_WALL
         faces.append(face)
         classes.append(cls)
+        in_iel.append(inside_iel)
+
+    def union_of(pred):
+        return shapely.union_all([f for f, c in zip(faces, classes) if pred(c)], grid_size=GRID_MM)
+
+    # region geometries consistent with the (simplified) faces
+    outer_s = _as_multipolygon(union_of(lambda c: True))
+    outer_s = Polygon(max(outer_s.geoms, key=lambda p: p.area).exterior)
+    lumen_s = _as_multipolygon(union_of(lambda c: c == LUMEN))
+    if not lumen_s.geoms:
+        raise ValueError("lumen vanished after simplification")
+    lumen_s = max(lumen_s.geoms, key=lambda p: p.area)
+    iel_s = _as_multipolygon(shapely.union_all([f for f, k in zip(faces, in_iel) if k], grid_size=GRID_MM))
+    iel_s = Polygon(max(iel_s.geoms, key=lambda p: p.area).exterior)
+    ca_s = _as_multipolygon(union_of(lambda c: c == TAG_CALCIUM))
+    lip_s = _as_multipolygon(union_of(lambda c: c == TAG_LIPID))
     info = {"r_iel_source": iel_src, "smooth_mm": smooth, "simplify_tol_mm": simplify_tol,
             "dropped_island_area": float(dropped),
-            "n_calcium_components": len(_as_multipolygon(ca).geoms)}
-    return Partition(faces, classes, outer, iel, lumen, _as_multipolygon(ca), _as_multipolygon(lip), info)
+            "n_calcium_components": len(ca_s.geoms),
+            "n_small_faces": int(sum(f.area < min_area for f in faces))}
+    return Partition(faces, classes, outer_s, iel_s, lumen_s, ca_s, lip_s, info, in_iel)
 
 
 def polar_pixel_areas(plm: PolarLabelMap, *, r_iel_default=None, allow_pending: bool = False) -> dict:
@@ -303,16 +345,26 @@ def polar_pixel_areas(plm: PolarLabelMap, *, r_iel_default=None, allow_pending: 
 # ---------------------------------------------------------------------------
 # gmsh helpers
 # ---------------------------------------------------------------------------
+#: Global gmsh options changed by this module; restored for a caller's session.
+_MANAGED_OPTIONS = ("General.Terminal", "Mesh.MeshSizeExtendFromBoundary", "Mesh.MeshSizeFromPoints",
+                    "Mesh.MeshSizeFromCurvature", "Mesh.Algorithm", "Mesh.ElementOrder",
+                    "Mesh.MaxNumThreads2D", "Mesh.MshFileVersion", "Mesh.MeshSizeMax")
+
+
 @contextlib.contextmanager
 def gmsh_model(name: str = "dtivl"):
-    """Fresh gmsh model; initialises/finalises gmsh only if not already active."""
+    """Fresh gmsh model; initialises/finalises gmsh only if not already active.
+
+    If the caller already holds a gmsh session, its current model and the
+    global options this module changes (``_MANAGED_OPTIONS``) are restored.
+    """
     import gmsh
 
     owns = not gmsh.isInitialized()
     if owns:
         gmsh.initialize(interruptible=False)
     prev = None if owns else gmsh.model.getCurrent()
-    old_terminal = gmsh.option.getNumber("General.Terminal")
+    saved = {} if owns else {o: gmsh.option.getNumber(o) for o in _MANAGED_OPTIONS}
     gmsh.option.setNumber("General.Terminal", 0)
     model_name = f"{name}_{uuid.uuid4().hex[:8]}"
     gmsh.model.add(model_name)
@@ -324,7 +376,8 @@ def gmsh_model(name: str = "dtivl"):
         if owns:
             gmsh.finalize()
         else:
-            gmsh.option.setNumber("General.Terminal", old_terminal)
+            for opt, val in saved.items():
+                gmsh.option.setNumber(opt, val)
             if prev:
                 with contextlib.suppress(Exception):
                     gmsh.model.setCurrent(prev)
@@ -410,8 +463,22 @@ def add_partition_geo(gmsh, part: Partition, h_default: float) -> GeoModel:
     return GeoModel(surfaces, surface_class, sorted(lumen_lines), sorted(outer_lines), sorted(ca_lines), mids)
 
 
+def check_sizes(h_ca: float, h_soft: float) -> None:
+    """Reject element sizes the size field cannot honour.
+
+    ``Mesh.MeshSizeMax = h_soft`` caps every element, so ``h_ca > h_soft``
+    would silently mesh calcium at ``h_soft`` while ``h_ca`` (and anything
+    derived from it, e.g. the phase-field length) is reported.
+    """
+    if not (h_ca > 0 and h_soft > 0):
+        raise ValueError(f"element sizes must be > 0 (h_ca={h_ca}, h_soft={h_soft})")
+    if h_ca > h_soft:
+        raise ValueError(f"h_ca={h_ca} > h_soft={h_soft}: calcium would be meshed at h_soft")
+
+
 def add_size_field(gmsh, geom: GeoModel, h_ca: float, h_soft: float) -> int:
     """Background field: ``h_ca`` in/near calcium, growing to ``h_soft``."""
+    check_sizes(h_ca, h_soft)
     f = gmsh.model.mesh.field
     fields = []
     ca_surf = geom.surfaces.get(TAG_CALCIUM, [])
@@ -505,6 +572,7 @@ def mesh_from_labelmap(plm: PolarLabelMap, out_msh, *, h_ca: float | None = None
     """
     h_ca = P.get("discretisation.h_calcium_mm").value if h_ca is None else float(h_ca)
     h_soft = P.get("discretisation.h_soft_mm").value if h_soft is None else float(h_soft)
+    check_sizes(h_ca, h_soft)
     part = build_partition(plm, r_iel_default=r_iel_default, allow_pending=allow_pending,
                            smooth=smooth, simplify_tol=simplify_tol)
     out_msh = Path(out_msh)

@@ -8,6 +8,11 @@ three blocks with structured layers (tetrahedra, no recombination):
     block 1: ``[m, m + L]``       calcified segment, calcium -> TAG_CALCIUM
     block 2: ``[m + L, 2m + L]``  margin, calcium-shaped volumes -> TAG_FIBROUS
 
+(Calcium-shaped volumes of the end blocks that lie OUTSIDE the IEL - possible
+when a real deposit crosses the IEL; the IEL line splits such a deposit into
+faces on either side - get TAG_WALL, consistent with the 2D fibrous/wall
+rule.)
+
 Each block extrudes the top surfaces of the previous one, so the three
 blocks share their interfaces (conforming). Lipid, fibrous and wall volumes
 keep their tag in every block (lipid therefore spans the whole segment).
@@ -30,11 +35,11 @@ from scipy.spatial import cKDTree
 
 from dtivl import params as P
 from dtivl.geometry.labels import (TAG_CALCIUM, TAG_END_BND, TAG_FIBROUS, TAG_LUMEN_BND,
-                                   TAG_OUTER_BND)
+                                   TAG_OUTER_BND, TAG_WALL)
 from dtivl.geometry.polar import PolarLabelMap
 
-from .mask_to_mesh import (add_partition_geo, add_size_field, build_partition, element_measure,
-                           gmsh_model, node_lookup, polar_pixel_areas)
+from .mask_to_mesh import (LUMEN, add_partition_geo, add_size_field, build_partition, check_sizes,
+                           element_measure, gmsh_model, node_lookup, polar_pixel_areas)
 
 #: Relative tolerance for classifying exterior surfaces (fraction of h_soft).
 CLASSIFY_TOL_FRAC = 1e-3
@@ -86,6 +91,9 @@ def mesh3d_from_labelmap(plm: PolarLabelMap, ca_length: float, out_msh, *, margi
     h_axial = P.get("discretisation.h_axial_3d_mm").value if h_axial is None else float(h_axial)
     h_ca = P.get("discretisation.h_calcium_mm").value if h_ca is None else float(h_ca)
     h_soft = P.get("discretisation.h_soft_mm").value if h_soft is None else float(h_soft)
+    check_sizes(h_ca, h_soft)
+    if h_axial <= 0:
+        raise ValueError("h_axial must be > 0")
     part = build_partition(plm, r_iel_default=r_iel_default, allow_pending=allow_pending,
                            smooth=smooth, simplify_tol=simplify_tol)
     blocks = [margin, float(ca_length), margin] if margin > 0 else [float(ca_length)]
@@ -99,12 +107,16 @@ def mesh3d_from_labelmap(plm: PolarLabelMap, ca_length: float, out_msh, *, margi
         geom = add_partition_geo(gmsh, part, h_soft)
         base = [s for s, _ in geom.surface_class]
         classes = [c for _, c in geom.surface_class]
+        # same order as the meshed faces in add_partition_geo
+        in_iel = [k for k, c in zip(part.face_in_iel or [True] * len(part.faces), part.face_class)
+                  if c != LUMEN]
+        end_tag = [TAG_FIBROUS if k else TAG_WALL for k in in_iel]
         vol_tags: dict[int, list[int]] = {}
         current = base
         for b, (dz, nl) in enumerate(zip(blocks, n_layers)):
             current, vols = _extrude_block(gmsh, current, dz, nl)
-            for v, c in zip(vols, classes):
-                tag = TAG_FIBROUS if (c == TAG_CALCIUM and b != middle) else c
+            for v, c, te in zip(vols, classes, end_tag):
+                tag = te if (c == TAG_CALCIUM and b != middle) else c
                 vol_tags.setdefault(tag, []).append(v)
         gmsh.model.geo.synchronize()
 

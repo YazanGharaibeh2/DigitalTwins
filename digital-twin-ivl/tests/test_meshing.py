@@ -233,11 +233,50 @@ def test_gmsh_session_of_caller_preserved(tmp_path):
     gmsh.initialize()
     try:
         gmsh.model.add("caller")
+        opts = ("Mesh.MeshSizeMax", "Mesh.MeshSizeFromPoints", "Mesh.MeshSizeExtendFromBoundary",
+                "Mesh.Algorithm", "General.Terminal")
+        before = {o: gmsh.option.getNumber(o) for o in opts}
         mesh_from_labelmap(make_case("sheet"), tmp_path / "s.msh", h_ca=0.08, h_soft=0.3)
         load_mesh(tmp_path / "s.msh", 2)
         assert gmsh.isInitialized() and gmsh.model.getCurrent() == "caller"
+        assert {o: gmsh.option.getNumber(o) for o in opts} == before   # global options restored
     finally:
         gmsh.finalize()
+
+
+def _min_quality(msh):
+    """Minimum gmsh minSICN over the 2D elements of a .msh file."""
+    from dtivl.meshing.mask_to_mesh import gmsh_model
+    with gmsh_model("quality") as g:
+        g.merge(str(msh))
+        _, tags, _ = g.model.mesh.getElements(2)
+        return float(g.model.mesh.getElementQualities(tags[0], "minSICN").min())
+
+
+@pytest.mark.parametrize("label", [LABEL_CALCIUM, LABEL_LIPID])
+def test_deposit_touching_lumen_has_no_slivers(tmp_path, label):
+    """A deposit sharing its boundary with the lumen must not leave sub-pixel
+    tissue slivers between the two (shared boundaries simplified once)."""
+    lab = _sector(_base(), R_LUMEN, R_LUMEN + 0.3, 90.0, 120.0, label)
+    plm = PolarLabelMap(lab, DR, np.full(N_THETA, R_OUT), np.full(N_THETA, R_IEL), {})
+    part = build_partition(plm)
+    assert part.info["n_small_faces"] == 0
+    tag = TAG_CALCIUM if label == LABEL_CALCIUM else TAG_LIPID
+    # lumen, deposit, one fibrous region, one wall annulus
+    assert sorted(part.face_class) == sorted([0, tag, TAG_FIBROUS, TAG_WALL])
+    # the deposit and the lumen share their boundary (no tissue in between)
+    dep = [f for f, c in zip(part.faces, part.face_class) if c == tag][0]
+    shared = dep.boundary.intersection(part.lumen.boundary).length
+    assert shared > 0.9 * np.radians(120.0) * R_LUMEN
+    res = mesh_from_labelmap(plm, tmp_path / "touch.msh")
+    assert _min_quality(res["msh"]) > 0.05   # was ~1e-4 with per-region simplification
+    assert abs(res["areas"][tag] / pixel_areas(plm)[tag] - 1) < AREA_RTOL
+
+
+def test_real_segmentation_mesh_quality(tmp_path):
+    res = mesh_from_labelmap(make_case("real"), tmp_path / "q.msh", r_iel_default=R_IEL)
+    assert res["partition_info"]["n_small_faces"] == 0
+    assert _min_quality(res["msh"]) > 0.05   # was ~1e-4 with per-region simplification
 
 
 # ---------------------------------------------------------------------------
@@ -282,3 +321,29 @@ def test_extrusion_3d_ring_defaults(tmp_path):
     res = mesh3d_from_labelmap(make_case("ring"), 1.0, tmp_path / "r3.msh", h_ca=0.1, h_soft=0.3)
     assert res["margin"] == P.get("geometry.margin_3d_mm").value
     assert res["volumes"][TAG_CALCIUM] == pytest.approx(res["areas_2d"][TAG_CALCIUM] * 1.0, rel=1e-6)
+
+
+def test_extrusion_3d_calcium_crossing_iel(tmp_path):
+    """End-block parts of a deposit crossing the IEL: fibrous inside, wall outside."""
+    lab = _sector(_base(), 1.5, 1.75, 0.0, 60.0)          # crosses the IEL at 1.6
+    plm = PolarLabelMap(lab, DR, np.full(N_THETA, R_OUT), np.full(N_THETA, R_IEL), {})
+    m = 0.5
+    res = mesh3d_from_labelmap(plm, 1.0, tmp_path / "x3.msh", margin=m, h_axial=0.5, h_ca=0.08, h_soft=0.3)
+    md = load_mesh(res["msh"], 3)
+    from dolfinx.mesh import compute_midpoints
+    for tag in (TAG_FIBROUS, TAG_WALL):
+        c = compute_midpoints(md.mesh, 3, md.cell_tags.find(tag))
+        rr = np.hypot(c[:, 0], c[:, 1])
+        ang = np.abs(np.degrees(np.arctan2(c[:, 1], c[:, 0])))
+        out_iel = (c[:, 2] < m) & (rr > 1.63) & (rr < 1.72) & (ang < 25.0)
+        assert (out_iel.sum() == 0) if tag == TAG_FIBROUS else (out_iel.sum() > 0)
+    # volume bookkeeping unchanged: calcium only in the middle block
+    assert res["volumes"][TAG_CALCIUM] == pytest.approx(res["areas_2d"][TAG_CALCIUM] * 1.0, rel=1e-6)
+
+
+def test_inconsistent_sizes_rejected(tmp_path):
+    """h_ca > h_soft would be silently capped at h_soft by Mesh.MeshSizeMax."""
+    with pytest.raises(ValueError, match="h_ca"):
+        mesh_from_labelmap(make_case("sheet"), tmp_path / "bad.msh", h_ca=0.2, h_soft=0.15)
+    with pytest.raises(ValueError, match="h_ca"):
+        mesh3d_from_labelmap(make_case("sheet"), 1.0, tmp_path / "bad3.msh", h_ca=0.2, h_soft=0.15)

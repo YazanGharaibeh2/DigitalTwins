@@ -890,7 +890,12 @@ def run_stent(state: NonlinearState, *, K_s: float | None = None, R_target: floa
     ``K_s`` (MPa/mm) defaults to the placeholder
     ``loads.stent_radial_stiffness_MPa_per_mm`` and is meant to be
     identified by the integrator. Stent metrics
-    (:func:`dtivl.metrics.outcomes.stent_metrics`) are in ``summary``.
+    (:func:`dtivl.metrics.outcomes.stent_metrics`) are in
+    ``summary["metrics"]``; ``summary["lumen_pre_xy"]`` and
+    ``summary["lumen_post_xy"]`` are the ordered lumen polylines (numpy
+    arrays, not JSON-serialisable). In 3D the lumen areas are axial means
+    over the calcium range and the polylines (malapposition) are the section
+    at its mid-plane (see :meth:`NonlinearState.lumen_loop`).
     """
     from dtivl.metrics.outcomes import stent_metrics
 
