@@ -139,6 +139,8 @@ U_SNES_OPTIONS = {
     "pc_type": "lu",
     "pc_factor_mat_solver_type": "mumps",
 }
+#: Line search of the single retry after a failed displacement solve (None = no retry).
+U_FALLBACK_LINESEARCH = "cp"
 STAGGER_TOL = 1e-3            #: ||Delta d||_inf tolerance of the alternate minimisation
 STAGGER_MAX_IT = 100          #: max alternate-minimisation iterations per increment
 MAX_HALVINGS = 6              #: min increment = nominal / 2**MAX_HALVINGS
@@ -182,6 +184,7 @@ class SolverSettings:
     max_halvings: int = MAX_HALVINGS
     erosion_max_rounds: int = ER.ERODE_MAX_ROUNDS
     erosion_split: bool = False               # True: eroded cells keep psi- (compression)
+    u_fallback_linesearch: str | None = U_FALLBACK_LINESEARCH
     quadrature_degree: int | None = None      # default 2 * degree
     u_petsc_options: dict = field(default_factory=dict)
     d_petsc_options: dict = field(default_factory=dict)
@@ -491,11 +494,28 @@ class NonlinearState:
 
     # ---------------------------------------------------------------- solving
     def _solve_u(self, info: dict) -> None:
-        self._uprob.solve()
+        """Displacement solve; one retry with ``settings.u_fallback_linesearch`` on failure."""
         snes = self._uprob.solver
+        u0 = self.u.x.array.copy()
+        self._uprob.solve()
         reason = int(snes.getConvergedReason())
         info["newton_its"] += int(snes.getIterationNumber())
-        if reason <= 0 or not np.all(np.isfinite(self.u.x.array)):
+        ok = reason > 0 and np.all(np.isfinite(self.u.x.array))
+        fb = self.settings.u_fallback_linesearch
+        if not ok and fb:
+            self.u.x.array[:] = u0
+            ls = snes.getLineSearch()
+            old = ls.getType()
+            ls.setType(fb)
+            try:
+                self._uprob.solve()
+            finally:
+                ls.setType(old)
+            reason = int(snes.getConvergedReason())
+            info["newton_its"] += int(snes.getIterationNumber())
+            info["u_fallbacks"] = info.get("u_fallbacks", 0) + 1
+            ok = reason > 0 and np.all(np.isfinite(self.u.x.array))
+        if not ok:
             raise SolveError(f"displacement SNES failed (reason {reason})")
 
     def _solve_d(self, info: dict) -> None:

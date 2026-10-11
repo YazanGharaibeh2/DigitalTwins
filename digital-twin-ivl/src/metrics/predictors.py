@@ -30,10 +30,11 @@ Deposits and ends (label map only)
 ----------------------------------
 Deposits are the 8-connected components of ``labels == LABEL_CALCIUM`` with
 the theta direction treated periodically (row 0 adjoins row n_theta-1).
-For each deposit the set of A-lines it touches is split into circular runs;
-a deposit touching every A-line is a closed ring (no ends), otherwise each
-run contributes two end angles at the outer edges of its first/last A-line
-(``theta_i -/+ dtheta/2``). ``t_ca`` is the deposit's maximum per-A-line
+A deposit is a closed ring (no ends) iff it contains a cycle winding once
+around the polar centre (see :func:`_unroll`; touching every A-line is not
+sufficient, e.g. for a spiral). Otherwise its samples are unrolled in
+theta and the deposit has two end angles at the outer edges of its first
+and last unrolled A-line (``theta_i -/+ dtheta/2``). ``t_ca`` is the deposit's maximum per-A-line
 sample count x dr and ``r_mid`` the mean radius of its samples. The edge
 window is purely angular (3D: axial deposit ends are not treated as edges;
 the label map is a single cross-section).
@@ -81,21 +82,48 @@ def weighted_quantile(values: np.ndarray, weights: np.ndarray, q: float) -> floa
     return float(values[order][min(k, values.size - 1)])
 
 
-def _circular_runs(mask: np.ndarray) -> list[tuple[int, int]]:
-    """Runs (first, last) of True in a periodic boolean array (not all True)."""
-    n = mask.size
-    if not mask.any():
-        return []
-    start = int(np.argmin(mask))           # a False entry: start scanning after it
-    runs, i0 = [], None
-    for k in range(1, n + 1):
-        i = (start + k) % n
-        if mask[i] and i0 is None:
-            i0 = i
-        if i0 is not None and (not mask[(i + 1) % n] or k == n):
-            runs.append((i0, i))
-            i0 = None
-    return runs
+def _unroll(mask: np.ndarray) -> tuple[bool, int, int]:
+    """Winding test and unrolled A-line extent of one theta-periodic component.
+
+    ``mask`` (n_theta, n_r) holds one 8-connected component (theta periodic).
+    Every sample gets an *unrolled* A-line index U (A-line index plus a
+    multiple of n_theta) by breadth-first propagation along the 8-neighbour
+    graph (a step to the next row adds +1, across the seam included). The
+    component encloses the lumen (closed ring) iff some edge is inconsistent
+    with U, i.e. a cycle winds around the centre. Otherwise its angular
+    extent is the unrolled interval [U.min(), U.max()] (this also covers a
+    spiral that touches every A-line without closing). Returns
+    ``(closed, U.min(), U.max())``.
+    """
+    from scipy import sparse
+    from scipy.sparse import csgraph
+
+    n, n_r = mask.shape
+    ii, jj = np.nonzero(mask)
+    N = ii.size
+    idx = np.full(mask.shape, -1, dtype=np.int64)
+    idx[ii, jj] = np.arange(N)
+    p_l, q_l, d_l = [], [], []
+    for di, dj in ((0, 1), (1, -1), (1, 0), (1, 1)):     # forward half of the 8-neighbourhood
+        i2, j2 = (ii + di) % n, jj + dj
+        ok = (j2 >= 0) & (j2 < n_r)
+        q = np.full(N, -1, dtype=np.int64)
+        q[ok] = idx[i2[ok], j2[ok]]
+        sel = np.nonzero(q >= 0)[0]
+        p_l.append(sel), q_l.append(q[sel]), d_l.append(np.full(sel.size, di))
+    p, q, d = np.concatenate(p_l), np.concatenate(q_l), np.concatenate(d_l)
+    G = sparse.coo_matrix((np.ones(p.size), (p, q)), shape=(N, N)).tocsr()
+    order, pred = csgraph.breadth_first_order(G, 0, directed=False, return_predecessors=True)
+    if order.size != N:
+        raise ValueError("mask is not a single connected component")
+    step = ((ii - ii[np.maximum(pred, 0)] + 1) % n) - 1    # row offset pred -> node in {-1, 0, 1}
+    U = np.zeros(N, dtype=np.int64)
+    U_l, pred_l, step_l = U.tolist(), pred.tolist(), step.tolist()
+    for k in order[1:].tolist():
+        U_l[k] = U_l[pred_l[k]] + step_l[k]
+    U = np.asarray(U_l, dtype=np.int64)
+    closed = bool(np.any(U[q] - U[p] != d))
+    return closed, int(U.min()), int(U.max())
 
 
 def deposits(plm: PolarLabelMap) -> list[dict]:
@@ -134,11 +162,8 @@ def deposits(plm: PolarLabelMap) -> list[dict]:
         m = lab == k
         counts = m.sum(axis=1)
         alines = counts > 0
-        closed = bool(alines.all())
-        ends = []
-        if not closed:
-            for i0, i1 in _circular_runs(alines):
-                ends += [plm.theta[i0] - 0.5 * dth, plm.theta[i1] + 0.5 * dth]
+        closed, u0, u1 = _unroll(m)
+        ends = [] if closed else [u0 * dth - 0.5 * dth, u1 * dth + 0.5 * dth]
         _, jj = np.nonzero(m)
         out.append({"alines": alines, "closed": closed, "ends": ends,
                     "t_ca": float(counts.max() * plm.dr), "r_mid": float(plm.r[jj].mean()),

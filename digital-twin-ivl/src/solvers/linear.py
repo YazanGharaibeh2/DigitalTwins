@@ -66,11 +66,16 @@ from dtivl.geometry.labels import (MATERIAL_NAMES, TAG_CALCIUM, TAG_END_BND, TAG
                                    TAG_OUTER_BND)
 from dtivl.materials.constitutive import MaterialSet
 
-#: PETSc options of the direct solver (numerical setting).
+#: PETSc options of the direct solver (numerical setting). ICNTL(24) = 1
+#: switches on MUMPS null-pivot detection; :func:`solve_linear` raises if
+#: any null pivot is found (INFOG(28) > 0), i.e. if the stiffness matrix is
+#: singular (e.g. a region not connected to the supported boundary). A
+#: preonly KSP otherwise reports convergence for such systems.
 LU_OPTIONS = {
     "ksp_type": "preonly",
     "pc_type": "lu",
     "pc_factor_mat_solver_type": "mumps",
+    "mat_mumps_icntl_24": 1,
     "ksp_error_if_not_converged": True,
 }
 
@@ -128,6 +133,12 @@ class LinearResult:
 # ---------------------------------------------------------------------------
 # Kinematics with the 3D embedding
 # ---------------------------------------------------------------------------
+def _mpi_land():
+    from mpi4py import MPI
+
+    return MPI.LAND
+
+
 def _strain_stress_3d(u, lam, mu):
     """3x3 small-strain tensors (plane strain embedding for 2D ``u``)."""
     gdim = u.ufl_shape[0]
@@ -250,6 +261,12 @@ def solve_linear(meshdata, ms: MaterialSet, p_lumen: float, *, k_found: float | 
         is the only constraint against in-plane rigid-body motion).
     degree : displacement polynomial degree.
     petsc_options : overrides of :data:`LU_OPTIONS`.
+
+    Raises ``ValueError`` if a required facet tag (lumen, outer; 3D also
+    ``TAG_END_BND``) is absent on every rank, and ``RuntimeError`` if the
+    solve fails, MUMPS detects null pivots (singular stiffness, e.g. a
+    calcium body that is not conformally connected to the wall) or the
+    displacement is not finite. Nothing is reported as a success silently.
     """
     from dolfinx import fem
     from dolfinx.fem.petsc import LinearProblem
@@ -264,8 +281,10 @@ def solve_linear(meshdata, ms: MaterialSet, p_lumen: float, *, k_found: float | 
     gdim, tdim = mesh.geometry.dim, mesh.topology.dim
     if gdim != tdim:
         raise ValueError("solve_linear expects gdim == tdim (2D plane strain or 3D)")
-    for tag in (TAG_LUMEN_BND, TAG_OUTER_BND):
-        if ft.find(tag).size == 0 and mesh.comm.allreduce(ft.find(tag).size) == 0:
+    # Collective check (every rank must take part in the allreduce).
+    required = (TAG_LUMEN_BND, TAG_OUTER_BND) + ((TAG_END_BND,) if gdim == 3 else ())
+    for tag in required:
+        if mesh.comm.allreduce(int(ft.find(tag).size)) == 0:
             raise ValueError(f"facet tag {tag} missing")
     mesh.topology.create_connectivity(tdim - 1, tdim)
 
@@ -298,6 +317,15 @@ def solve_linear(meshdata, ms: MaterialSet, p_lumen: float, *, k_found: float | 
     reason = problem.solver.getConvergedReason()
     if reason <= 0:
         raise RuntimeError(f"linear solve failed (KSP reason {reason})")
+    pc = problem.solver.getPC()
+    n_null = 0
+    if pc.getType() == "lu" and pc.getFactorSolverType() == "mumps" and opts.get("mat_mumps_icntl_24"):
+        n_null = int(pc.getFactorMatrix().getMumpsInfog(28))
+    if n_null > 0:
+        raise RuntimeError(f"singular stiffness matrix: MUMPS found {n_null} null pivot(s) "
+                           "(unsupported rigid-body modes, e.g. a region not connected to the wall)")
+    if not mesh.comm.allreduce(bool(np.isfinite(uh.x.array).all()), op=_mpi_land()):
+        raise RuntimeError("linear solve produced non-finite displacements")
 
     # Foundation reaction vs applied load (both as total force magnitudes).
     reac = fem.assemble_scalar(fem.form(kf * ufl.sqrt(ufl.inner(uh, uh)) * ds(TAG_OUTER_BND)))
@@ -312,7 +340,8 @@ def solve_linear(meshdata, ms: MaterialSet, p_lumen: float, *, k_found: float | 
     ca = cell_averages(uh, lam, mu, ca_cells)
     info = {"ndofs": int(V.dofmap.index_map.size_global * V.dofmap.index_map_bs),
             "ncells": int(mesh.topology.index_map(tdim).size_global),
-            "ksp_reason": int(reason), "lumen_boundary_measure": float(lumen_meas)}
+            "ksp_reason": int(reason), "null_pivots": n_null,
+            "lumen_boundary_measure": float(lumen_meas)}
     return LinearResult(meshdata=meshdata, u=uh, lam=lam, mu=mu, p_lumen=float(p_lumen),
                         k_found=float(k_found), degree=degree, gdim=gdim, ca_cells=ca_cells,
                         sigma1=ca["sigma1"], eps1=ca["eps1"], sed=ca["sed"], measure=ca["measure"],

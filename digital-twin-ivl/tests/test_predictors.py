@@ -179,3 +179,43 @@ def test_local_thickness_fallback():
     t = PR.local_thickness(plm, np.radians([0.0, 90.0]))
     assert t[0] == pytest.approx(R_CA_OUT - R_CA_IN, abs=1.5 * DR)
     assert t[1] == pytest.approx(R_CA_OUT - R_CA_IN, abs=1.5 * DR)   # nearest calcium A-line
+
+
+def _band_labelmap(r_in_of_theta, thickness, mask_theta=None):
+    th = 2 * np.pi * np.arange(N_THETA) / N_THETA
+    n_r = int(round(R_OUT * 1.05 / DR))
+    r = (np.arange(n_r) + 0.5) * DR
+    T, R = np.meshgrid(th, r, indexing="ij")
+    lab = np.full((N_THETA, n_r), LABEL_OTHER, dtype=np.uint8)
+    lab[R < R_LUMEN] = LABEL_LUMEN
+    rin = r_in_of_theta(T)
+    sel = (R >= rin) & (R < rin + thickness)
+    if mask_theta is not None:
+        sel &= mask_theta(T)
+    lab[sel] = LABEL_CALCIUM
+    return PolarLabelMap(lab, DR, np.full(N_THETA, R_OUT))
+
+
+def test_spiral_touching_every_aline_is_not_a_ring():
+    """A spiral covering all A-lines without closing has two ends (not a ring)."""
+    plm = _band_labelmap(lambda T: 1.1 + 0.5 * T / (2 * np.pi), 0.1)
+    plm.validate()
+    deps = PR.deposits(plm)
+    assert len(deps) == 1 and deps[0]["alines"].all()
+    assert not deps[0]["closed"]
+    ends = np.degrees(deps[0]["ends"])
+    assert ends[0] == pytest.approx(-0.5) and ends[1] == pytest.approx(359.5)
+
+
+def test_wobbly_ring_and_fragments():
+    """A ring of varying radius crossing theta = 0 is closed; separate fragments are open."""
+    ring = _band_labelmap(lambda T: 1.2 + 0.1 * np.sin(3 * T), 0.1)
+    d = PR.deposits(ring)
+    assert len(d) == 1 and d[0]["closed"] and d[0]["ends"] == []
+    frag = _band_labelmap(lambda T: np.full_like(T, 1.2), 0.1,
+                          lambda T: np.mod(np.degrees(T) + 10.0, 45.0) < 27.0)   # 8 deposits, one straddles 0
+    d = PR.deposits(frag)
+    assert len(d) == 8 and not any(x["closed"] for x in d)
+    for x in d:
+        lo, hi = np.degrees(x["ends"])
+        assert hi - lo == pytest.approx(27.0, abs=1.0)

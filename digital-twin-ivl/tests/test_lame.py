@@ -107,3 +107,98 @@ def test_3d_tube_with_end_constraints_matches_plane_strain():
 def test_fibrous_single_material_runs():
     rep = L.lame_check(tag=TAG_FIBROUS, h=0.1)
     assert rep["max_rel_err_ur"] < 0.01
+
+
+def _annulus_with_island():
+    """Fibrous annulus plus a calcium disk meshed WITHOUT fragmentation (floating)."""
+    from mpi4py import MPI
+    from dolfinx.io.gmsh import model_to_mesh
+
+    with L._gmsh_model("island") as gmsh:
+        occ = gmsh.model.occ
+        ann = occ.cut([(2, occ.addDisk(0, 0, 0, 2, 2))], [(2, occ.addDisk(0, 0, 0, 1, 1))])[0]
+        isl = occ.addDisk(1.5, 0, 0, 0.1, 0.1)
+        occ.synchronize()
+        gmsh.model.addPhysicalGroup(2, [ann[0][1]], TAG_FIBROUS)
+        gmsh.model.addPhysicalGroup(2, [isl], TAG_CALCIUM)
+        inner, outer = [], []
+        for _, c in gmsh.model.getBoundary(ann, oriented=False):
+            x0, y0, _, x1, y1, _ = gmsh.model.getBoundingBox(1, c)
+            (outer if max(x1 - x0, y1 - y0) > 3 else inner).append(c)
+        gmsh.model.addPhysicalGroup(1, inner, TAG_LUMEN_BND)
+        gmsh.model.addPhysicalGroup(1, outer, TAG_OUTER_BND)
+        gmsh.option.setNumber("Mesh.MeshSizeMax", 0.15)
+        gmsh.model.mesh.generate(2)
+        return model_to_mesh(gmsh.model, MPI.COMM_WORLD, 0, gdim=2)
+
+
+def test_singular_system_is_not_reported_as_success():
+    """A floating (non-conforming) calcium body must raise, not return sigma1 = 0."""
+    with pytest.raises(RuntimeError, match="null pivot"):
+        L.solve_linear(_annulus_with_island(), MaterialSet.baseline(), 0.4)
+
+
+def test_regular_solve_has_no_null_pivots():
+    res = L.solve_linear(L.annulus_meshdata(1.0, 2.0, 0.3, TAG_CALCIUM), MaterialSet.baseline(), 0.1)
+    assert res.info["null_pivots"] == 0
+
+
+def test_3d_without_end_tags_rejected():
+    """design.md section 4: 3D ends carry u_z = 0, so TAG_END_BND is required."""
+    from dolfinx.io.gmsh import MeshData
+    from dolfinx import mesh as dmesh
+
+    md = _annulus3d(1.0, 2.0, 0.4, 0.4, TAG_CALCIUM)
+    ft = md.facet_tags
+    keep = ft.values != TAG_END_BND
+    ft2 = dmesh.meshtags(md.mesh, 2, ft.indices[keep], ft.values[keep])
+    md2 = MeshData(md.mesh, md.cell_tags, ft2, *([None] * (len(MeshData._fields) - 3)))
+    with pytest.raises(ValueError, match=str(TAG_END_BND)):
+        L.solve_linear(md2, MaterialSet.baseline(), 0.1)
+
+
+_MPI_SCRIPT = r'''
+import numpy as np
+from mpi4py import MPI
+from dolfinx import mesh as dm
+from dolfinx.io.gmsh import MeshData
+from dtivl.geometry.labels import TAG_CALCIUM, TAG_LUMEN_BND, TAG_OUTER_BND
+from dtivl.materials.constitutive import MaterialSet
+from dtivl.solvers import linear as L
+comm = MPI.COMM_WORLD
+msh = dm.create_rectangle(comm, [[0, 0], [4, 1]], [40, 10])
+nc = msh.topology.index_map(2).size_local + msh.topology.index_map(2).num_ghosts
+ct = dm.meshtags(msh, 2, np.arange(nc, dtype=np.int32), np.full(nc, TAG_CALCIUM, np.int32))
+msh.topology.create_connectivity(1, 2)
+lum = dm.locate_entities_boundary(msh, 1, lambda x: np.isclose(x[0], 0.0))
+out = dm.locate_entities_boundary(msh, 1, lambda x: np.isclose(x[1], 1.0))
+f = np.concatenate([lum, out]).astype(np.int32)
+v = np.concatenate([np.full(len(lum), TAG_LUMEN_BND), np.full(len(out), TAG_OUTER_BND)]).astype(np.int32)
+o = np.argsort(f)
+ft = dm.meshtags(msh, 1, f[o], v[o])
+md = MeshData(msh, ct, ft, *([None] * (len(MeshData._fields) - 3)))
+counts = comm.allgather(len(lum))
+L.solve_linear(md, MaterialSet.baseline(), 0.1)
+if comm.rank == 0:
+    print("DONE", counts)
+'''
+
+
+def test_facet_tag_check_is_collective(tmp_path):
+    """Lumen facets on one rank only: solve_linear must not deadlock (2 ranks)."""
+    import shutil
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    mpiexec = Path(sys.executable).parent / "mpiexec"
+    if not mpiexec.exists():
+        mpiexec = shutil.which("mpiexec")
+    if mpiexec is None:
+        pytest.skip("mpiexec not available")
+    script = tmp_path / "mpi_check.py"
+    script.write_text(_MPI_SCRIPT)
+    proc = subprocess.run([str(mpiexec), "-n", "2", sys.executable, str(script)], capture_output=True,
+                          text=True, timeout=120)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    assert "DONE" in proc.stdout
