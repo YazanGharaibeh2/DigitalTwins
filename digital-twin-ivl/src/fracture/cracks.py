@@ -1,0 +1,352 @@
+"""Crack post-processing on the calcium cells (design.md section 5.5).
+
+:func:`crack_analysis` works on cell-averaged damage (phase field) or on a
+per-cell eroded indicator (erosion comparator) and on the lesion's polar
+label map, so that synthetic and real segmentations are treated alike.
+Serial (single-rank) use.
+
+Definitions
+-----------
+* Cracked cell: calcium cell with cell-averaged ``d > fracture.d_crack``.
+  Crack components: connected components of cracked cells sharing a facet.
+* Calcium surfaces: facets of calcium cells whose other side is not
+  calcium (or the domain boundary). With ``n`` the facet normal pointing
+  out of the calcium and ``e_r`` the in-plane radial direction at the facet
+  midpoint (distance from the vessel axis), a facet is *luminal* if
+  ``n . e_r <= -SURFACE_NORMAL_COS`` and *abluminal* if
+  ``n . e_r >= SURFACE_NORMAL_COS``; other facets (deposit ends, 3D end
+  faces) are lateral.
+* ``fracture``: some component touches both a luminal and an abluminal
+  surface (through-thickness); ``n_fractures`` counts such components and
+  ``n_partial`` the others.
+* Depth: on the A-line of each cell centroid (``theta`` -> row of the label
+  map) the calcium spans ``[r_in, r_out]`` (first sample start to last
+  sample end). A cell covers the normalised depths ``s = (r - r_in) /
+  (r_out - r_in)`` of its vertex radii, clipped to [0, 1]. A component's
+  ``depth_frac`` is 1 if through-thickness, ``max s`` if it touches only the
+  luminal surface, ``1 - min s`` if only the abluminal one, else
+  ``max s - min s``. ``max_depth_frac`` is the maximum over components (0
+  without cracks). A-lines without calcium in the label map use the
+  nearest A-line with calcium.
+* ``pattern``: ``"radial"`` if the principal axis of the measure-weighted
+  in-plane cell centroids is within ``PATTERN_ANGLE_DEG`` of the radial
+  direction at the component centroid, else ``"circumferential"``;
+  ``"undetermined"`` for components with fewer than ``MIN_CELLS_PATTERN``
+  cells. In 3D the in-plane (x, y) projection is used.
+* ``location_frac``: deposits are the wrap-aware 4-connected calcium
+  components of the label map; a component is assigned to the deposit whose
+  angular interval contains (or is nearest to) its circular-mean angle, and
+  ``location_frac = |angle - deposit centre| / deposit half-span`` (0 =
+  centre, 1 = end), ``None`` for closed rings.
+* ``onset_load``: first ``load`` in ``history`` (step records of
+  :mod:`dtivl.solvers.nonlinear`) with ``max_d >= fracture.d_crack``
+  (``onset_phase`` gives its protocol phase); ``None`` without history or
+  if never reached.
+"""
+from __future__ import annotations
+
+import math
+
+import numpy as np
+
+from dtivl import params as P
+from dtivl.geometry.labels import LABEL_CALCIUM, TAG_CALCIUM
+
+SURFACE_NORMAL_COS = 0.5     #: |n . e_r| threshold for luminal/abluminal facets (60 deg)
+PATTERN_ANGLE_DEG = 45.0     #: radial if the principal axis is within 45 deg of e_r
+MIN_CELLS_PATTERN = 2        #: smaller components have no pattern
+
+
+# ---------------------------------------------------------------------------
+# Cell values
+# ---------------------------------------------------------------------------
+def cell_values(meshdata, d) -> np.ndarray:
+    """Per-cell values over all local cells from a dolfinx Function or an array.
+
+    A DG0 function is read directly; any other function is cell-averaged by
+    a DG0 assembly. An array must have one value per local cell (owned
+    cells first, as dolfinx numbers them).
+    """
+    mesh = meshdata.mesh
+    tdim = mesh.topology.dim
+    imap = mesh.topology.index_map(tdim)
+    n_all = imap.size_local + imap.num_ghosts
+    if isinstance(d, np.ndarray) or isinstance(d, (list, tuple)):
+        arr = np.asarray(d, dtype=float)
+        if arr.shape[0] < imap.size_local:
+            raise ValueError(f"per-cell array has {arr.shape[0]} entries, mesh has {imap.size_local} cells")
+        out = np.zeros(n_all)
+        out[:arr.shape[0]] = arr[:n_all]
+        return out
+    import ufl
+    from dolfinx import fem
+
+    V = d.function_space
+    el = V.ufl_element()
+    if getattr(el, "embedded_superdegree", None) == 0 and V.dofmap.index_map_bs == 1:
+        return d.x.array[V.dofmap.list[:, 0]].astype(float)
+    Q0 = fem.functionspace(mesh, ("DG", 0))
+    w = ufl.TestFunction(Q0)
+    num = fem.assemble_vector(fem.form(d * w * ufl.dx)).array
+    vol = fem.assemble_vector(fem.form(w * ufl.dx)).array
+    blocks = Q0.dofmap.list[:, 0]
+    return num[blocks] / vol[blocks]
+
+
+# ---------------------------------------------------------------------------
+# Label-map helpers
+# ---------------------------------------------------------------------------
+def calcium_deposits(plm) -> tuple[np.ndarray, list[dict]]:
+    """Wrap-aware 4-connected calcium components of a polar label map.
+
+    Returns ``(labels, deposits)``: an int array (n_theta, n_r) with deposit
+    ids (0 = no calcium) and per deposit ``{id, closed, theta_center,
+    half_span}`` (radians; angular interval of the A-lines it occupies).
+    """
+    from scipy import ndimage
+
+    mask = plm.labels == LABEL_CALCIUM
+    lab, n = ndimage.label(mask)
+    if n == 0:
+        return lab, []
+    parent = np.arange(n + 1)
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for j in np.where(mask[0] & mask[-1])[0]:
+        a, b = find(lab[0, j]), find(lab[-1, j])
+        if a != b:
+            parent[max(a, b)] = min(a, b)
+    roots = np.array([find(i) for i in range(n + 1)])
+    uniq = np.unique(roots[1:])
+    remap = np.zeros(n + 1, dtype=int)
+    remap[uniq] = np.arange(1, uniq.size + 1)
+    lab = remap[roots[lab]]
+    lab[~mask] = 0
+    nt = plm.n_theta
+    dth = 2.0 * math.pi / nt
+    deps = []
+    for k in range(1, uniq.size + 1):
+        rows = np.unique(np.where(lab == k)[0])
+        if rows.size == nt:
+            deps.append({"id": k, "closed": True, "theta_center": 0.0, "half_span": math.pi})
+            continue
+        gaps = (np.roll(rows, -1) - rows) % nt
+        m = int(np.argmax(gaps))
+        first, last = rows[(m + 1) % rows.size], rows[m]
+        n_rows = (last - first) % nt + 1
+        start = first * dth - 0.5 * dth
+        span = n_rows * dth
+        deps.append({"id": k, "closed": False, "theta_center": (start + 0.5 * span) % (2 * math.pi),
+                     "half_span": 0.5 * span})
+    return lab, deps
+
+
+def _aline_extent(plm) -> tuple[np.ndarray, np.ndarray]:
+    """Per-A-line calcium start/end radius (nearest calcium A-line where absent)."""
+    mask = plm.labels == LABEL_CALCIUM
+    has = mask.any(axis=1)
+    if not has.any():
+        raise ValueError("label map contains no calcium")
+    j0 = np.argmax(mask, axis=1)
+    j1 = mask.shape[1] - 1 - np.argmax(mask[:, ::-1], axis=1)
+    r_in, r_out = j0 * plm.dr, (j1 + 1) * plm.dr
+    if not has.all():
+        nt = plm.n_theta
+        idx = np.where(has)[0]
+        dist = np.abs(np.arange(nt)[:, None] - idx[None, :])
+        dist = np.minimum(dist, nt - dist)
+        near = idx[np.argmin(dist, axis=1)]
+        r_in, r_out = r_in[near], r_out[near]
+    return r_in, r_out
+
+
+def _wrap(a):
+    return (a + math.pi) % (2.0 * math.pi) - math.pi
+
+
+# ---------------------------------------------------------------------------
+# Mesh helpers
+# ---------------------------------------------------------------------------
+def _cell_geometry(mesh, cells):
+    """Vertex coordinates (n, nv, gdim), centroids and measures of ``cells``."""
+    gdim, tdim = mesh.geometry.dim, mesh.topology.dim
+    gdm = mesh.geometry.dofmaps[0][:, :tdim + 1]       # vertex nodes (straight-sided approximation)
+    X = mesh.geometry.x[gdm[cells]][:, :, :gdim]
+    cen = X.mean(axis=1)
+    E = X[:, 1:, :] - X[:, :1, :]
+    meas = np.abs(np.linalg.det(E)) / math.factorial(gdim)
+    return X, cen, meas
+
+
+def _surface_flags(mesh, ca_cells: np.ndarray, is_ca: np.ndarray):
+    """Per calcium cell: touches a luminal / abluminal calcium surface facet."""
+    from dolfinx import mesh as dmesh
+
+    tdim = mesh.topology.dim
+    fdim = tdim - 1
+    mesh.topology.create_connectivity(tdim, fdim)
+    mesh.topology.create_connectivity(fdim, tdim)
+    c2f = mesh.topology.connectivity(tdim, fdim)
+    f2c = mesh.topology.connectivity(fdim, tdim)
+    nfc = tdim + 1
+    cf = c2f.array.reshape(-1, nfc)[ca_cells]                  # (n, nfc)
+    off, arr = f2c.offsets, f2c.array
+    cnt = off[1:] - off[:-1]
+    first = arr[off[:-1]]
+    second = np.where(cnt == 2, arr[np.minimum(off[:-1] + 1, arr.size - 1)], -1)
+    C = np.repeat(ca_cells[:, None], nfc, axis=1)
+    other = np.where(first[cf] == C, second[cf], first[cf])
+    bnd = (other < 0) | ~is_ca[np.maximum(other, 0)]
+    lum = np.zeros(ca_cells.size, dtype=bool)
+    abl = np.zeros(ca_cells.size, dtype=bool)
+    if not bnd.any():
+        return lum, abl
+    ci, fi = np.nonzero(bnd)
+    facets = cf[ci, fi].astype(np.int32)
+    gdim = mesh.geometry.dim
+    fn = dmesh.entities_to_geometry(mesh, fdim, facets)[:, :fdim + 1]    # vertex nodes
+    P_ = mesh.geometry.x[fn][:, :, :gdim]                         # (m, nvf, gdim)
+    mid = P_.mean(axis=1)
+    if gdim == 2:
+        t = P_[:, 1] - P_[:, 0]
+        n = np.column_stack([t[:, 1], -t[:, 0]])
+    else:
+        n = np.cross(P_[:, 1] - P_[:, 0], P_[:, 2] - P_[:, 0])
+    n /= np.linalg.norm(n, axis=1)[:, None]
+    _, cen, _ = _cell_geometry(mesh, ca_cells[ci])
+    flip = np.einsum("ij,ij->i", n, mid - cen) < 0
+    n[flip] *= -1.0
+    er = np.zeros_like(mid)
+    er[:, :2] = mid[:, :2]
+    er /= np.linalg.norm(er, axis=1)[:, None]
+    s = np.einsum("ij,ij->i", n, er)
+    np.logical_or.at(lum, ci, s <= -SURFACE_NORMAL_COS)
+    np.logical_or.at(abl, ci, s >= SURFACE_NORMAL_COS)
+    return lum, abl
+
+
+# ---------------------------------------------------------------------------
+# Main entry
+# ---------------------------------------------------------------------------
+def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: float | None = None) -> dict:
+    """Crack metrics of design.md section 5.5 (see module docstring).
+
+    Parameters
+    ----------
+    meshdata : MeshData with ``TAG_CALCIUM`` cells.
+    d : damage Function (P1 or DG0) or per-cell array (e.g. the erosion
+        indicator of :func:`dtivl.fracture.erosion.eroded_indicator`).
+    plm : :class:`~dtivl.geometry.polar.PolarLabelMap` of the lesion.
+    history : optional step records (for ``onset_load``).
+    d_crack : threshold (default ``fracture.d_crack``).
+    """
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+
+    d_crack = float(P.raw("fracture.d_crack")) if d_crack is None else float(d_crack)
+    mesh = meshdata.mesh
+    tdim = mesh.topology.dim
+    imap = mesh.topology.index_map(tdim)
+    n_all = imap.size_local + imap.num_ghosts
+    ct = meshdata.cell_tags
+    ca = ct.find(TAG_CALCIUM)
+    ca = ca[ca < imap.size_local].astype(np.int32)
+    dc = cell_values(meshdata, d)
+    is_ca = np.zeros(n_all, dtype=bool)
+    is_ca[ca] = True
+    X, cen, meas = _cell_geometry(mesh, ca)
+    cracked_mask = dc[ca] > d_crack
+    out = {"d_crack": d_crack, "n_cracked_cells": int(cracked_mask.sum()),
+           "cracked_measure": float(meas[cracked_mask].sum()), "ca_measure": float(meas.sum())}
+    onset = None
+    if history:
+        onset = next((r for r in history if r.get("max_d", 0.0) >= d_crack), None)
+    out["onset_load"] = None if onset is None else float(onset["load"])
+    out["onset_phase"] = None if onset is None else onset.get("phase")
+
+    comps = []
+    if cracked_mask.any():
+        lum, abl = _surface_flags(mesh, ca, is_ca)
+        loc = np.full(n_all, -1, dtype=np.int64)
+        sel = np.where(cracked_mask)[0]                        # indices into ca
+        loc[ca[sel]] = np.arange(sel.size)
+        mesh.topology.create_connectivity(tdim, tdim - 1)
+        mesh.topology.create_connectivity(tdim - 1, tdim)
+        c2f = mesh.topology.connectivity(tdim, tdim - 1).array.reshape(-1, tdim + 1)
+        f2c = mesh.topology.connectivity(tdim - 1, tdim)
+        rows, cols = [], []
+        for k, c in enumerate(ca[sel]):
+            for f in c2f[c]:
+                for nb in f2c.links(f):
+                    if nb != c and loc[nb] >= 0:
+                        rows.append(k)
+                        cols.append(loc[nb])
+        g = coo_matrix((np.ones(len(rows)), (rows, cols)), shape=(sel.size, sel.size))
+        ncomp, lab = connected_components(g, directed=False)
+
+        r_in_al, r_out_al = _aline_extent(plm)
+        dep_lab, deposits = calcium_deposits(plm)
+        th = np.mod(np.arctan2(cen[:, 1], cen[:, 0]), 2 * math.pi)
+        ia = np.mod(np.rint(th / (2 * math.pi) * plm.n_theta).astype(int), plm.n_theta)
+        rv = np.hypot(X[:, :, 0], X[:, :, 1])
+        span = np.maximum(r_out_al[ia] - r_in_al[ia], plm.dr)
+        s_lo = np.clip((rv.min(axis=1) - r_in_al[ia]) / span, 0.0, 1.0)
+        s_hi = np.clip((rv.max(axis=1) - r_in_al[ia]) / span, 0.0, 1.0)
+        cos_pat = math.cos(math.radians(PATTERN_ANGLE_DEG))
+        for k in range(ncomp):
+            idx = sel[lab == k]
+            w = meas[idx]
+            through = bool(lum[idx].any() and abl[idx].any())
+            if through:
+                depth = 1.0
+            elif lum[idx].any():
+                depth = float(s_hi[idx].max())
+            elif abl[idx].any():
+                depth = float(1.0 - s_lo[idx].min())
+            else:
+                depth = float(s_hi[idx].max() - s_lo[idx].min())
+            xy = cen[idx, :2]
+            m = (w[:, None] * xy).sum(axis=0) / w.sum()
+            pattern, cosang, aniso = "undetermined", float("nan"), float("nan")
+            if idx.size >= MIN_CELLS_PATTERN:
+                dxy = xy - m
+                cov = (w[:, None, None] * np.einsum("ni,nj->nij", dxy, dxy)).sum(axis=0) / w.sum()
+                ev, evec = np.linalg.eigh(cov)
+                axis = evec[:, -1]
+                er = m / max(np.linalg.norm(m), 1e-300)
+                cosang = float(abs(axis @ er))
+                aniso = float(ev[-1] / max(ev[0], 1e-300))
+                pattern = "radial" if cosang >= cos_pat else "circumferential"
+            ang = float(np.mod(math.atan2((w * np.sin(th[idx])).sum(), (w * np.cos(th[idx])).sum()), 2 * math.pi))
+            locf, dep_id = None, None
+            if deposits:
+                dist = []
+                for dep in deposits:
+                    if dep["closed"]:
+                        dist.append(0.0)
+                    else:
+                        dist.append(max(0.0, abs(_wrap(ang - dep["theta_center"])) - dep["half_span"]))
+                dep = deposits[int(np.argmin(dist))]
+                dep_id = dep["id"]
+                if not dep["closed"]:
+                    locf = float(min(abs(_wrap(ang - dep["theta_center"])) / dep["half_span"], 1.0))
+            comps.append({"n_cells": int(idx.size), "measure": float(w.sum()), "through": through,
+                          "touches_luminal": bool(lum[idx].any()), "touches_abluminal": bool(abl[idx].any()),
+                          "depth_frac": depth, "pattern": pattern, "axis_cos_radial": cosang,
+                          "anisotropy": aniso, "angle_deg": math.degrees(ang), "deposit": dep_id,
+                          "location_frac": locf})
+        comps.sort(key=lambda c: -c["measure"])
+    out.update({
+        "fracture": any(c["through"] for c in comps),
+        "n_fractures": sum(c["through"] for c in comps),
+        "n_partial": sum(not c["through"] for c in comps),
+        "max_depth_frac": max((c["depth_frac"] for c in comps), default=0.0),
+        "pattern": [c["pattern"] for c in comps],
+        "location_frac": [c["location_frac"] for c in comps],
+        "components": comps,
+    })
+    return out

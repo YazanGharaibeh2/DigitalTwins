@@ -1,0 +1,44 @@
+{
+ "n_per_set": {
+  "core": 32,
+  "holdout": 24,
+  "pilot": 3,
+  "example3d": 1
+ },
+ "n_total": 60,
+ "core_geometry": {
+  "r_lumen_mm": 0.8368283871884005,
+  "plaque_thickness_mm": 0.8481716128115996,
+  "wall_thickness_mm": 0.567,
+  "depth_superficial_mm": 0.16,
+  "depth_deep_mm": 0.33999999999999997,
+  "r_eem_mm": 1.899
+ },
+ "plaque_burden_check": {
+  "implied_plaque_burden_pct": 80.58117809838276,
+  "cta_calcified_plaque_pct": 77.05,
+  "cta_calcified_nodule_pct": 85.4,
+  "within_range": true
+ },
+ "fujino_score_counts": {
+  "core": {
+   "0": 16,
+   "1": 2,
+   "2": 12,
+   "3": 2
+  },
+  "holdout": {
+   "0": 10,
+   "1": 2,
+   "2": 8,
+   "3": 4
+  },
+  "pilot": {
+   "0": 1,
+   "2": 2
+  },
+  "example3d": {
+   "4": 1
+  }
+ }
+}

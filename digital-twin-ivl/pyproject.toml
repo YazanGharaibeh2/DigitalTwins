@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 
 [tool.setuptools]
 package-dir = {"dtivl" = "src"}
-packages = ["dtivl", "dtivl.geometry", "dtivl.meshing", "dtivl.materials", "dtivl.solvers", "dtivl.fracture", "dtivl.metrics", "dtivl.stats"]
+packages = ["dtivl", "dtivl.geometry", "dtivl.meshing", "dtivl.materials", "dtivl.solvers", "dtivl.fracture", "dtivl.metrics", "dtivl.stats", "dtivl.drivers"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
