@@ -20,8 +20,6 @@ from dtivl.metrics.predictors import predictor_analysis
 
 #: Number of log-spaced calcium moduli between the cited sensitivity bounds.
 N_E_SWEEP = 5
-#: Coarsening of the 3D example relative to the 2D defaults (3D cost; user asked for coarse models).
-COARSEN_3D = 2.0
 
 
 def e_sweep() -> list[float]:
@@ -47,14 +45,62 @@ def mesh2d(lesion_id: str):
 
 
 def mesh3d(lesion_id: str):
+    """Coarse 3D mesh of the D1 example (sizes from discretisation.example3d)."""
     spec = cohort.example3d_spec()
     assert spec.lesion_id == lesion_id
     plm = load_mask(lesion_id)
-    h_ca = P.get("discretisation.h_calcium_mm").value * COARSEN_3D
-    h_soft = P.get("discretisation.h_soft_mm").value * COARSEN_3D
-    h_ax = P.get("discretisation.h_axial_3d_mm").value * COARSEN_3D
-    info = mesh3d_from_labelmap(plm, spec.ca_length, MESH_DIR / f"{lesion_id}.msh", h_ca=h_ca, h_soft=h_soft, h_axial=h_ax)
+    sz = P.raw("discretisation.example3d")
+    info = mesh3d_from_labelmap(plm, spec.ca_length, MESH_DIR / f"{lesion_id}.msh", h_ca=float(sz["h_calcium_mm"]),
+                                h_soft=float(sz["h_soft_mm"]), h_axial=float(sz["h_axial_mm"]))
     return plm, info, load_mesh(info["msh"], gdim=3)
+
+
+def mesh2d_like3d(lesion_id: str):
+    """2D mesh of the 3D example's cross-section with the same in-plane sizes (2D-vs-3D comparison)."""
+    plm = load_mask(lesion_id)
+    sz = P.raw("discretisation.example3d")
+    info = mesh_from_labelmap(plm, MESH_DIR / f"{lesion_id}_2d.msh", h_ca=float(sz["h_calcium_mm"]),
+                              h_soft=float(sz["h_soft_mm"]))
+    return plm, info, load_mesh(info["msh"], gdim=2)
+
+
+def run_example3d(e_values=None, transient=True, nonlinear=True) -> dict:
+    """D1: test the 3D code on the Fujino-4 example and compare with the 2D cross-section model."""
+    from dtivl.fracture.phasefield import regularisation_length
+    from dtivl.solvers.nonlinear import NonlinearState, run_ivl
+    from dtivl.solvers.transient import transfer_factor
+
+    lid = example3d_id()
+    base = MaterialSet.baseline().ca_E
+    e_values = e_values or [base, min(e_sweep(), key=lambda e: abs(np.log10(e) - np.log10(STENT_E_TARGET_MPA)))]
+    h_ca = float(P.raw("discretisation.example3d")["h_calcium_mm"])
+    ell = regularisation_length(h_ca=h_ca)
+    out = {"lesion": lid, "E_values_MPa": e_values, "ell_mm": ell, "models": {}}
+    for dim, builder in ((3, mesh3d), (2, mesh2d_like3d)):
+        plm, info, md = builder(lid)
+        rec = {"mesh": {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}, "by_E": []}
+        for E in e_values:
+            ms = MaterialSet.baseline(ca_E=E)
+            row = {"ca_E_MPa": E}
+            with Timer() as t:
+                row["predictors"] = predictor_analysis(md, plm, ms)
+            row["predictors_seconds"] = t.seconds
+            if transient:
+                with Timer() as t:
+                    tf = transfer_factor(md, plm, ms)
+                row["transient"] = {k: tf[k] for k in ("T", "T_equivalent", "sigma1_peak_transient",
+                                                       "sigma1_static_equivalent", "t_peak", "peak_at_window_end")}
+                row["transient_seconds"] = t.seconds
+            if nonlinear:
+                T = row["transient"]["T_equivalent"] if transient else 0.0
+                st = NonlinearState(md, ms, h_ca=h_ca, ell=ell)
+                with Timer() as t:
+                    row["ivl"] = _protocol_record(run_ivl(st, T=T), md, plm)
+                row["ivl"]["seconds"] = t.seconds
+            rec["by_E"].append(row)
+            out["models"][f"{dim}d"] = rec
+            write_json("pilot_example3d", out)
+    return out
 
 
 def run_linear_and_transient(include_3d: bool = True, transient: bool = True) -> dict:

@@ -76,6 +76,10 @@ discretisation:
   h_calcium_mm: 0.04              # coarse-mesh defaults (user request); convergence study refines/coarsens
   h_soft_mm: 0.15
   h_axial_3d_mm: 0.25
+  example3d:                      # D1 3D code test: coarse for tractability with a direct solver (~64k tets, ~0.3M P2 dofs)
+    h_calcium_mm: 0.15
+    h_soft_mm: 0.4
+    h_axial_mm: 1.0
 
 materials:
   wall:
