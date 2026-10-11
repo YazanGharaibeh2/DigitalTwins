@@ -48,9 +48,10 @@ pressure is rejected), which then stops with status ``"limited"``.
 Recorded per step (``state.history``)
 -------------------------------------
 ``phase, step, load_name, load, increment, p, R_in, R_cap, max_d,
-n_crack_cells, lumen_area, p_contact_mean, p_contact_max, p_cap_mean,
-contact_force, E_elastic, E_fracture, E_contact, E_foundation,
-stagger_its, stagger_err, stagger_converged, newton_its, n_eroded``.
+n_crack_cells, n_eroded, lumen_area, p_contact_mean, p_contact_max,
+p_cap_mean, contact_force, E_elastic, E_fracture, E_contact, E_foundation,
+stagger_its, stagger_err, stagger_converged, newton_its, d_its,
+n_new_eroded`` (energies in N mm, per mm of length in plane strain).
 
 Definitions:
 
@@ -84,10 +85,19 @@ the minimum lumen radius ``R_min`` and the recoil solves
 unloaded wall has no residual deformation (hyperelastic-damage model), so
 ``P_tissue(R_min) = 0`` and the bracket is valid.
 
+Discretisation note (contact on linear meshes): the pipeline meshes are
+straight-sided, so the discrete lumen is a polygon. A rigid cylinder then
+touches the chord midpoints while the vertices stay outside ``R`` by up to
+the chord sag ``h^2 / (8 R)`` (about 3 um for h = 0.15 mm at R = 1 mm), which
+is much larger than the penalty penetration ``p_c / k_pen``. This shifts the
+effective cylinder radius by O(h^2/R) and is part of the mesh-convergence
+error. The contact verification therefore uses curved (second-order) cells.
+
 Verification helpers (design.md section 5.7): :func:`annulus_meshdata`,
-:func:`hyperelastic_lame_check`, :func:`contact_check` and
-:func:`verification_nonlinear`; the AT1 onset check lives in
-:func:`dtivl.fracture.phasefield.verification_phasefield`.
+:func:`tube_meshdata`, :func:`hyperelastic_lame_check`, :func:`contact_check`
+and :func:`verification_nonlinear` (``results/verification_nonlinear.json``);
+the AT1 onset check is
+:func:`dtivl.fracture.phasefield.verification_phasefield`. Serial use.
 """
 from __future__ import annotations
 
@@ -159,7 +169,13 @@ class SolveError(RuntimeError):
 
 @dataclass
 class SolverSettings:
-    """Numerical settings of :class:`NonlinearState` (defaults: module constants)."""
+    """Numerical settings of :class:`NonlinearState` (defaults: module constants).
+
+    ``erosion_split=True`` scales only ``psi+`` of eroded cells (see
+    :mod:`dtivl.fracture.erosion`); ``quadrature_degree`` defaults to
+    ``2 * degree``; ``u_petsc_options``/``d_petsc_options`` override
+    :data:`U_SNES_OPTIONS` / :data:`dtivl.fracture.phasefield.D_SNES_OPTIONS`.
+    """
 
     stagger_tol: float = STAGGER_TOL
     stagger_max_it: int = STAGGER_MAX_IT

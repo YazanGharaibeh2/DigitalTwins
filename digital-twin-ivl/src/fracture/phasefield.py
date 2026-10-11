@@ -46,7 +46,6 @@ first damaged step.
 from __future__ import annotations
 
 import json
-import logging
 import uuid
 from pathlib import Path
 
@@ -58,7 +57,6 @@ from dtivl import params as P
 from dtivl.geometry.labels import TAG_CALCIUM
 from dtivl.materials.constitutive import MaterialSet, degradation
 
-log = logging.getLogger(__name__)
 
 #: AT1 normalisation constant c_w = 4 int_0^1 sqrt(w(s)) ds with w(d) = d.
 AT1_CW = 8.0 / 3.0
@@ -239,13 +237,11 @@ def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | N
     state = NonlinearState(md, ms, fracture="phasefield", h_ca=h_ca,
                            bc_factory=_uniaxial_bcs(msh, length, disp), name=f"verif_pf{gdim}d")
     psi_c = onset_energy(state.Gc_value, state.ell)
-    if gdim == 2:
-        eps_pred = ms.eps_f * np.sqrt(1.0 - ms.ca_nu ** 2) if ms.failure_mode == "strain" else \
-            np.sqrt(2.0 * psi_c * (1.0 - ms.ca_nu ** 2) / ms.ca_E)
-        state_desc = "plane strain, uniaxial in-plane stress (sigma_yy = 0, eps_zz = 0)"
-    else:
-        eps_pred = np.sqrt(2.0 * psi_c / ms.ca_E)
-        state_desc = "3D uniaxial stress"
+    # small-strain uniaxial energy psi = E_u eps^2 / 2 (E_u = E / (1 - nu^2) in plane strain)
+    E_u = ms.ca_E / (1.0 - ms.ca_nu ** 2) if gdim == 2 else ms.ca_E
+    eps_pred = np.sqrt(2.0 * psi_c / E_u)
+    state_desc = ("plane strain, uniaxial in-plane stress (sigma_yy = 0, eps_zz = 0)" if gdim == 2
+                  else "3D uniaxial stress")
     psi_form = fem.form(state.psi_plus * state.dx(TAG_CALCIUM))
     vol = state.comm.allreduce(fem.assemble_scalar(fem.form(1.0 * state.dx(TAG_CALCIUM))))
 

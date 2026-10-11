@@ -11,7 +11,6 @@ from dtivl import params as P
 from dtivl.fracture.cracks import crack_analysis
 from dtivl.geometry.labels import LABEL_CALCIUM, LABEL_LUMEN, LABEL_OTHER, TAG_FIBROUS, TAG_WALL
 from dtivl.geometry.polar import PolarLabelMap
-from dtivl.materials.constitutive import MaterialSet
 from dtivl.solvers import nonlinear as NL
 
 # Small test lesion: lumen a, outer b, 180-degree calcium sector r1..r2 centred on +x.

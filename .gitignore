@@ -3,3 +3,4 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 digital-twin-ivl/cohort/meshes/verification/
+digital-twin-ivl/cohort/meshes/*.msh
