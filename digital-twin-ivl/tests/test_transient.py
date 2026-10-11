@@ -441,6 +441,104 @@ def test_static_matches_lame_homogeneous(ms, acoustic):
     assert err.max() < 0.01
 
 
+def layered_annulus_meshdata(radii, tags, h):
+    """Concentric layers ``radii[i] < r < radii[i+1]`` with cell tag ``tags[i]`` (2D)."""
+    import gmsh
+    from mpi4py import MPI
+    from dolfinx.io.gmsh import model_to_mesh
+
+    owns = not gmsh.isInitialized()
+    if owns:
+        gmsh.initialize(interruptible=False)
+    gmsh.option.setNumber("General.Terminal", 0)
+    gmsh.model.add(f"layers_{np.random.default_rng().integers(1 << 30)}")
+    try:
+        occ = gmsh.model.occ
+        disks = [occ.addDisk(0, 0, 0, r, r) for r in radii]
+        occ.fragment([(2, disks[-1])], [(2, d) for d in disks[:-1]])
+        occ.synchronize()
+        groups: dict[int, list[int]] = {}
+        for _, s in gmsh.model.getEntities(2):
+            r_max = gmsh.model.getBoundingBox(2, s)[3]
+            k = int(np.argmin([abs(r_max - r) for r in radii]))
+            if k == 0:
+                occ.remove([(2, s)], recursive=True)          # the lumen disk
+            else:
+                groups.setdefault(tags[k - 1], []).append(s)
+        occ.synchronize()
+        for tag, ss in groups.items():
+            gmsh.model.addPhysicalGroup(2, ss, tag)
+        ents = [(2, s) for ss in groups.values() for s in ss]
+        lum, out = [], []
+        for _, e in gmsh.model.getBoundary(ents, combined=True, oriented=False):
+            r_max = gmsh.model.getBoundingBox(1, abs(e))[3]
+            (lum if r_max < 0.5 * (radii[0] + radii[-1]) else out).append(abs(e))
+        gmsh.model.addPhysicalGroup(1, lum, TAG_LUMEN_BND)
+        gmsh.model.addPhysicalGroup(1, out, TAG_OUTER_BND)
+        gmsh.option.setNumber("Mesh.MeshSizeMax", h)
+        gmsh.option.setNumber("Mesh.MeshSizeMin", h)
+        gmsh.model.mesh.generate(2)
+        return model_to_mesh(gmsh.model, MPI.COMM_WORLD, 0, gdim=2)
+    finally:
+        gmsh.model.remove()
+        if owns:
+            gmsh.finalize()
+
+
+def _layered_lame(radii, tags, mats, p):
+    """Exact plane-strain solution u_r = A_i r + B_i / r per layer; returns (n_layers, 2) [A, B]."""
+    n = len(tags)
+    A, b = np.zeros((2 * n, 2 * n)), np.zeros(2 * n)
+
+    def srr(i, r):
+        m = mats[tags[i]]
+        return np.array([2.0 * (m.lam + m.mu), -2.0 * m.mu / r ** 2])
+
+    A[0, 0:2], b[0] = srr(0, radii[0]), -p
+    for i in range(n - 1):
+        r = radii[i + 1]
+        A[2 * i + 1, 2 * i:2 * i + 4] = [r, 1.0 / r, -r, -1.0 / r]               # u_r continuous
+        A[2 * i + 2, 2 * i:2 * i + 2], A[2 * i + 2, 2 * i + 2:2 * i + 4] = srr(i, r), -srr(i + 1, r)
+    A[-1, -2:] = srr(n - 1, radii[-1])                                           # traction-free outside
+    return np.linalg.solve(A, b).reshape(n, 2)
+
+
+def test_static_layered_interfaces(ms, acoustic):
+    """Multi-material ring (fibrous / calcium / fibrous / wall) vs the exact layered Lame solution.
+
+    Regression for a defect of the first implementation: a Taylor-Hood pressure that is
+    continuous *across* material interfaces cannot represent the pressure jump where mu and K
+    jump, which polluted the calcium stresses next to the interfaces (cell errors up to ~30 %
+    of the peak, not converging). The default per-material pressure is exact to < 1 %.
+    """
+    r_l, r_iel, r_o = _radii()
+    d = P.get("geometry.depth_superficial_mm").value
+    t_ca = float(P.raw("design.core_factorial.thickness_mm")[0])
+    radii = [r_l, r_l + d, r_l + d + t_ca, r_iel, r_o]
+    tags = [TAG_FIBROUS, TAG_CALCIUM, TAG_FIBROUS, TAG_WALL]
+    md = layered_annulus_meshdata(radii, tags, H_CA)
+    rho, c = acoustic
+    k_found = P.get("loads.perivascular_k_MPa_per_mm").value
+    cells = np.sort(md.cell_tags.find(TAG_CALCIUM)).astype(np.int32)
+    cen = md.mesh.geometry.x[md.mesh.geometry.dofmaps[0][cells]].mean(axis=1)
+    r = np.hypot(cen[:, 0], cen[:, 1])
+    errs = {}
+    for form, ip in (("mixed", "discontinuous"), ("displacement", "discontinuous"), ("mixed", "continuous")):
+        model = TR.build_model(md, ms, rho, c, outer_bc="free", formulation=form, interface_pressure=ip)
+        a, b = _layered_lame(radii, tags, model.materials, 1.0)[1]
+        m = model.materials[TAG_CALCIUM]
+        s_tt = 2 * (m.lam + m.mu) * a + 2 * m.mu * b / r ** 2
+        s_rr = 2 * (m.lam + m.mu) * a - 2 * m.mu * b / r ** 2
+        exact = np.maximum(np.maximum(s_tt, s_rr), 2 * m.lam * a)
+        s1 = model.cell_stress_operator(cells)(*model.static_solution(1.0, k_found))
+        errs[(form, ip)] = (np.abs(s1 - exact).max() / exact.max(), abs(s1.max() / exact.max() - 1.0))
+        print(f"layered ring {form}/{ip}: calcium cell err max {errs[(form, ip)][0]:.4f}, "
+              f"peak err {errs[(form, ip)][1]:.4f}")
+    for key in (("mixed", "discontinuous"), ("displacement", "discontinuous")):
+        assert errs[key][0] < 0.01 and errs[key][1] < 0.01
+    assert errs[("mixed", "continuous")][0] > 0.05       # documents the interface error of the old default
+
+
 def test_static_matches_lame_3d(ms, acoustic):
     """3D tube (u_z = 0 ends = plane strain): mixed is locking-free, P2 displacement locks."""
     h = H_SOFT

@@ -192,6 +192,10 @@ energies.
   `loads.ivl_balloon_pressure_atm`) with cap R_target, then to
   p_bal + T × `loads.ivl_peak_pressure_MPa` × `loads.ivl_pulse_scale` with the
   same cap, then unload to 0 without cap. Cap radius R_ivl = ½·`geometry.ivl_balloon_diameter_mm`.
+  T is the lesion- and modulus-specific `T_equivalent` from §6: the transient
+  peak tensile calcium stress divided by the static peak of the quasi-static
+  model (MaterialSet moduli) under the same pressure, so that the quasi-static
+  pulse step reproduces the transient peak (decision recorded 2026-10-11).
 * Stent: `run_stent(state, *, K_s=None)` = inner rigid cylinder expanding from just inside
   the minimum lumen radius to R_target = ½·`geometry.stent_target_diameter_mm`; stop early if the mean contact
   pressure exceeds `loads.balloon_rated_pressure_atm` (→ under-expansion);

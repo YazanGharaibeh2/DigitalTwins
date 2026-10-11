@@ -25,10 +25,16 @@ The acoustic bulk moduli are 3-5 orders of magnitude above the shear moduli
 ~8e4 wall). Two formulations are provided:
 
 * ``formulation="mixed"`` (default): Taylor-Hood u-p (P2 displacement,
-  continuous P1 pressure ``p = -K div u``, positive in compression).
-  Locking-free: on the pressurised wall annulus (K/mu = 8.2e4) the
-  cell-averaged sigma1 matches Lame within 0.2 % (2D, h = 0.05 mm) and
-  0.6 % (3D tube with u_z = 0 ends, h = 0.2 mm).
+  P1 pressure ``p = -K div u``, positive in compression). The pressure is
+  continuous inside each material and discontinuous across material
+  interfaces (one P1 field per cell tag; ``interface_pressure``), because
+  the exact pressure jumps where mu and K jump: a globally continuous
+  pressure gave calcium cell errors up to ~30 % of the peak next to the
+  interfaces of a layered ring. Locking-free: on the pressurised wall
+  annulus (K/mu = 8.2e4) the cell-averaged sigma1 matches Lame within
+  0.2 % (2D, h = 0.05 mm) and 0.6 % (3D tube with u_z = 0 ends,
+  h = 0.2 mm); on a fibrous / calcium / fibrous / wall ring the calcium
+  cell sigma1 matches the exact layered solution within 0.1 %.
 * ``formulation="displacement"``: pure P2 displacement; ``volumetric="full"``
   integrates exactly (cleanest plane-wave propagation, but P2 elements lock
   at these ratios: 2D peak sigma1 within 0.4 % with isolated noisy cells up
@@ -43,20 +49,21 @@ carry only shear stiffness; with shear-wave speeds of 0.006-0.04 mm/us the
 physical shear wavelengths during a ~2 us pulse (0.01-0.08 mm) are not
 resolved by practical meshes, and mode conversion at the calcium edges
 excites these modes. The transient tensile sigma1 in calcium (small: about
-0.1-0.2 MPa against ~4 MPa compression) is therefore mesh sensitive: in the
-2D 90 deg sector test T = 0.012, 0.010, 0.006 for h_ca = 0.05, 0.025,
-0.0125 mm (mixed) and 0.009, 0.007, 0.007 (displacement), i.e. T is
-resolved to about +-0.005 at the default calcium mesh size. A 3D extrusion
+0.2-0.3 MPa against ~4 MPa compression) is therefore mesh sensitive: in the
+2D 90 deg sector test (mixed, per-material pressure, 20 us window)
+T = 0.0142, 0.0166, 0.0153 for h_ca = 0.05, 0.025, 0.0125 mm, i.e. T is
+resolved to about +-0.002 at the default calcium mesh size. A 3D extrusion
 of the same section with u_z = 0 ends (plane strain) reproduces the 2D
-value with the mixed formulation (h_ca = 0.05 mm: T = 0.0124 in 3D vs
-0.0123 in 2D); the 3D displacement formulation does not (locking).
+value with the mixed formulation (h_ca = 0.08 mm, 10 us window:
+T = 0.0139 in 3D vs 0.0150 in 2D); the 3D displacement formulation does
+not (locking).
 
 Weak form (plane strain in 2D, 3D otherwise; mixed)
 ---------------------------------------------------
     int rho a.v dx + int 2 mu dev(eps3(u)) : dev(eps3(v)) dx - int p div v dx
         + int_outer (rho c_p (n.v)(n.u_t) + rho c_s (v_t . u_t,t)) ds
         = - p_lumen(t) int_lumen n.v ds,
-    int (div u + p / K) q dx = 0
+    int (div u + p / K) q dx = 0   for all q (piecewise P1, continuous per material)
 
 (the displacement formulation replaces the pressure by
 ``+ int K div u div v dx``). ``eps3`` is the 3x3 strain (plane strain
@@ -89,8 +96,9 @@ together with the acceleration at the generalized-alpha level
 
 Stress output
 -------------
-Cell averages of the 3x3 strain (and of the mixed pressure) are obtained by
-precomputed sparse operators (exact quadrature); the cell stress is
+Cell averages of the 3x3 strain (and of the mixed pressure of the cell's own
+material) are obtained by precomputed sparse operators (exact quadrature);
+the cell stress is
 ``sigma3 = 2 mu dev(eps3) - p I`` with ``p`` the cell-averaged pressure
 (mixed) or ``-K tr(eps)`` (displacement), i.e. the cell average of the
 pointwise stress since the coefficients are cell-wise constant. In plane
@@ -329,13 +337,26 @@ class ElastodynamicModel:
     outer_bc : ``"absorbing"`` (dashpot), ``"free"`` or ``"fixed"``.
     roller_tags : ``{facet_tag: component}`` constraints ``u_component = 0``;
         default ``{TAG_END_BND: 2}`` in 3D and none in 2D.
+    interface_pressure : mixed formulation only. ``"discontinuous"``
+        (default): one continuous pressure field per cell tag, free to jump
+        across material interfaces (as the exact pressure does where mu and
+        K jump). ``"continuous"``: a single globally continuous pressure;
+        kept for verification only, because it smears the interface jump
+        and pollutes the stresses of the cells next to every interface
+        (calcium cell errors up to ~30 % of the peak on a layered ring,
+        not decreasing with refinement).
 
     Attributes
     ----------
     M, Kd : mass and deviatoric stiffness (scipy CSR, expanded u DOFs).
     Kv : displacement formulation: volumetric stiffness (else ``None``).
     G, Mp : mixed formulation: ``G[i, j] = int q_j div v_i``,
-        ``Mp[i, j] = int q_i q_j / K`` (else ``None``).
+        ``Mp[i, j] = int q_i q_j / K`` (else ``None``), in the extended
+        pressure numbering: the per-tag blocks of P_{k-1} DOFs (in the order
+        of the sorted cell tags) are concatenated, so a DOF on a material
+        interface appears once per adjacent material. ``pressure`` arrays
+        (``static_solution``, ``TransientHistory.p_final``) use this
+        numbering.
     C : dashpot matrix (``None`` unless absorbing).
     f_lumen : load vector per unit lumen pressure.
     n_u, n_p : number of displacement / pressure unknowns (``n_p = 0`` for
@@ -794,8 +815,9 @@ def transfer_factor(meshdata, plm_or_calcium_tag, ms: MaterialSet,
                     p_peak: float | None = None, width_us: float | None = None,
                     dt: float | None = None, t_end: float | None = None, rho_inf: float = RHO_INF,
                     degree: int = DEGREE, formulation: str = "mixed", volumetric: str = "full",
-                    outer_bc: str = "absorbing", k_found: float | None = None,
-                    equivalent_static: bool = True, allow_pending: bool = False) -> dict:
+                    outer_bc: str = "absorbing", interface_pressure: str = "discontinuous",
+                    k_found: float | None = None, equivalent_static: bool = True,
+                    allow_pending: bool = False) -> dict:
     """Dynamic transfer factor ``T = sigma1_peak,transient / sigma1_static`` of one lesion.
 
     Parameters
@@ -815,8 +837,9 @@ def transfer_factor(meshdata, plm_or_calcium_tag, ms: MaterialSet,
     dt : time step (us), default :meth:`ElastodynamicModel.default_dt`.
     t_end : simulated window (us), default ``WINDOW_PULSES * width``.
     rho_inf : generalized-alpha spectral radius (1 = average acceleration).
-    formulation, volumetric, degree, outer_bc : see :class:`ElastodynamicModel`
-        (the static denominator uses the same discretisation).
+    formulation, volumetric, degree, outer_bc, interface_pressure : see
+        :class:`ElastodynamicModel` (the static denominator uses the same
+        discretisation).
     k_found : static foundation stiffness, default
         ``loads.perivascular_k_MPa_per_mm``.
     equivalent_static : also compute ``T_equivalent`` with the quasi-static
@@ -844,7 +867,7 @@ def transfer_factor(meshdata, plm_or_calcium_tag, ms: MaterialSet,
     cells, ca_tag = _calcium_cells(meshdata, plm_or_calcium_tag)
 
     model = build_model(meshdata, ms, densities, sound_speeds, degree=degree, formulation=formulation,
-                        volumetric=volumetric, outer_bc=outer_bc)
+                        volumetric=volumetric, outer_bc=outer_bc, interface_pressure=interface_pressure)
     if dt is None:
         dt = model.default_dt(width_us)
     if t_end is None:
@@ -878,6 +901,7 @@ def transfer_factor(meshdata, plm_or_calcium_tag, ms: MaterialSet,
                                                        "K": m.K, "nu": m.nu}
                       for t, m in model.materials.items()},
         "info": dict(hist.info, volumetric=volumetric, outer_bc=outer_bc, degree=degree,
+                     interface_pressure=interface_pressure,
                      k_found=float(k_found), h_min=model.h_min),
     }
     if equivalent_static:

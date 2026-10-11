@@ -180,7 +180,9 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     out = {"K_s": K_s, "p_phys": p_phys, "p_bal": p_bal, "R_ivl": R_ivl, "lesions": {}}
     for lid in lesions:
         plm, info, md = mesh2d(lid)
-        Tmap = {round(r["ca_E_MPa"], 6): r["transient"]["T"] for r in lt["lesions"][lid]["by_E"]}
+        # T_equivalent = transient peak / static sigma1 of the *quasi-static* model (MaterialSet moduli),
+        # i.e. the factor that reproduces the transient peak inside run_ivl (design.md section 5.4).
+        Tmap = {round(r["ca_E_MPa"], 6): r["transient"]["T_equivalent"] for r in lt["lesions"][lid]["by_E"]}
         rows = []
         for E in e_values:
             ms = MaterialSet.baseline(ca_E=E)
