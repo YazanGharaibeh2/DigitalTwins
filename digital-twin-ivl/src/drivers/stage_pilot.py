@@ -90,6 +90,8 @@ def run_linear_and_transient(include_3d: bool = True, transient: bool = True) ->
 # ---------------------------------------------------------------------------
 #: Calcium moduli (MPa) for the expensive stent runs: baseline and the sweep value nearest 1 GPa.
 STENT_E_TARGET_MPA = 1000.0
+#: Increments used to move the rigid cylinder from R_dep to the recoiled radius in the K_s identification.
+RECOIL_RAMP_STEPS = 5
 
 
 def _crack_summary(md, state, plm) -> dict:
@@ -141,8 +143,10 @@ def identify_stent_stiffness(lesion_id: str | None = None) -> dict:
         res = run_stent(st, K_s=1e12)          # effectively rigid stent: deployment only, no recoil
         R_dep = res.summary["R_dep"]
         R_f = R_dep * (1.0 - target)
-        st.set_loads(p=None, R_in=R_f, R_cap=None)
-        st.solve_step()
+        for R in np.linspace(R_dep, R_f, RECOIL_RAMP_STEPS + 1)[1:]:   # unload the rigid cylinder gradually
+            st.set_loads(p=0.0, R_in=float(R), R_cap=None)
+            st.solve_step()
+            st.commit()
         P_f = st.observables()["p_contact_mean"]
     K_s = P_f / (R_dep - R_f)
     out = {"lesion_template": lesion_id, "recoil_target_pct": target * 100.0, "R_dep": R_dep, "R_f": R_f,
