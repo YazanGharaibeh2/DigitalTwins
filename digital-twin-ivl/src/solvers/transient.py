@@ -345,11 +345,15 @@ class ElastodynamicModel:
     def __init__(self, meshdata, materials: Mapping[int, AcousticMaterial], *, degree: int = DEGREE,
                  formulation: str = "mixed", volumetric: str = "full", outer_bc: str = "absorbing",
                  roller_tags: Mapping[int, int] | None = None,
-                 lumen_tag: int = TAG_LUMEN_BND, outer_tag: int = TAG_OUTER_BND):
+                 lumen_tag: int = TAG_LUMEN_BND, outer_tag: int = TAG_OUTER_BND,
+                 interface_pressure: str = "discontinuous"):
         from dolfinx import fem, la
 
         if formulation not in ("mixed", "displacement"):
             raise ValueError(f"formulation must be 'mixed' or 'displacement', got {formulation!r}")
+        if interface_pressure not in ("discontinuous", "continuous"):
+            raise ValueError(f"interface_pressure must be 'discontinuous' or 'continuous', got {interface_pressure!r}")
+        self.interface_pressure = interface_pressure
         if volumetric not in ("reduced", "full"):
             raise ValueError(f"volumetric must be 'reduced' or 'full', got {volumetric!r}")
         if outer_bc not in ("absorbing", "free", "fixed"):
@@ -391,15 +395,35 @@ class ElastodynamicModel:
         self.Kd = _to_scipy(fem.form(2.0 * mu * ufl.inner(_dev(_eps3(u)), _dev(_eps3(v))) * ufl.dx))
         self.Kv = self.G = self.Mp = None
         self.Q = None
+        self._p_blocks = None
         if formulation == "displacement":
             dx_vol = ufl.dx(metadata={"quadrature_degree": 0}) if volumetric == "reduced" else ufl.dx
             self.Kv = _to_scipy(fem.form(K * ufl.div(u) * ufl.div(v) * dx_vol))
         else:
+            import scipy.sparse as sp
+
             Q = fem.functionspace(mesh, ("Lagrange", degree - 1))
             self.Q = Q
             p, q = ufl.TrialFunction(Q), ufl.TestFunction(Q)
-            self.G = _to_scipy(fem.form(ufl.div(v) * p * ufl.dx))
-            self.Mp = _to_scipy(fem.form(p * q / K * ufl.dx))
+            if interface_pressure == "continuous":
+                self.G = _to_scipy(fem.form(ufl.div(v) * p * ufl.dx))
+                self.Mp = _to_scipy(fem.form(p * q / K * ufl.dx))
+                self._p_blocks = [(None, np.arange(Q.dofmap.index_map.size_local), 0)]
+            else:
+                # per-material pressure: the global hat functions restricted to the cells of one tag
+                # are exactly the P_{k-1} basis of that subdomain, so the extended pressure vector
+                # (one block per tag) is continuous inside each material and free to jump across
+                # material interfaces, where -p = sigma_nn - 2 mu dev(eps)_nn jumps with mu and K.
+                dxt = ufl.Measure("dx", domain=mesh, subdomain_data=ct)
+                G_blocks, Mp_blocks, self._p_blocks, off = [], [], [], 0
+                for t in tags_present:
+                    dofs = np.unique(Q.dofmap.list[ct.find(t)].ravel())
+                    G_blocks.append(_to_scipy(fem.form(ufl.div(v) * p * dxt(t)))[:, dofs])
+                    Mp_blocks.append(_to_scipy(fem.form(p * q / K * dxt(t)))[dofs][:, dofs])
+                    self._p_blocks.append((t, dofs, off))
+                    off += dofs.size
+                self.G = sp.hstack(G_blocks, format="csr")
+                self.Mp = sp.block_diag(Mp_blocks, format="csr")
         if outer_bc == "absorbing":
             zc_p, zc_s = dg0(lambda m: m.rho * m.c_p, "rho_cp"), dg0(lambda m: m.rho * m.c_s, "rho_cs")
             un, vn = ufl.dot(u, n), ufl.dot(v, n)
@@ -562,8 +586,17 @@ class ElastodynamicModel:
         Bc = B[rows, :].multiply(np.repeat(1.0 / meas, nc)[:, None]).tocsr()
         Bp = None
         if self.Q is not None:
-            Bp = _to_scipy(fem.form(ufl.TrialFunction(self.Q) * w0 * ufl.dx))[dofs0, :]
-            Bp = Bp.multiply((1.0 / meas)[:, None]).tocsr()
+            import scipy.sparse as sp
+
+            # cell integrals of each material's own pressure block (extended numbering)
+            ct = self.meshdata.cell_tags
+            dxt = ufl.Measure("dx", domain=mesh, subdomain_data=ct)
+            pt = ufl.TrialFunction(self.Q)
+            blocks = []
+            for t, pdofs, _ in self._p_blocks:
+                form = pt * w0 * (ufl.dx if t is None else dxt(t))
+                blocks.append(_to_scipy(fem.form(form))[dofs0][:, pdofs])
+            Bp = sp.hstack(blocks, format="csr").multiply((1.0 / meas)[:, None]).tocsr()
         mu = self._coef["mu"].x.array[dofs0]
         K = self._coef["K"].x.array[dofs0]
 

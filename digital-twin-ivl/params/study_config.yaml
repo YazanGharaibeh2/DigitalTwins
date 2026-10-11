@@ -113,7 +113,7 @@ fracture:
   eps_f: {expr: "calcification_fracture_stretch - 1", basis: "failure stretch 1.02 -> strain 0.02", status: DERIVED}
   sigma_c_stress_controlled: {lit: calcification_fracture_stress}
   ell_over_h: {value: 2.0, sens: [1.5, 3.0], basis: "ASSUMPTION: regularisation length = 2 calcium element sizes", status: ASSUMPTION}
-  k_residual: 1.0e-6
+  k_residual: 1.0e-4               # NUMERICAL: residual stiffness of fully damaged calcium; 1e-6 stalled Newton in stent contact (nonlinear module report); sensitivity 1e-5..1e-3
   d_crack: 0.9                    # cell-average d above which a cell is cracked (post-processing)
 
 loads:

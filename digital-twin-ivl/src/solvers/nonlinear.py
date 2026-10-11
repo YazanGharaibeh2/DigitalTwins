@@ -31,7 +31,9 @@ scales the calcium energy cell-wise by a DG0 erosion factor
 Algorithm
 ---------
 Per load increment, alternate minimisation: (i) ``u`` with ``d`` frozen,
-SNES ``newtonls`` with backtracking line search and MUMPS LU; (ii) ``d`` with
+SNES ``newtonls`` with backtracking line search and MUMPS LU (a failed solve
+is retried once from the same start with the ``U_FALLBACK_LINESEARCH`` line
+search before the increment is halved); (ii) ``d`` with
 ``u`` frozen, SNES ``vinewtonrsls`` with bounds ``[d_prev, ub]``; repeated
 until ``||d_k - d_{k-1}||_inf < STAGGER_TOL`` (at most ``STAGGER_MAX_IT``
 iterations; non-convergence is logged and flagged in the step record, and
