@@ -17,8 +17,10 @@ Fixed choices (documented here, not in the config):
   ``C`` (core), ``P`` (pilot), ``X3D`` (3D example), and ``H-<nnn>`` for the
   hold-out set; MORPH in {SUP, DEEP, NOD, FRAG}.
 * Hold-out: Latin hypercube (``scipy.stats.qmc.LatinHypercube``) seeded with
-  ``design.seed + HOLDOUT_SEED_OFFSET``; see :func:`holdout_specs` for the
-  accepted range formats.
+  ``design.seed + HOLDOUT_SEED_OFFSET`` over ``design.holdout_lhs.ranges``;
+  see :func:`holdout_specs` for the accepted keys, range formats and the
+  rules (balanced morphology cycle, lipid fraction, depth rule, eccentricity
+  via IEL offset, lumen area at fixed IEL radius).
 * ``cohort.csv``: one row per lesion with every spec field, every descriptor
   (descriptor names win; a spec field with the same name - only
   ``lipid_arc_deg`` - is written as ``spec_<name>``), the Fujino score and
@@ -29,7 +31,9 @@ from __future__ import annotations
 import dataclasses
 import itertools
 import json
+import logging
 import math
+import re
 from pathlib import Path
 
 import numpy as np
@@ -39,8 +43,10 @@ from dtivl import params
 from .descriptors import descriptors
 from .labels import LABEL_CALCIUM, LABEL_LIPID, LABEL_LUMEN, LABEL_OTHER
 from .polar import PolarLabelMap
-from .rasterize import rasterize_polar
+from .rasterize import rasterize_polar, ray_circle_radius
 from .spec import MORPHOLOGIES, LesionSpec
+
+_log = logging.getLogger(__name__)
 
 #: seed offset of the hold-out Latin hypercube (added to design.seed)
 HOLDOUT_SEED_OFFSET = 1
@@ -158,8 +164,13 @@ def example3d_spec(*, allow_pending: bool = False) -> LesionSpec:
 
 # ----------------------------------------------------------------- hold-out
 _SPEC_FIELDS = {f.name for f in dataclasses.fields(LesionSpec)}
+#: ranges keys -> LesionSpec fields (or internal names for special keys)
 _HOLDOUT_ALIASES = {"arc_deg": "ca_arc_deg", "thickness_mm": "ca_thickness", "depth_mm": "ca_depth",
-                    "length_mm": "ca_length", "lumen_area_mm2": "lumen_area"}
+                    "length_mm": "ca_length", "lumen_area_mm2": "lumen_area",
+                    "cap_thickness_mm": "lipid_cap_thickness", "ecc_index": "ecc_index"}
+#: ranges keys handled as rules rather than sampled fields
+_HOLDOUT_RULE_KEYS = ("morphology", "depth_rule", "lipid_fraction")
+_NUM_RE = r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
 
 
 def _holdout_field(key: str) -> str:
@@ -167,50 +178,116 @@ def _holdout_field(key: str) -> str:
     if key in _HOLDOUT_ALIASES:
         return _HOLDOUT_ALIASES[key]
     for cand in (key, key.removesuffix("_mm"), "ca_" + key.removesuffix("_mm")):
-        if cand in _SPEC_FIELDS and cand not in ("lesion_id", "set_name", "notes"):
+        if cand in _SPEC_FIELDS and cand not in ("lesion_id", "set_name", "notes", "morphology"):
             return cand
     raise ValueError(f"design.holdout_lhs.ranges: unknown key {key!r} (expected a LesionSpec field, "
-                     f"optionally with an '_mm' suffix, or one of {sorted(_HOLDOUT_ALIASES)})")
+                     f"optionally with an '_mm' suffix, one of {sorted(_HOLDOUT_ALIASES)} or "
+                     f"{list(_HOLDOUT_RULE_KEYS)})")
 
 
-def _parse_range(key: str, node):
-    """Return ('cont', lo, hi) or ('cat', choices) for one ranges entry."""
+def _number(x, key: str, allow_pending: bool) -> float:
+    """A range bound: plain number or a resolvable config entry (value/lit/expr)."""
+    if isinstance(x, bool):
+        raise ValueError(f"design.holdout_lhs.ranges.{key}: boolean is not a number")
+    if isinstance(x, (int, float)):
+        return float(x)
+    if isinstance(x, dict):
+        return params.resolve(x, allow_pending=allow_pending).value
+    raise ValueError(f"design.holdout_lhs.ranges.{key}: cannot read a number from {x!r}")
+
+
+def _parse_range(key: str, node, allow_pending: bool = False):
+    """Return ('cont', lo, hi), ('const', v) or ('cat', choices) for one ranges entry.
+
+    Accepted: ``[lo, hi]`` (each a number or a ``value``/``lit``/``expr``
+    entry), ``{min|lower: lo, max|upper: hi}``, a single number or resolvable
+    entry (constant), a list of strings or ``{choices: [...]}`` (categorical).
+    """
     if isinstance(node, dict):
         if "choices" in node:
             return ("cat", list(node["choices"]))
+        if any(k in node for k in ("value", "lit", "expr")):
+            return ("const", _number(node, key, allow_pending))
         lo = node.get("min", node.get("lower"))
         hi = node.get("max", node.get("upper"))
         if lo is None or hi is None:
-            raise ValueError(f"design.holdout_lhs.ranges.{key}: need min/max (or lower/upper) or choices")
+            raise ValueError(f"design.holdout_lhs.ranges.{key}: need min/max (or lower/upper), "
+                             f"choices, or a value/lit/expr entry")
         node = [lo, hi]
+    if isinstance(node, (int, float)) and not isinstance(node, bool):
+        return ("const", float(node))
     if isinstance(node, (list, tuple)):
-        if all(isinstance(v, str) for v in node):
+        if node and all(isinstance(v, str) for v in node):
             return ("cat", list(node))
-        if len(node) == 2 and all(isinstance(v, (int, float)) for v in node):
-            lo, hi = float(node[0]), float(node[1])
+        if len(node) == 2:
+            lo, hi = (_number(v, key, allow_pending) for v in node)
             if hi < lo:
                 raise ValueError(f"design.holdout_lhs.ranges.{key}: max < min")
             return ("cont", lo, hi)
     raise ValueError(f"design.holdout_lhs.ranges.{key}: unsupported range {node!r}")
 
 
+def _depth_clearance(rule) -> float | None:
+    """Clearance (mm) from the ``depth_rule`` text ('... plaque thickness minus X mm ...')."""
+    if rule is None:
+        return None
+    m = re.search(rf"minus\s+({_NUM_RE})\s*mm", str(rule))
+    if m is None:
+        raise ValueError(f"design.holdout_lhs.ranges.depth_rule: cannot parse the clearance from {rule!r}")
+    return float(m.group(1))
+
+
+def _min_local_plaque(r_lumen: float, plaque: float, offset: float, arc_deg: float, center_deg: float) -> float:
+    """Minimum plaque thickness r_iel(phi) - r_lumen over the calcium arc."""
+    half = math.radians(min(arc_deg, 360.0)) / 2
+    phi = math.radians(center_deg) + np.linspace(-half, half, _DEPTH_RULE_SAMPLES)
+    c = (offset * math.cos(math.radians(center_deg)), offset * math.sin(math.radians(center_deg)))
+    return float((ray_circle_radius(phi, c, r_lumen + plaque) - r_lumen).min())
+
+
+#: angular samples of the calcium arc used by the depth rule
+_DEPTH_RULE_SAMPLES = 721
+#: bisection steps used when the plaque offset must be reduced to fit the calcium
+_OFFSET_BISECTION_STEPS = 60
+#: minimum angular gap (deg) between a hold-out lipid pool and the calcium arc
+LIPID_CALCIUM_GAP_DEG = 10.0
+
+
 def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pending: bool = False,
                   on_invalid: str = "raise") -> list[LesionSpec]:
     """Latin-hypercube hold-out lesions over ``design.holdout_lhs.ranges``.
 
-    Accepted range formats per key: ``[lo, hi]``, ``{min: lo, max: hi}`` (or
-    ``lower``/``upper``) for continuous fields, a list of strings or
-    ``{choices: [...]}`` for categorical ones (e.g. ``morphology``). Keys are
-    LesionSpec fields, optionally with an ``_mm`` suffix, or the aliases
-    ``arc_deg``, ``thickness_mm``, ``depth_mm``, ``length_mm`` and
-    ``lumen_area_mm2`` (sets ``r_lumen``). ``arc_deg`` and ``thickness_mm``
-    are required. Fields not listed keep the core
-    reference geometry; morphology defaults to the core-factorial list;
-    depth defaults per morphology. ``n`` defaults to ``design.holdout_lhs.n``
-    and ``seed`` to ``design.seed + HOLDOUT_SEED_OFFSET``.
+    Every key of ``ranges`` is read; unknown keys raise ``ValueError`` and a
+    missing ``ranges`` raises ``KeyError``. Sampled/constant keys are
+    LesionSpec fields (optionally with an ``_mm`` suffix) or the aliases
+    ``arc_deg``, ``thickness_mm``, ``depth_mm``, ``length_mm``,
+    ``cap_thickness_mm`` (-> ``lipid_cap_thickness``) and
 
-    ``on_invalid='raise'`` (default) raises on a geometrically invalid sample;
-    ``'skip'`` drops it (the result then has fewer than ``n`` lesions).
+    * ``lumen_area_mm2``: circular lumen of that area; the IEL radius stays at
+      the core reference value, so ``plaque_thickness = R_iel,core - r_lumen``
+      (the derivation of ``geometry.plaque_thickness_mm``);
+    * ``ecc_index``: target plaque eccentricity (t_max - t_min)/t_max of the
+      intima thickness, realised by the IEL offset
+      ``o = ecc * P / (2 - ecc)`` toward the calcium (t = P +/- o).
+
+    Rule keys: ``morphology`` (``balanced_cycle`` -> lesion i gets
+    ``design.core_factorial.morphology[i % 4]``; a list -> categorical LHS
+    dimension; default balanced_cycle), ``lipid_fraction`` (an LHS indicator
+    dimension: lesion carries lipid if u < fraction; default 0) and
+    ``depth_rule`` (if depth + thickness exceeds the minimum local plaque
+    thickness over the calcium arc minus the clearance parsed from the rule
+    text, depth is reduced to fit; if that would push depth below the lower
+    bound of the depth range, the depth is set to that bound and the IEL
+    offset is reduced by bisection until the calcium fits). Lipid pools are
+    centred opposite the calcium; their arc is clipped to the angular room
+    left (``360 - arc - 2*LIPID_CALCIUM_GAP_DEG``) and dropped when the room is
+    below the lower bound of the lipid-arc range. Every adjustment is logged
+    and listed in ``spec.notes['adjustments']``.
+
+    ``arc_deg`` and ``thickness_mm`` are required. ``n`` defaults to
+    ``design.holdout_lhs.n`` and ``seed`` to ``design.seed +
+    HOLDOUT_SEED_OFFSET``. ``on_invalid='raise'`` (default) raises on a
+    geometrically invalid sample; ``'skip'`` drops it.
     """
     from scipy.stats import qmc
 
@@ -227,33 +304,100 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
     if on_invalid not in ("raise", "skip"):
         raise ValueError("on_invalid must be 'raise' or 'skip'")
 
-    dims = {_holdout_field(k): _parse_range(k, v) for k, v in ranges.items()}
+    dims = {_holdout_field(k): _parse_range(k, v, allow_pending)
+            for k, v in ranges.items() if k not in _HOLDOUT_RULE_KEYS}
     missing = [f for f in ("ca_arc_deg", "ca_thickness") if f not in dims]
     if missing:
         raise KeyError(f"design.holdout_lhs.ranges must define {missing} (keys arc_deg / thickness_mm)")
-    if "morphology" not in dims:
-        dims["morphology"] = ("cat", list(params.raw("design.core_factorial.morphology")))
-    names = list(dims)
-    u = qmc.LatinHypercube(d=len(names), rng=np.random.default_rng(seed)).random(n)
+    core_morphs = list(params.raw("design.core_factorial.morphology"))
+    morph_rule = ranges.get("morphology", "balanced_cycle")
+    if isinstance(morph_rule, str):
+        if morph_rule != "balanced_cycle":
+            raise ValueError(f"design.holdout_lhs.ranges.morphology: unknown rule {morph_rule!r}")
+    else:
+        dims["morphology"] = _parse_range("morphology", morph_rule)
+    lipid_fraction = (_number(ranges["lipid_fraction"], "lipid_fraction", allow_pending)
+                      if "lipid_fraction" in ranges else 0.0)
+    if lipid_fraction > 0:
+        dims["_lipid_u"] = ("cont", 0.0, 1.0)
+    clearance = _depth_clearance(ranges.get("depth_rule"))
+
+    sampled = [k for k, d in dims.items() if d[0] != "const"]
+    u = qmc.LatinHypercube(d=max(1, len(sampled)), rng=np.random.default_rng(seed)).random(n)
 
     geo = fixed_geometry(allow_pending=allow_pending)
+    r_iel_core = geo["r_lumen"] + geo["plaque_thickness"]
     specs = []
     for i in range(n):
         vals = {}
-        for k, name in enumerate(names):
-            d = dims[name]
-            if d[0] == "cat":
-                vals[name] = d[1][min(int(u[i, k] * len(d[1])), len(d[1]) - 1)]
-            else:
-                vals[name] = d[1] + u[i, k] * (d[2] - d[1])
-        morph = vals.pop("morphology")
-        arc = vals.pop("ca_arc_deg")
-        t = vals.pop("ca_thickness")
-        if "lumen_area" in vals:
-            vals["r_lumen"] = math.sqrt(vals.pop("lumen_area") / math.pi)
+        for name, d in dims.items():
+            if d[0] == "const":
+                vals[name] = d[1]
+                continue
+            x = u[i, sampled.index(name)]
+            vals[name] = (d[1][min(int(x * len(d[1])), len(d[1]) - 1)] if d[0] == "cat"
+                          else d[1] + x * (d[2] - d[1]))
+        lid = f"H-{i + 1:03d}"
+        notes = {"lhs_seed": seed, "adjustments": [], "pending_inputs": list(geo["pending_inputs"])}
+        morph = vals.pop("morphology") if "morphology" in vals else core_morphs[i % len(core_morphs)]
+        arc, t = vals.pop("ca_arc_deg"), vals.pop("ca_thickness")
+        center = vals.get("ca_center_deg", 0.0)
+        r_lumen = (math.sqrt(vals.pop("lumen_area") / math.pi) if "lumen_area" in vals
+                   else geo["r_lumen"])
+        plaque = vals.get("plaque_thickness", r_iel_core - r_lumen)
+        ecc = vals.pop("ecc_index", None)
+        offset = vals.get("plaque_offset", ecc * plaque / (2.0 - ecc) if ecc is not None else 0.0)
+        depth = vals.get("ca_depth", _depth_for(morph, geo))
+        if ecc is not None:
+            notes["ecc_index_target"] = ecc
+
+        if clearance is not None:
+            need = t + clearance
+            t_min = _min_local_plaque(r_lumen, plaque, offset, arc, center)
+            if depth + need > t_min:
+                d_lo = dims["ca_depth"][1] if dims.get("ca_depth", ("const",))[0] == "cont" else 0.0
+                new_depth = t_min - need
+                if new_depth >= d_lo:
+                    notes["adjustments"].append(f"depth {depth:.4f} -> {new_depth:.4f} mm (depth_rule)")
+                    depth = new_depth
+                else:
+                    new_depth = min(depth, d_lo)
+                    lo_o, hi_o = 0.0, offset
+                    for _ in range(_OFFSET_BISECTION_STEPS):
+                        mid = 0.5 * (lo_o + hi_o)
+                        if _min_local_plaque(r_lumen, plaque, mid, arc, center) >= new_depth + need:
+                            lo_o = mid
+                        else:
+                            hi_o = mid
+                    notes["adjustments"].append(
+                        f"depth {depth:.4f} -> {new_depth:.4f} mm and plaque offset {offset:.4f} -> "
+                        f"{lo_o:.4f} mm (depth_rule: calcium does not fit otherwise)")
+                    depth, offset = new_depth, lo_o
+
+        has_lipid = lipid_fraction > 0 and vals.pop("_lipid_u") < lipid_fraction
+        vals.pop("_lipid_u", None)
+        if has_lipid:
+            lip_lo = dims["lipid_arc_deg"][1] if dims.get("lipid_arc_deg", ("const",))[0] == "cont" else 0.0
+            room = 360.0 - arc - 2 * LIPID_CALCIUM_GAP_DEG
+            lip_arc = vals.get("lipid_arc_deg", 0.0)
+            if room < max(lip_lo, 1e-9):
+                notes["adjustments"].append(f"lipid dropped: only {room:.1f} deg free beside the calcium")
+                has_lipid = False
+            elif lip_arc > room:
+                notes["adjustments"].append(f"lipid arc {lip_arc:.1f} -> {room:.1f} deg (fit beside calcium)")
+                vals["lipid_arc_deg"] = room
+        if has_lipid:
+            vals.setdefault("lipid_center_deg", center + 180.0)
+        else:
+            for k in ("lipid_arc_deg", "lipid_thickness", "lipid_cap_thickness"):
+                vals[k] = 0.0
         if morph != "nodule":
             vals["nodule_height"] = 0.0
-        lid = f"H-{i + 1:03d}"
+        notes["has_lipid"] = has_lipid
+        for msg in notes["adjustments"]:
+            _log.info("%s: %s", lid, msg)
+        vals.update(r_lumen=r_lumen, plaque_thickness=plaque, plaque_offset=offset, ca_depth=depth,
+                    notes=notes)
         try:
             spec = make_spec(lid, morph, arc, t, geo, set_name="holdout",
                              length_mm=vals.pop("ca_length", None), **vals)
@@ -262,8 +406,8 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
             if on_invalid == "raise":
                 raise ValueError(f"hold-out sample {lid} is invalid ({exc}); narrow "
                                  f"design.holdout_lhs.ranges or pass on_invalid='skip'") from exc
+            _log.warning("%s skipped: %s", lid, exc)
             continue
-        spec.notes["lhs_seed"] = seed
         specs.append(spec)
     return specs
 

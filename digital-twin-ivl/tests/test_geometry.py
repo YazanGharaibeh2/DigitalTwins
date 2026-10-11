@@ -16,7 +16,7 @@ from dtivl.geometry.build import (calcium_inner_radius, calcium_radii, cap_half_
                                   nominal_descriptors)
 from dtivl.geometry.descriptors import _max_circular_run, count_components_wrapped, descriptors
 from dtivl.geometry.fujino import fujino_criteria, fujino_max_score, fujino_score
-from dtivl.geometry.labels import LABEL_CALCIUM, LABEL_LIPID, LABEL_LUMEN, LABEL_OTHER
+from dtivl.geometry.labels import LABEL_CALCIUM, LABEL_LUMEN, LABEL_OTHER
 from dtivl.geometry.polar import PolarLabelMap
 from dtivl.geometry.rasterize import ray_circle_radius, rasterize_polar
 from dtivl.geometry.spec import MORPHOLOGIES
@@ -248,11 +248,20 @@ def test_fujino_edge_cases():
 
 
 # ------------------------------------------------------------------ cohort
-def test_core_specs_refuse_pending_by_default():
-    if not params.check_ready(list(cohort._GEOMETRY_KEYS.values())):
-        pytest.skip("no geometry entry is PENDING any more")
+def _patched_config(monkeypatch):
+    cfg = copy.deepcopy(params.load_config())
+    monkeypatch.setattr(params, "load_config", lambda *a, **k: cfg)
+    return cfg
+
+
+def test_pending_refused_unless_allowed(monkeypatch):
+    cfg = _patched_config(monkeypatch)
+    cfg["geometry"]["plaque_thickness_mm"] = {"value": 0.8, "basis": "test placeholder", "status": "PENDING"}
     with pytest.raises(ValueError, match="PENDING"):
         cohort.core_specs()
+    specs = cohort.core_specs(allow_pending=True)
+    assert specs[0].plaque_thickness == 0.8
+    assert specs[0].notes["pending_inputs"] == ["geometry.plaque_thickness_mm"]
 
 
 def test_core_specs():
@@ -267,11 +276,12 @@ def test_core_specs():
     geo = cohort.fixed_geometry(allow_pending=True)
     for s in specs:
         s.validate()
+        lesion_polygons(s)
         assert s.set_name == "core" and not s.is_3d
         assert s.r_lumen == pytest.approx(math.sqrt(params.get("geometry.lumen_area_mm2").value / math.pi))
         assert s.ca_depth == (geo["depth_deep"] if s.morphology == "deep_sheet" else geo["depth_superficial"])
         assert (s.nodule_height > 0) == (s.morphology == "nodule")
-        assert s.notes["pending_inputs"]
+        assert s.plaque_offset == 0 and s.lipid_arc_deg == 0
 
 
 def test_pilot_and_example3d():
@@ -280,34 +290,55 @@ def test_pilot_and_example3d():
     ex = cohort.example3d_spec(allow_pending=True)
     e = params.raw("design.fujino4_example_3d")
     assert ex.is_3d and ex.ca_length == e["length_mm"]
+    assert ex.lesion_id == f"X3D-A{e['arc_deg']}-T{e['thickness_mm']}-L{e['length_mm']}-SUP"
     d = descriptors(rasterize_polar(ex), length_mm=ex.ca_length)
     assert d["fujino_score"] == 4 == fujino_max_score(True)
 
 
-def test_holdout_requires_ranges():
-    if params.raw("design.holdout_lhs").get("ranges"):
-        pytest.skip("ranges already present in the config")
+def test_holdout_requires_ranges(monkeypatch):
+    cfg = _patched_config(monkeypatch)
+    cfg["design"]["holdout_lhs"].pop("ranges", None)
     with pytest.raises(KeyError, match="ranges"):
         cohort.holdout_specs(allow_pending=True)
 
 
-def test_holdout_lhs(monkeypatch):
-    cfg = copy.deepcopy(params.load_config())
+def test_holdout_from_config():
+    """Hold-out set from the configured ranges: balanced, valid, inside the ranges."""
+    cfg = params.raw("design.holdout_lhs")
+    specs = cohort.holdout_specs(allow_pending=True)
+    assert len(specs) == cfg["n"] and len({s.lesion_id for s in specs}) == cfg["n"]
+    counts = pd.Series([s.morphology for s in specs]).value_counts()
+    assert set(counts) == {cfg["n"] // 4}
+    rng = cohort._parse_range("arc_deg", cfg["ranges"]["arc_deg"])
+    arcs = np.array([s.ca_arc_deg for s in specs])
+    assert arcs.min() >= rng[1] and arcs.max() <= rng[2]
+    # Latin hypercube: one arc per stratum
+    assert sorted(np.floor((arcs - rng[1]) / (rng[2] - rng[1]) * len(specs)).astype(int)) == list(range(len(specs)))
+    clearance = cohort._depth_clearance(cfg["ranges"]["depth_rule"])
+    for s in specs:
+        s.validate()
+        lesion_polygons(s)
+        t_min = cohort._min_local_plaque(s.r_lumen, s.plaque_thickness, s.plaque_offset, s.ca_arc_deg,
+                                         s.ca_center_deg)
+        assert s.ca_depth + s.ca_thickness + clearance <= t_min + 1e-9
+        assert (s.lipid_arc_deg > 0) == s.notes["has_lipid"]
+    assert any(s.notes["has_lipid"] for s in specs)
+    again = cohort.holdout_specs(allow_pending=True)
+    assert [s.to_dict() for s in again] == [s.to_dict() for s in specs]
+
+
+def test_holdout_ecc_index_and_custom_ranges(monkeypatch):
+    cfg = _patched_config(monkeypatch)
     cfg["design"]["holdout_lhs"]["ranges"] = {
-        "arc_deg": [60, 300], "thickness_mm": [0.15, 0.45], "plaque_offset_mm": {"min": 0.0, "max": 0.1},
-        "morphology": ["superficial_sheet", "deep_sheet", "fragmented"],
+        "arc_deg": [60, 180], "thickness_mm": {"min": 0.2, "max": 0.3}, "ecc_index": [0.2, 0.4],
+        "morphology": ["superficial_sheet", "fragmented"],
     }
-    monkeypatch.setattr(params, "load_config", lambda *a, **k: cfg)
-    a = cohort.holdout_specs(n=6, allow_pending=True)
-    b = cohort.holdout_specs(n=6, allow_pending=True)
-    assert [s.ca_arc_deg for s in a] == [s.ca_arc_deg for s in b]
-    assert len(a) == 6 and len({s.lesion_id for s in a}) == 6
-    arcs = np.array([s.ca_arc_deg for s in a])
-    assert arcs.min() >= 60 and arcs.max() <= 300
-    # Latin hypercube: one sample per stratum
-    assert sorted(np.floor((arcs - 60) / 240 * 6).astype(int)) == list(range(6))
-    assert all(0 <= s.plaque_offset <= 0.1 and s.set_name == "holdout" for s in a)
-    cfg["design"]["holdout_lhs"]["ranges"] = {"bogus_key": [0, 1], "arc_deg": [60, 90], "thickness_mm": [0.2, 0.3]}
+    specs = cohort.holdout_specs(n=4, seed=7, allow_pending=True)
+    assert {s.morphology for s in specs} <= {"superficial_sheet", "fragmented"}
+    for s in specs:
+        d = descriptors(rasterize_polar(s))
+        assert d["plaque_ecc_index"] == pytest.approx(s.notes["ecc_index_target"], abs=0.03)
+    cfg["design"]["holdout_lhs"]["ranges"]["bogus_key"] = [0, 1]
     with pytest.raises(ValueError, match="bogus_key"):
         cohort.holdout_specs(n=2, allow_pending=True)
 
