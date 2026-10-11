@@ -1,10 +1,13 @@
 # Study plan (one page)
 
+Working title (D6): *In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting*. Decisions D1–D7 are recorded in `params/study_config.yaml`.
+
 **Question.** Can lesion-level mechanical metrics from a cheap pre-treatment analysis predict calcium fracture under IVL, and the resulting stent expansion, better than geometry alone, as summarised by the Fujino OCT calcium score [17]? The study uses a structured in silico cohort of calcified coronary cross-sections and segments. No clinical data are used.
 
 **Cohort (Phase 2).** Lesions are generated as polar label maps in the IVOCT convention (0 = other, 1 = lumen, 4 = calcium, plus internal labels for fibrous tissue and lipid). They are meshed with Gmsh. The same mask-to-mesh function will be tested on hand-made masks so that real segmentations can plug in later.
-- *Core factorial, 2D plane strain:* calcium arc {90, 180, 270, 360}° × thickness {4 levels; see decision D2} × morphology {superficial sheet, deep sheet, nodule, fragmented} = 64 lesions, with fixed lumen and wall.
-- *3D coarse subset:* calcium length {4 levels; D3} combined with the other three factors in an L16 orthogonal array, giving 16 short segments (≥ 4 required). These test whether 2D conclusions hold and supply the full Fujino score, which needs length.
+- *Core factorial, 2D plane strain:* calcium arc {90, 180, 270, 360}° × thickness {0.2, 0.4} mm (D2) × morphology {superficial sheet, deep sheet, nodule, fragmented} (D4) = 32 lesions, with fixed lumen and wall.
+- *3D:* the 3D code is first tested on one example with Fujino score 4 (D1): arc 270°, thickness 0.6 mm, length 7 mm, each one step beyond the D2/D3 series. The 3D length levels {1, 3, 5} mm (D3) are run after Checkpoint 2, with the number of 3D runs set from the measured cost of the example.
+- *Note:* with thickness ≤ 0.4 mm and length ≤ 5 mm, no core or 3D-level lesion exceeds the Fujino thickness (> 0.5 mm) or length (> 5 mm) criteria. The Fujino score of the cohort therefore takes only the values 0 and 2 (arc > 180°). This is raised for decision at Checkpoint 2.
 - *Space-filling hold-out:* about 30 lesions from a Latin hypercube (seeded) over continuous arc, thickness, depth, eccentricity, lumen diameter, fibrous-cap thickness and lipid inclusion. Ranges come from `params/literature_parameters.csv`. Thresholds derived on the core set are tested here.
 
 **Models (Phase 3).** Soft tissues are modelled as follows. The wall uses Yeoh with verified media constants [30], lumped across layers. Fibrous tissue and lipid use neo-Hookean models from [28] and [34], nearly incompressible. Calcium is linear-elastic and brittle. Only rigid-body constraints are applied, with an optional elastic foundation (sensitivity). The load cases are:
@@ -12,7 +15,7 @@
 2. IVL: 4 atm balloon apposition plus pulse loading. (a) Quasi-static equivalent pressure *T* × 5 MPa, where the transfer factor *T* comes from (b) transient elastodynamic runs (2–5 µs pulse) on a subset. Both are reported. Pulse-count fatigue is omitted because no calcified-plaque fatigue data were found.
 3. Stenting with and without prior IVL: a cylindrical envelope is expanded under displacement control to the target diameter and then released. Outputs are lumen gain, acute recoil, expansion %, and malapposition area.
 
-**Fracture.** AT1 phase-field is applied in calcium only, with a volumetric–deviatoric split. The failure strain is the verified quantity (stretch 1.02 ± 0.005 [27]); the critical stress is E·ε_f, and G_c is derived from the AT1 nucleation relation and ℓ [50]. A stress-controlled scenario (σ_c = 179 kPa) is run as a sensitivity. On a subset, results are compared with max-principal-stress element erosion. Recorded per lesion: onset load, location, number of fractures, depth, and pattern (radial or circumferential).
+**Fracture.** AT1 phase-field is applied in calcium only, with a volumetric–deviatoric split. Per D5, the failure strain is the primary quantity (stretch 1.02 ± 0.005 [27]); the critical stress is E·ε_f, and G_c is derived from the AT1 nucleation relation and ℓ [50]. A stress-controlled scenario (σ_c = 179 kPa fixed) is run as a sensitivity. On a subset, results are compared with max-principal-stress element erosion. Recorded per lesion: onset load, location, number of fractures, depth, and pattern (radial or circumferential).
 
 **Non-circularity.** Predictors come only from geometry plus a *linear-elastic, undamaged* analysis (small-strain moduli, unit IVL load). Outcomes come only from the *nonlinear phase-field* runs. Shared inputs (geometry, calcium modulus) are acknowledged in Methods.
 

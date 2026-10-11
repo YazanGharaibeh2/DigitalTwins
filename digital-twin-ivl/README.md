@@ -1,5 +1,7 @@
 # digital-twin-ivl
 
+In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting (working title, D6).
+
 An in silico finite element study of predictive digital twins of calcified coronary lesions under intravascular lithotripsy (IVL) and stent deployment. It is the basis of a manuscript prepared for the *Medical Sciences* (MDPI) special issue "Artificial Intelligence and Computational Modeling for Next-Generation Medical Imaging and Therapy". The study uses no clinical data.
 
 ## Status

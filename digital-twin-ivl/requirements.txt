@@ -1,0 +1,17 @@
+# Pinned pure-Python dependencies (mirrors environment.yml).
+# DOLFINx 0.11.0 / PETSc / MPI are not pip-installable: create the conda env with
+#   micromamba create -n dtivl -f environment.yml   (exact build: environment.lock.txt)
+# The gmsh wheel needs libGLU; on systems without it use the conda package.
+numpy==2.5.4
+scipy==1.18.1
+pandas==3.0.6
+matplotlib==3.11.2
+scikit-learn==1.9.1
+SALib==1.6.0
+meshio==5.3.5
+pytest==9.1.1
+python-docx==1.2.0
+scikit-image==0.26.0
+shapely==2.2.0
+PyYAML==6.0.3
+gmsh==4.15.2
