@@ -164,3 +164,34 @@ def test_crack_analysis_3d_tube():
     assert out["fracture"] and out["n_fractures"] == 1 and out["n_partial"] == 0
     assert out["pattern"] == ["radial"]
     assert out["location_frac"][0] == pytest.approx(30.0 / 90.0, abs=0.06)
+
+
+def _p1_damage(md, fn):
+    """P1 damage Function with nodal values fn(theta_deg, r), zero outside calcium cells."""
+    from dolfinx import fem
+
+    V = fem.functionspace(md.mesh, ("Lagrange", 1))
+    d = fem.Function(V)
+    x = V.tabulate_dof_coordinates()
+    th, r = np.degrees(np.arctan2(x[:, 1], x[:, 0])), np.hypot(x[:, 0], x[:, 1])
+    d.x.array[:] = np.clip(fn(th, r), 0.0, 1.0)
+    return d
+
+
+def test_pattern_from_damage_gradient(sector):
+    """A wide through-thickness cut is radial; a mid-thickness band is circumferential.
+
+    The radial cut is 8 deg wide (about 0.14 mm at r = 1 mm), wider than the
+    0.2 mm-thick sheet is thick relative to its angular extent, which the old
+    centroid-PCA rule classified as circumferential.
+    """
+    md = sector
+    plm = _plm([(-90.0, 90.0)])
+    radial = _p1_damage(md, lambda th, r: np.exp(-((th - 20.0) / 4.0) ** 2) * 1.5)
+    out = crack_analysis(md, radial, plm)
+    c = max(out["components"], key=lambda c: c["measure"])
+    assert c["through"] and c["pattern"] == "radial"
+    circ = _p1_damage(md, lambda th, r: np.where(np.abs(th + 45.0) < 25.0, np.exp(-((r - 1.0) / 0.02) ** 2) * 1.5, 0.0))
+    out2 = crack_analysis(md, circ, plm)
+    c2 = max(out2["components"], key=lambda c: c["measure"])
+    assert not c2["through"] and c2["pattern"] == "circumferential"

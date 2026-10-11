@@ -36,11 +36,19 @@ Definitions
   ``max s - min s``. ``max_depth_frac`` is the maximum over components (0
   without cracks). A-lines without calcium in the label map use the
   nearest A-line with calcium.
-* ``pattern``: ``"radial"`` if the principal axis of the measure-weighted
-  in-plane cell centroids is within ``PATTERN_ANGLE_DEG`` of the radial
-  direction at the component centroid, else ``"circumferential"``;
-  ``"undetermined"`` for components with fewer than ``MIN_CELLS_PATTERN``
-  cells. In 3D the in-plane (x, y) projection is used.
+* ``pattern``: orientation of the crack from the damage *gradient*
+  (structure tensor ``S = sum_c |c| grad d (x) grad d`` over the calcium
+  cells within ``PATTERN_NEIGHBOUR_ELL`` x ell of the component, in-plane
+  components). The crack normal is the principal eigenvector of S and the
+  crack line is perpendicular to it; the crack is ``"radial"`` if the crack
+  line lies within ``PATTERN_ANGLE_DEG`` of the radial direction at the
+  component centroid, else ``"circumferential"``. This replaces the
+  centroid-PCA rule of design.md 5.5 (decision 2026-10-11): in thin sheets
+  the cracked band is wider than the sheet is thick, so the centroid axis
+  is tangential even for a crack that cuts the sheet through its
+  thickness. For per-cell damage arrays (erosion), which have no gradient,
+  the centroid-PCA rule is kept. ``"undetermined"`` for components with
+  fewer than ``MIN_CELLS_PATTERN`` cells or a degenerate tensor.
 * ``location_frac``: deposits are the wrap-aware 4-connected calcium
   components of the label map; a component is assigned to the deposit whose
   angular interval contains (or is nearest to) its circular-mean angle, and
@@ -63,12 +71,36 @@ from dtivl.geometry.labels import LABEL_CALCIUM, TAG_CALCIUM
 SURFACE_NORMAL_COS = 0.5     #: |n . e_r| threshold for luminal/abluminal facets (60 deg)
 PATTERN_ANGLE_DEG = 45.0     #: radial if the principal axis is within 45 deg of e_r
 MIN_CELLS_PATTERN = 2        #: smaller components have no pattern
+PATTERN_NEIGHBOUR_ELL = 2.0  #: structure-tensor neighbourhood radius in units of the regularisation length
 MIN_PIECE_CELLS = 3          #: intact pieces smaller than this do not count as separated fragments
 
 
 # ---------------------------------------------------------------------------
 # Cell values
 # ---------------------------------------------------------------------------
+
+def _cell_gradients(meshdata, d, cells: np.ndarray) -> np.ndarray | None:
+    """In-plane gradient of a P1 damage Function per cell (None for arrays/other spaces)."""
+    if isinstance(d, np.ndarray) or not hasattr(d, "function_space"):
+        return None
+    V = d.function_space
+    if V.ufl_element().basix_element.degree != 1 or V.dofmap.index_map_bs != 1:
+        return None
+    mesh = V.mesh
+    gdim = mesh.geometry.dim
+    xg = mesh.geometry.x
+    gdm = mesh.geometry.dofmaps[0]
+    vals = d.x.array
+    grads = np.zeros((cells.size, gdim))
+    for i, c in enumerate(cells):
+        dofs = V.dofmap.cell_dofs(int(c))
+        geo = gdm[int(c)]
+        X = xg[geo, :gdim]
+        A = X[1:] - X[0]
+        b = vals[dofs[1:]] - vals[dofs[0]]
+        grads[i] = np.linalg.lstsq(A, b, rcond=None)[0]
+    return grads[:, :2]
+
 def cell_values(meshdata, d) -> np.ndarray:
     """Per-cell values over all local cells from a dolfinx Function or an array.
 
@@ -352,6 +384,13 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
         s_lo = np.clip((rv.min(axis=1) - r_in_al[ia]) / span, 0.0, 1.0)
         s_hi = np.clip((rv.max(axis=1) - r_in_al[ia]) / span, 0.0, 1.0)
         cos_pat = math.cos(math.radians(PATTERN_ANGLE_DEG))
+        grads = _cell_gradients(meshdata, d, ca)
+        if grads is not None:
+            from scipy.spatial import cKDTree
+
+            from dtivl.fracture.phasefield import regularisation_length
+            tree = cKDTree(cen[:, :2])
+            r_nb = PATTERN_NEIGHBOUR_ELL * regularisation_length()
         for k in range(ncomp):
             idx = sel[lab == k]
             w = meas[idx]
@@ -372,12 +411,23 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
             xy = cen[idx, :2]
             m = (w[:, None] * xy).sum(axis=0) / w.sum()
             pattern, cosang, aniso = "undetermined", float("nan"), float("nan")
-            if idx.size >= MIN_CELLS_PATTERN:
+            er = m / max(np.linalg.norm(m), 1e-300)
+            if idx.size >= MIN_CELLS_PATTERN and grads is not None:
+                nb = np.unique(np.concatenate([np.asarray(v, dtype=int) for v in tree.query_ball_point(xy, r=r_nb)]))
+                g = grads[nb]
+                S = (meas[nb][:, None, None] * np.einsum("ni,nj->nij", g, g)).sum(axis=0)
+                ev, evec = np.linalg.eigh(S)
+                if ev[-1] > 0:
+                    normal = evec[:, -1]
+                    line = np.array([-normal[1], normal[0]])
+                    cosang = float(abs(line @ er))
+                    aniso = float(ev[-1] / max(ev[0], 1e-300))
+                    pattern = "radial" if cosang >= cos_pat else "circumferential"
+            elif idx.size >= MIN_CELLS_PATTERN:
                 dxy = xy - m
                 cov = (w[:, None, None] * np.einsum("ni,nj->nij", dxy, dxy)).sum(axis=0) / w.sum()
                 ev, evec = np.linalg.eigh(cov)
                 axis = evec[:, -1]
-                er = m / max(np.linalg.norm(m), 1e-300)
                 cosang = float(abs(axis @ er))
                 aniso = float(ev[-1] / max(ev[0], 1e-300))
                 pattern = "radial" if cosang >= cos_pat else "circumferential"

@@ -214,8 +214,10 @@ energies.
 calcium surfaces), `n_fractures` (number of such through-thickness
 components), `n_partial`, `max_depth_frac` (radial penetration / local
 thickness), `pattern` per component (`radial` if the principal axis of the
-component's cell centroids is within 45° of the radial direction, else
-`circumferential`), `location_frac` (angular position of each component
+crack line, taken perpendicular to the principal eigenvector of the
+damage-gradient structure tensor, is within 45° of the radial direction, else
+`circumferential`; decision 2026-10-11 replacing the centroid-PCA rule, which
+mislabels through-thickness cuts of thin sheets), `location_frac` (angular position of each component
 relative to its deposit: 0 = centre, 1 = end), `onset_load` (first load
 parameter with max d ≥ 0.9). Stent metrics: `lumen_area_pre`,
 `lumen_area_post`, `lumen_gain`, `msa` (π R_final²), `stent_expansion_pct`

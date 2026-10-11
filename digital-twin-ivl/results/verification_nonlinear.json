@@ -1,0 +1,52 @@
+{
+  "check": "hyperelastic thick cylinder vs Lame; rigid-cylinder penalty contact (design.md 5.7)",
+  "dolfinx_version": "0.11.0",
+  "lame": {
+    "material": "fibrous",
+    "lambda_MPa": 38.019555555555556,
+    "mu_MPa": 0.7706666666666666,
+    "a_mm": 1.0,
+    "b_mm": 2.0,
+    "h_mm": 0.15,
+    "p_MPa": 7.706666666666667e-05,
+    "status": "ok",
+    "max_rel_err_ur_lumen": 0.0013696783616299476,
+    "max_rel_err_ur_outer": 0.0002926545530781664,
+    "passed": true
+  },
+  "contact": {
+    "material": "fibrous",
+    "a_mm": 1.0,
+    "b_mm": 2.0,
+    "h_mm": 0.15,
+    "k_pen": 1000.0,
+    "status": "ok",
+    "rows": [
+      {
+        "R_mm": 1.01,
+        "p_contact_mean_MPa": 0.01133573495630905,
+        "p_ref_MPa": 0.011449098271614349,
+        "penalty_penetration_mm": 1.1449098271614348e-05,
+        "frac_nodes_in_contact": 1.0,
+        "max_abs_R_minus_rho_mm": 1.3126530642670886e-05,
+        "max_dev_from_penalty_pen_mm": 1.6774323710565378e-06,
+        "p_lame_MPa": 0.011489696811875463,
+        "rel_err_p_vs_lame": 0.003533473591674996
+      },
+      {
+        "R_mm": 1.02,
+        "p_contact_mean_MPa": 0.022364446138286337,
+        "p_ref_MPa": 0.02281174694749049,
+        "penalty_penetration_mm": 2.281174694749049e-05,
+        "frac_nodes_in_contact": 1.0,
+        "max_abs_R_minus_rho_mm": 2.7416095715881994e-05,
+        "max_dev_from_penalty_pen_mm": 4.604348768391505e-06,
+        "p_lame_MPa": 0.022979493065567295,
+        "rel_err_p_vs_lame": 0.007299818042033168
+      }
+    ],
+    "passed": true
+  },
+  "passed": true,
+  "wall_time_s": 0.4762601852416992
+}

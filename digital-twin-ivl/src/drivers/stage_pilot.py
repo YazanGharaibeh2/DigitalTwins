@@ -167,6 +167,7 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     from dtivl.solvers.nonlinear import NonlinearState, run_ivl, run_pressure, run_stent
 
     lt = read_json("pilot_linear_transient")
+    aggregate = lesions is None
     lesions = lesions or pilot_ids()
     e_values = e_values or lt["E_sweep_MPa"]
     if stent_e_values is None:
@@ -215,5 +216,19 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
             rows.append(row)
             write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "rows": rows, "K_s": K_s})
         out["lesions"][lid] = rows
+    if aggregate:
+        write_json("pilot_nonlinear", out)
+    return out
+
+
+def merge_nonlinear() -> dict:
+    """Combine per-lesion pilot files (parallel runs) into results/pilot_nonlinear.json."""
+    from dtivl.drivers.common import read_json
+
+    out = {"lesions": {}}
+    for lid in pilot_ids():
+        part = read_json(f"pilot_nonlinear_{lid}")
+        out["lesions"][lid] = part["rows"]
+        out["K_s"] = part["K_s"]
     write_json("pilot_nonlinear", out)
     return out
