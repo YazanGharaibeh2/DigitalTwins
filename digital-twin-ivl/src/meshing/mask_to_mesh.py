@@ -22,7 +22,7 @@ Pipeline (design.md section 3)
    (holes filled, other label-1 islands treated as tissue), minus calcium and
    lipid. Tissue components not connected to the main vessel wall (e.g.
    calcium floating in the lumen) are discarded. All boundaries are snapped
-   to a ``GRID_MM`` grid, noded by ``unary_union`` and ``polygonize``-d into
+   to a ``GRID_MM`` grid, noded by ``shapely.union_all`` and ``polygonize``-d into
    faces, so neighbouring faces share *identical* vertex chains. Each face is
    classified by ``point_on_surface`` into lumen (not meshed), calcium,
    lipid, fibrous (inside the IEL) or wall (outside the IEL).
