@@ -186,18 +186,21 @@ energies.
 
 ### 5.4 Load protocols (functions returning a state + history)
 * `run_pressure(state, p_target, *, cap_radius=None, n_steps)` — lumen
-  pressure ramp, optional envelope cap.
+  pressure ramp, optional envelope cap. Physiological load:
+  `loads.physiological_pressure` (MPa).
 * IVL: `run_ivl(state, *, T)` = pressure to p_bal (=
   `loads.ivl_balloon_pressure_atm`) with cap R_target, then to
   p_bal + T × `loads.ivl_peak_pressure_MPa` × `loads.ivl_pulse_scale` with the
-  same cap, then unload to 0 without cap. R_target = ½·`geometry.stent_target_diameter_mm`.
-* Stent: `run_stent(state)` = inner rigid cylinder expanding from just inside
-  the minimum lumen radius to R_target; stop early if the mean contact
+  same cap, then unload to 0 without cap. Cap radius R_ivl = ½·`geometry.ivl_balloon_diameter_mm`.
+* Stent: `run_stent(state, *, K_s=None)` = inner rigid cylinder expanding from just inside
+  the minimum lumen radius to R_target = ½·`geometry.stent_target_diameter_mm`; stop early if the mean contact
   pressure exceeds `loads.balloon_rated_pressure_atm` (→ under-expansion);
   then recoil: find R_final in [R_min, R_dep] with bisection on
-  P_tissue(R) = K_s (R_dep − R) where K_s =
-  `loads.stent_radial_stiffness_MPa_per_mm` and P_tissue(R) is the mean
-  contact pressure with the cylinder fixed at R.
+  P_tissue(R) = K_s (R_dep − R) where K_s defaults to
+  `loads.stent_radial_stiffness_MPa_per_mm` (a placeholder: the integrator
+  identifies K_s so that a calcium-free lesion shows the clinical acute recoil
+  `loads.stent_recoil_target_pct`; therefore K_s must be an argument) and
+  P_tissue(R) is the mean contact pressure with the cylinder fixed at R.
 * Damage is active in every protocol (balloon/stent can fracture calcium);
   `stent after IVL` starts from u = 0 with the post-IVL d field.
 
@@ -212,7 +215,7 @@ component's cell centroids is within 45° of the radial direction, else
 relative to its deposit: 0 = centre, 1 = end), `onset_load` (first load
 parameter with max d ≥ 0.9). Stent metrics: `lumen_area_pre`,
 `lumen_area_post`, `lumen_gain`, `msa` (π R_final²), `stent_expansion_pct`
-(msa / (π R_target²) × 100), `acute_recoil_pct` ((R_dep − R_final)/R_dep ×
+(msa / reference lumen area × 100, reference area = π (½·`geometry.reference_diameter_mm`)²), `acute_recoil_pct` ((R_dep − R_final)/R_dep ×
 100), `malapposition_area` (lumen area outside the stent circle beyond
 `loads.malapposition_gap_mm`), `malapposed_frac` (fraction of the stent
 circumference with gap > threshold), `reached_target` (bool),

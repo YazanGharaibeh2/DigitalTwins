@@ -35,6 +35,18 @@ design:
   holdout_lhs:
     n: 24
     basis: "Latin hypercube (scipy.stats.qmc, seeded) over continuous ranges below; tests thresholds derived on the core set."
+    ranges:
+      arc_deg: [60, 360]                                   # user brief
+      thickness_mm: [0.2, 0.4]                             # D2 bounds
+      depth_mm: [{lit: calcium_depth_ex_vivo_FDOCT, transform: value-sd}, {lit: calcium_depth_ex_vivo_FDOCT, transform: value+sd}]
+      lumen_area_mm2: [{lit: pre_procedure_MLA_IVL_lesions, transform: value-sd}, {lit: pre_procedure_MLA_IVL_lesions, transform: value+sd}]
+      ecc_index: [0.0, {expr: "1 - 1 / eccentric_plaque_threshold_max_over_min"}]   # (max-min)/max, eccentric limit
+      lipid_fraction: 0.5                                  # DESIGN: half of the hold-out lesions carry a lipid pool
+      lipid_arc_deg: [90, {lit: lipid_arc_high_risk_threshold}]   # 90 deg lower bound: ASSUMPTION (TCFA arc definitions not verified)
+      cap_thickness_mm: [{lit: min_cap_thickness_OCT_culprit_AMI}, {lit: min_cap_thickness_OCT_culprit_SAP}]
+      lipid_thickness_mm: {value: 0.2, basis: "ASSUMPTION: no verified lipid-core thickness found", status: ASSUMPTION}
+      morphology: balanced_cycle                            # 6 lesions per morphology
+      depth_rule: "if depth + thickness exceeds the local plaque thickness minus 0.05 mm, depth is reduced to fit (logged)"
   pilot_2d:                       # Checkpoint 2 pilot (3 lesions)
     - {arc_deg: 90,  thickness_mm: 0.2, morphology: superficial_sheet}
     - {arc_deg: 270, thickness_mm: 0.4, morphology: deep_sheet}
@@ -42,12 +54,17 @@ design:
 
 geometry:                         # fixed reference geometry of the core set
   lumen_area_mm2: {lit: pre_procedure_MLA_IVL_lesions}       # 2.2 mm^2 -> circular lumen
-  stent_target_diameter_mm: {value: 3.0, basis: "ASSUMPTION: nominal 3.0 mm stent/balloon; reference area = pi*1.5^2. Disrupt CAD III MSA 6.5 mm^2 is of this order.", status: ASSUMPTION}
-  plaque_thickness_mm: {value: 0.8, basis: "PENDING verified intima/plaque thickness; must exceed deep-calcium depth + 0.4 mm + 0.1 mm", status: PENDING}
-  wall_thickness_mm:   {value: 0.6, basis: "PENDING verified media+adventitia thickness", status: PENDING}
-  depth_superficial_mm: {value: 0.05, basis: "PENDING verified superficial-calcium depth (thin fibrous covering)", status: PENDING}
-  depth_deep_mm:        {value: 0.30, basis: "PENDING verified deep-calcium depth", status: PENDING}
-  nodule_height_mm:     {value: 0.30, basis: "PENDING verified calcified-nodule protrusion height", status: PENDING}
+  stent_target_diameter_mm: {lit: stent_diameter_IVL_OCT}             # mean implanted stent diameter, IVL OCT cohort
+  ivl_balloon_diameter_mm:  {lit: ivl_balloon_diameter_IVL_OCT}       # mean IVL balloon diameter, same cohort
+  reference_diameter_mm:    {lit: reference_vessel_diameter_IVL_OCT}  # stent-expansion reference area
+  # Intima/plaque thickness at the lesion: EEM radius taken as the reference lumen radius plus the
+  # media (no remodelling, near-normal reference), so plaque = R_ref - r_lumen. Implied plaque burden
+  # (~81%) is checked against CTA plaque burden of calcified plaques (77-85%) in the verification step.
+  plaque_thickness_mm: {expr: "reference_vessel_diameter_IVL_OCT / 2 - sqrt(pre_procedure_MLA_IVL_lesions / pi)", basis: "DERIVED: R_ref - r_lumen (see comment)", status: DERIVED}
+  wall_thickness_mm:   {expr: "media_thickness_main_branches + adventitia_thickness_atherosclerotic_LAD", basis: "DERIVED: media (histology median) + adventitia (IVUS, atherosclerotic LAD)", status: DERIVED}
+  depth_superficial_mm: {lit: calcium_depth_ex_vivo_FDOCT, transform: value-sd}   # mean - 1 SD
+  depth_deep_mm:        {lit: calcium_depth_ex_vivo_FDOCT, transform: value+sd}   # mean + 1 SD
+  nodule_height_mm:     {value: 0.30, sens: [0.2, 0.4], basis: "ASSUMPTION: no verified OCT protrusion height found; set within the D2 thickness range", status: ASSUMPTION}
   nodule_base_arc_deg:  {value: 60, basis: "ASSUMPTION: nodule protrusion spans 60 deg at the centre of the calcium arc", status: ASSUMPTION}
   fragment_pitch_deg:   {value: 45, basis: "ASSUMPTION: one deposit per 45 deg of arc (n = arc/45, min 2)", status: ASSUMPTION}
   fragment_fill:        {value: 0.6, basis: "ASSUMPTION: each deposit fills 60% of its pitch", status: ASSUMPTION}
@@ -79,6 +96,16 @@ materials:
     sens_E: [{lit: calcified_tissue_tangential_modulus}, {lit: calcification_modulus_nanoindentation, transform: lower}]
     nu: {lit: calcification_poisson_ratio}
   bulk_to_shear_soft: {value: 50, sens: [20, 200], basis: "ASSUMPTION: near-incompressibility penalty K/mu for soft tissues", status: ASSUMPTION}
+  density:              # transient IVL subset only (model-input values from earlier studies; SECONDARY)
+    wall:    {lit: density_arterial_wall_model_input, allow_status: [SECONDARY]}
+    fibrous: {lit: density_arterial_wall_model_input, allow_status: [SECONDARY]}
+    lipid:   {lit: density_plaque_model_input, allow_status: [SECONDARY]}
+    calcium: {lit: density_calcified_plaque_model_input, allow_status: [SECONDARY]}
+  sound_speed_m_per_s:  # transient IVL subset only
+    wall:    {lit: sound_speed_arterial_tissue_37C}
+    fibrous: {lit: sound_speed_fibrous_plaque_37C}
+    lipid:   {lit: sound_speed_fatty_material}
+    calcium: {lit: sound_speed_highly_calcified_lesion_37C}
 
 fracture:
   model: AT1
@@ -90,12 +117,13 @@ fracture:
   d_crack: 0.9                    # cell-average d above which a cell is cracked (post-processing)
 
 loads:
-  physiological_pressure_kPa: {value: 13.3, sens: [10.7, 18.7], basis: "ASSUMPTION: 100 mmHg mean pressure (80-140 mmHg); citation to be added", status: ASSUMPTION}
+  physiological_pressure: {lit: normal_systolic_blood_pressure_upper}   # 120 mmHg (upper limit of normal systolic), in MPa
   ivl_balloon_pressure_atm: {lit: ivl_balloon_inflation_pressure}
   ivl_peak_pressure_MPa: {lit: ivl_peak_positive_pressure}
   ivl_pulse_scale: {value: 1.0, sens: [0.5, 1.0], basis: "ASSUMPTION: unknown attenuation between emitter and tissue", status: ASSUMPTION}
-  balloon_rated_pressure_atm: {value: 18, basis: "PENDING verified rated burst pressure of stent delivery balloons", status: PENDING}
-  stent_radial_stiffness_MPa_per_mm: {value: 0.5, basis: "PENDING verified stent radial stiffness", status: PENDING}
+  balloon_rated_pressure_atm: {lit: stent_rated_burst_pressure}        # 16 atm, in MPa
+  stent_radial_stiffness_MPa_per_mm: {value: 0.5, basis: "PLACEHOLDER until identified: chosen so that a calcium-free reference lesion shows the clinical acute recoil (lit acute_recoil_EES_CoCr_clinical); the identified value is written to results/calibration_stent.json", status: ASSUMPTION}
+  stent_recoil_target_pct: {lit: acute_recoil_EES_CoCr_clinical}
   perivascular_k_MPa_per_mm: {value: 1.0e-4, sens: [1.0e-3, 1.0e-2, 1.0e-1], basis: "ASSUMPTION: negligible support; stabilises rigid-body modes only", status: ASSUMPTION}
   contact_penalty_MPa_per_mm: {value: 1.0e3, basis: "NUMERICAL: penalty stiffness; sensitivity in verification", status: NUMERICAL}
-  malapposition_gap_mm: {value: 0.1, basis: "PENDING verified OCT malapposition distance threshold", status: PENDING}
+  malapposition_gap_mm: {value: 0.1, sens: [0.05, 0.2], basis: "ASSUMPTION: OCT malapposition distance threshold (not verified)", status: ASSUMPTION}

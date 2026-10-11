@@ -16,6 +16,7 @@ from __future__ import annotations
 import ast
 import csv
 import functools
+import math
 import operator
 import re
 from dataclasses import dataclass, field
@@ -168,7 +169,11 @@ def _eval_expr(expr: str) -> float:
         if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
             return float(node.value)
         if isinstance(node, ast.Name):
+            if node.id == "pi":
+                return math.pi
             return lit(node.id).value
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "sqrt" and len(node.args) == 1:
+            return math.sqrt(ev(node.args[0]))
         if isinstance(node, ast.BinOp) and type(node.op) in _OPS:
             return _OPS[type(node.op)](ev(node.left), ev(node.right))
         if isinstance(node, ast.UnaryOp) and type(node.op) in _OPS:
@@ -187,10 +192,12 @@ def resolve(entry: Any, *, allow_pending: bool = False) -> Quantity:
     if "sens" in entry:
         sens = tuple(float(x) for x in entry["sens"])
     if "lit" in entry:
-        q = lit(entry["lit"], entry.get("transform", "value"))
+        allowed = set(entry.get("allow_status", []))
+        p = load_literature()[entry["lit"]]
+        q = lit(entry["lit"], entry.get("transform", "value"), allow_unverified=p.status in allowed)
         return Quantity(q.value, q.unit, q.provenance, q.status, sens)
     if "expr" in entry:
-        v = _eval_expr(entry["expr"])
+        v = _eval_expr(entry["expr"])  # names are literature rows (main-analysis statuses only), pi, sqrt()
         return Quantity(v, entry.get("unit", ""), f"expr:{entry['expr']}", entry.get("status", "DERIVED"), sens)
     if "value" in entry:
         status = entry.get("status", "ASSUMPTION")

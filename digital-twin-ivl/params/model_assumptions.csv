@@ -1,10 +1,8 @@
 assumption,value,sensitivity_values,unit,basis,status
-geometry.stent_target_diameter_mm,3.0,,,ASSUMPTION: nominal 3.0 mm stent/balloon; reference area = pi*1.5^2. Disrupt CAD III MSA 6.5 mm^2 is of this order.,ASSUMPTION
-geometry.plaque_thickness_mm,0.8,,,PENDING verified intima/plaque thickness; must exceed deep-calcium depth + 0.4 mm + 0.1 mm,PENDING
-geometry.wall_thickness_mm,0.6,,,PENDING verified media+adventitia thickness,PENDING
-geometry.depth_superficial_mm,0.05,,,PENDING verified superficial-calcium depth (thin fibrous covering),PENDING
-geometry.depth_deep_mm,0.3,,,PENDING verified deep-calcium depth,PENDING
-geometry.nodule_height_mm,0.3,,,PENDING verified calcified-nodule protrusion height,PENDING
+design.holdout_lhs.ranges.lipid_thickness_mm,0.2,,,ASSUMPTION: no verified lipid-core thickness found,ASSUMPTION
+geometry.plaque_thickness_mm,reference_vessel_diameter_IVL_OCT / 2 - sqrt(pre_procedure_MLA_IVL_lesions / pi),,,DERIVED: R_ref - r_lumen (see comment),DERIVED
+geometry.wall_thickness_mm,media_thickness_main_branches + adventitia_thickness_atherosclerotic_LAD,,,"DERIVED: media (histology median) + adventitia (IVUS, atherosclerotic LAD)",DERIVED
+geometry.nodule_height_mm,0.3,0.2 | 0.4,,ASSUMPTION: no verified OCT protrusion height found; set within the D2 thickness range,ASSUMPTION
 geometry.nodule_base_arc_deg,60,,,ASSUMPTION: nodule protrusion spans 60 deg at the centre of the calcium arc,ASSUMPTION
 geometry.fragment_pitch_deg,45,,,"ASSUMPTION: one deposit per 45 deg of arc (n = arc/45, min 2)",ASSUMPTION
 geometry.fragment_fill,0.6,,,ASSUMPTION: each deposit fills 60% of its pitch,ASSUMPTION
@@ -13,10 +11,8 @@ materials.calcium.E,calcification_fracture_stress / (calcification_fracture_stre
 materials.bulk_to_shear_soft,50,20 | 200,,ASSUMPTION: near-incompressibility penalty K/mu for soft tissues,ASSUMPTION
 fracture.eps_f,calcification_fracture_stretch - 1,,,failure stretch 1.02 -> strain 0.02,DERIVED
 fracture.ell_over_h,2.0,1.5 | 3.0,,ASSUMPTION: regularisation length = 2 calcium element sizes,ASSUMPTION
-loads.physiological_pressure_kPa,13.3,10.7 | 18.7,,ASSUMPTION: 100 mmHg mean pressure (80-140 mmHg); citation to be added,ASSUMPTION
 loads.ivl_pulse_scale,1.0,0.5 | 1.0,,ASSUMPTION: unknown attenuation between emitter and tissue,ASSUMPTION
-loads.balloon_rated_pressure_atm,18,,,PENDING verified rated burst pressure of stent delivery balloons,PENDING
-loads.stent_radial_stiffness_MPa_per_mm,0.5,,,PENDING verified stent radial stiffness,PENDING
+loads.stent_radial_stiffness_MPa_per_mm,0.5,,,PLACEHOLDER until identified: chosen so that a calcium-free reference lesion shows the clinical acute recoil (lit acute_recoil_EES_CoCr_clinical); the identified value is written to results/calibration_stent.json,ASSUMPTION
 loads.perivascular_k_MPa_per_mm,0.0001,0.001 | 0.01 | 0.1,,ASSUMPTION: negligible support; stabilises rigid-body modes only,ASSUMPTION
 loads.contact_penalty_MPa_per_mm,1.0e3,,,NUMERICAL: penalty stiffness; sensitivity in verification,NUMERICAL
-loads.malapposition_gap_mm,0.1,,,PENDING verified OCT malapposition distance threshold,PENDING
+loads.malapposition_gap_mm,0.1,0.05 | 0.2,,ASSUMPTION: OCT malapposition distance threshold (not verified),ASSUMPTION

@@ -161,3 +161,29 @@ Totals: 58 references. D = 40, C = 10, P = 8. Six D entries still need their aut
 - A 2026 *Heart and Vessels* paper on intimal thickness over a superficial calcified sheet and IVL fracture (doi:10.1007/s00380-026-02706-y appeared only as a link; content not confirmed).
 - A meta-analysis reporting a pooled post-IVL fracture rate of 68% (prediction interval 0.13–1.00), seen in one snippet; title, journal and authors not confirmed.
 - Densities of calcified plaque and soft tissue, needed for the transient IVL model: no verified source found.
+
+## 12. Additional sources verified in Phase 2 (geometry, devices, acoustics)
+
+A second search round (four topic agents, each followed by an independent verifier) supplied the inputs needed to build lesion geometry. Codes as in §10. These entries are numbered 59 onward.
+
+59. Konishi et al. The histological analysis of the coronary medial thickness: implications for percutaneous coronary intervention. *PLoS ONE* **2023**, 18, e0283840. doi:10.1371/journal.pone.0283840. Media 0.214 mm (IQR 0.157–0.281) in main branches. — D
+60. Rioufol G, et al. Adventitia measurement in coronary artery: an in vivo intravascular ultrasound study. *Heart* **2006**, 92, 985–986. Adventitia 353 ± 75 µm in atherosclerotic LAD. The value was seen only in a review citing the paper. — C
+61. Sato et al. A revised optical coherence tomography-derived calcium score to predict stent underexpansion in severely calcified lesions. *JACC Cardiovasc. Interv.* **2025**. doi:10.1016/j.jcin.2024.12.001 — D
+62. [Authors to be confirmed]. A novel intravascular lithotripsy system in severely calcified coronary lesions: the COCALP study. *MedComm* **2025**. doi:10.1002/mco2.70208 — D
+63. Lee T, et al. Prevalence, predictors, and clinical presentation of a calcified nodule as assessed by optical coherence tomography. *JACC Cardiovasc. Imaging* **2017**. doi:10.1016/j.jcmg.2017.05.013 — D
+64. [Authors to be confirmed]. Serum marker and CT characteristics of coronary calcified nodule assessed by intravascular ultrasound. *BMC Cardiovasc. Disord.* **2022**. doi:10.1186/s12872-022-02931-z — D
+65. [Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies. *J. Am. Coll. Cardiol.* **2021**. doi:10.1016/j.jacc.2021.09.970 — D
+66. [Authors to be confirmed]. Volumetric characterization of human coronary calcification by frequency-domain optical coherence tomography. Calcium depth 0.25 ± 0.09 mm in 30 cadaveric LAD arteries. — P
+67. [Authors to be confirmed]. Cardiovascular Ultrasound **2016**: IVUS plaque eccentricity index; eccentric if max/min ≥ 3. doi:10.1186/s12947-016-0090-3 — D
+68. Rooney et al. 1979 and 1982: speed of sound in excised arteries (1609 ± 8 m/s at 37 °C) and in highly calcified lesions (~2000 m/s). — P
+69. [Authors to be confirmed]. Speed of sound in human coronary artery walls at 50 MHz. *Braz. J. Med. Biol. Res.* **2002**. — P
+70. [Authors to be confirmed]. Comparison of in vivo acute stent recoil between the bioabsorbable everolimus-eluting coronary stent and the everolimus-eluting cobalt chromium coronary stent. Acute recoil 4.3 ± 7.1% (EES). — P
+71. Abbott Vascular (XIENCE) and Boston Scientific (SYNERGY) product specifications: nominal pressure 11–12 atm; rated burst pressure 16 atm (SYNERGY 2.25–2.75 mm: 18 atm). Manufacturer documents. — P
+72. Model-input densities used in earlier studies (not measurements): calcified plaque 2050 kg/m³ (doi:10.1186/s13104-019-4381-2) and 1450 kg/m³ (doi:10.1186/s40759-014-0002-x); arterial wall 1075 and plaque 920 kg/m³ (doi:10.1186/1475-925X-6-8). — D (as sources of model inputs only)
+73. Whelton PK, et al. 2017 ACC/AHA high blood pressure guideline: normal systolic < 120 mmHg. Details from secondary summaries. — P
+
+**Findings that change the study context.**
+- *Calcium thickness in IVL-treated lesions.* The Disrupt CAD III OCT substudy reports mean maximum arc 292.5 ± 76.5°, maximum thickness 0.96 ± 0.25 mm and calcified length 47.9 ± 18.8 mm. The thickness levels approved for the core set (0.2, 0.4 mm) are therefore thinner than typical IVL-treated calcium. They lie near the balloon-fracture thickness cutoffs (0.24 mm [18]; 0.505 mm in a Kubo/Akasaka OCT study, secondary source).
+- *Geometry construction.* No absolute intima thickness at calcified lesions was found. The plaque thickness is therefore derived from the reference lumen radius and the lesion lumen radius. The implied plaque burden (≈81%) lies within the CTA range for calcified plaques (77–85%) [64].
+- *Fracture geometry after IVL.* Pooled OCT shows 3.1 ± 2.7 fractures per lesion, fracture length 5.6 ± 5.3 mm, and 72% full-thickness fractures [65]. These are the targets of the fracture-pattern consistency check.
+- *Not found.* No measured density of calcified plaque, no coronary IVL pressure–distance profile (only a 1/r decay for an extracorporeal electrohydraulic lithotripter), no stent radial stiffness, and no calcified-nodule protrusion height. Each of these enters the model as a labelled assumption with a sensitivity range.
