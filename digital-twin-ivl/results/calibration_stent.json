@@ -1,0 +1,22 @@
+{
+ "lesion_template": "P-A90-T0.2-SUP",
+ "recoil_target_pct": 4.3,
+ "R_dep": 1.6049999999999989,
+ "R_f": 1.5359849999999988,
+ "P_tissue_at_R_f": 0.4187995822188474,
+ "K_s_MPa_per_mm": 6.068239979987641,
+ "reached_target": true,
+ "seconds": 14.715500823000184,
+ "material_set": {
+  "wall_c10": "lit:wall_yeoh_c10[value] (VERIFIED)",
+  "wall_c20": "lit:wall_yeoh_c20[value] (VERIFIED)",
+  "wall_c30": "lit:wall_yeoh_c30[value] (VERIFIED)",
+  "fibrous_E": "lit:intima_hypocellular_tangential_modulus[value] (VERIFIED)",
+  "lipid_E": "lit:lipid_modulus_AFM[value] (PROVISIONAL)",
+  "ca_E": "expr:calcification_fracture_stress / (calcification_fracture_stretch - 1)",
+  "ca_nu": "lit:calcification_poisson_ratio[value] (VERIFIED)",
+  "k_over_mu": "config:ASSUMPTION: near-incompressibility penalty K/mu for soft tissues",
+  "eps_f": "expr:calcification_fracture_stretch - 1",
+  "sigma_c": "lit:calcification_fracture_stress[value] (VERIFIED)"
+ }
+}
