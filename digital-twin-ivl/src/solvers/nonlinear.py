@@ -24,9 +24,9 @@ tissue domain, which points into the lumen on ``TAG_LUMEN_BND``)
 with ``rho = |(x + u)_perp|`` the distance of the current position from the
 vessel axis (the origin in 2D, the z-axis in 3D), ``k_f`` =
 ``loads.perivascular_k_MPa_per_mm`` and ``k_pen`` =
-``loads.contact_penalty_MPa_per_mm``. ``fracture="erosion"`` replaces
-``g(d)`` by a DG0 erosion factor (:mod:`dtivl.fracture.erosion`);
-``fracture="none"`` keeps the calcium intact.
+``loads.contact_penalty_MPa_per_mm``. ``fracture="erosion"`` drops ``d`` and
+scales the calcium energy cell-wise by a DG0 erosion factor
+(:mod:`dtivl.fracture.erosion`); ``fracture="none"`` keeps the calcium intact.
 
 Algorithm
 ---------
@@ -165,6 +165,7 @@ class SolverSettings:
     stagger_max_it: int = STAGGER_MAX_IT
     max_halvings: int = MAX_HALVINGS
     erosion_max_rounds: int = ER.ERODE_MAX_ROUNDS
+    erosion_split: bool = False               # True: eroded cells keep psi- (compression)
     quadrature_degree: int | None = None      # default 2 * degree
     u_petsc_options: dict = field(default_factory=dict)
     d_petsc_options: dict = field(default_factory=dict)
@@ -317,12 +318,14 @@ class NonlinearState:
             psi_p, psi_m = psi_calcium_split(F3, self.ms_ufl.ca_mu, self.ms_ufl.ca_K)
             self.psi_plus = psi_p
             if fracture == "phasefield":
-                gfac = degradation(self.d, self._kres)
+                W_ca = degradation(self.d, self._kres) * psi_p + psi_m
+            elif fracture == "erosion" and self.settings.erosion_split:
+                W_ca = self.eta * psi_p + psi_m
             elif fracture == "erosion":
-                gfac = self.eta
+                W_ca = self.eta * (psi_p + psi_m)
             else:
-                gfac = 1.0
-            term = (gfac * psi_p + psi_m) * dx(TAG_CALCIUM)
+                W_ca = psi_p + psi_m
+            term = W_ca * dx(TAG_CALCIUM)
             W_el = term if W_el is None else W_el + term
 
         x = ufl.SpatialCoordinate(msh)
@@ -509,11 +512,13 @@ class NonlinearState:
         elif self._eroder is not None:
             for rnd in range(1, s.erosion_max_rounds + 1):
                 self._solve_u(info)
-                n_new = self._eroder.update()
+                new = self._eroder.find_new()
+                n_new = int(self.comm.allreduce(int(new.size)))
                 info["stagger_its"] = rnd
                 info["n_new_eroded"] += n_new
                 if n_new == 0:
                     break
+                self._eroder.erode_with_continuation(new, lambda: self._solve_u(info))
             else:
                 info["stagger_converged"] = False
                 log.warning("erosion not converged after %d rounds (loads %s)", s.erosion_max_rounds, self.loads)
@@ -546,19 +551,16 @@ class NonlinearState:
         """Ordered (CCW) deformed lumen boundary polyline (n, 2) incl. midside nodes.
 
         2D: walk along the lumen edges (the longest loop if several).
-        3D: lumen nodes of the node layer closest to ``z`` (default: centre of
-        the calcium range, else of the segment), ordered by polar angle.
+        3D: section of the deformed lumen surface by the reference plane
+        ``Z = z`` (default: centre of the calcium range, else of the
+        segment), ordered by polar angle (star-shaped lumen assumed); the
+        straight-sided (vertex) geometry of the facets is used.
         """
-        X, x = self.lumen_points()
         if self.gdim == 3:
             if z is None:
                 z = 0.5 * (self.z_range[0] + self.z_range[1])
-            zs = X[:, 2]
-            zl = zs[np.argmin(np.abs(zs - z))]
-            sel = np.abs(zs - zl) <= 1e-9 * max(1.0, abs(zl)) + 1e-12
-            pts = x[sel, :2]
-            ang = np.arctan2(pts[:, 1], pts[:, 0])
-            return pts[np.argsort(ang)]
+            return self._lumen_section(float(z))
+        X, x = self.lumen_points()
         pos = {int(n): i for i, n in enumerate(self._lumen_nodes)}
         loops = _walk_loops(self._lumen_edges)
         best, best_area = None, -1.0
@@ -568,6 +570,54 @@ class NonlinearState:
             if abs(a) > best_area:
                 best, best_area = (pts if a > 0 else pts[::-1]), abs(a)
         return best
+
+    def _vertex_positions(self) -> tuple[np.ndarray, np.ndarray]:
+        """Reference and deformed positions of all geometry nodes (P1 interpolation of u)."""
+        from dolfinx import fem
+
+        if getattr(self, "_V1", None) is None:
+            self._V1 = fem.functionspace(self.mesh, ("Lagrange", 1, (self.gdim,)))
+            self._u1 = fem.Function(self._V1)
+            nv = self.mesh.topology.dim + 1
+            gdm = self.mesh.geometry.dofmaps[0][:, :nv]
+            n2d = np.full(self.mesh.geometry.x.shape[0], -1, dtype=np.int64)
+            n2d[gdm.ravel()] = self._V1.dofmap.list.ravel()
+            self._node2dof = n2d
+        self._u1.interpolate(self.u)
+        X = self.mesh.geometry.x[:, :self.gdim]
+        U = np.zeros_like(X)
+        ok = self._node2dof >= 0
+        U[ok] = self._u1.x.array.reshape(-1, self.gdim)[self._node2dof[ok]]
+        return X, X + U
+
+    def _lumen_section(self, z: float) -> np.ndarray:
+        """3D: deformed lumen boundary points on the reference plane Z = z, ordered by angle.
+
+        Edges of the lumen facets that cross the plane are cut by linear
+        interpolation of the deformed vertex positions (vertices on the
+        plane are taken as they are); duplicates are removed.
+        """
+        from dolfinx import mesh as dmesh
+
+        X, x = self._vertex_positions()
+        fn = dmesh.entities_to_geometry(self.mesh, 2, self._lumen_facets)[:, :3]
+        tol = 1e-9 * max(1.0, abs(z))
+        pts = []
+        for i, j in ((0, 1), (1, 2), (2, 0)):
+            a, b = fn[:, i], fn[:, j]
+            za, zb = X[a, 2] - z, X[b, 2] - z
+            cross = (za * zb < 0.0)
+            t = za[cross] / (za[cross] - zb[cross])
+            pts.append(x[a[cross], :2] + t[:, None] * (x[b[cross], :2] - x[a[cross], :2]))
+        on = np.unique(fn[np.abs(X[fn, 2] - z) <= tol])
+        pts.append(x[on, :2])
+        P2d = np.vstack(pts)
+        if P2d.size == 0:
+            return P2d.reshape(0, 2)
+        key = np.round(P2d / (1e-9 * max(1.0, float(np.abs(P2d).max()))))
+        _, first = np.unique(key, axis=0, return_index=True)
+        P2d = P2d[np.sort(first)]
+        return P2d[np.argsort(np.arctan2(P2d[:, 1], P2d[:, 0]))]
 
     def cell_damage(self) -> np.ndarray:
         """Cell-averaged damage of the calcium cells (eroded indicator in erosion mode)."""
@@ -1001,6 +1051,61 @@ def annulus_meshdata(a: float, b: float, h: float, *, tag: int = TAG_FIBROUS,
         if order > 1:
             gmsh.model.mesh.setOrder(order)
         return model_to_mesh(gmsh.model, comm, 0, gdim=2)
+
+
+def tube_meshdata(a: float, b: float, length: float, h: float, *, tag: int = TAG_FIBROUS,
+                  ca_sector: tuple[float, float, float] | None = None, ca_center_deg: float = 0.0, comm=None):
+    """3D tube ``a <= r <= b``, ``0 <= z <= length`` (linear tetrahedra, size ``h``).
+
+    Optional calcium sector ``(r1, r2, arc_deg)`` over the full length.
+    Facet tags ``TAG_LUMEN_BND``, ``TAG_OUTER_BND`` and ``TAG_END_BND``
+    (z = 0 and z = length). Verification/test geometry.
+    """
+    from mpi4py import MPI
+    from dolfinx.io.gmsh import model_to_mesh
+
+    comm = MPI.COMM_WORLD if comm is None else comm
+    with _gmsh_model("tube_nl") as gmsh:
+        occ = gmsh.model.occ
+        ring, _ = occ.cut([(3, occ.addCylinder(0, 0, 0, 0, 0, length, b))],
+                          [(3, occ.addCylinder(0, 0, 0, 0, 0, length, a))])
+        ca_set = set()
+        if ca_sector is not None:
+            r1, r2, arc = ca_sector
+            sec, _ = occ.cut([(3, occ.addCylinder(0, 0, 0, 0, 0, length, r2))],
+                             [(3, occ.addCylinder(0, 0, 0, 0, 0, length, r1))])
+            if arc < 360.0:
+                c0, half, n, R = math.radians(ca_center_deg), math.radians(arc) / 2.0, max(8, int(arc / 10.0)), 2.0 * b
+                pts = [occ.addPoint(0, 0, 0)] + [
+                    occ.addPoint(R * math.cos(c0 - half + 2 * half * k / n), R * math.sin(c0 - half + 2 * half * k / n), 0)
+                    for k in range(n + 1)]
+                lines = [occ.addLine(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts))]
+                wedge = occ.extrude([(2, occ.addPlaneSurface([occ.addCurveLoop(lines)]))], 0, 0, length)
+                sec, _ = occ.intersect(sec, [dt for dt in wedge if dt[0] == 3])
+            _, children = occ.fragment(ring, sec)
+            ca_set = {t for dimtags in children[len(ring):] for _, t in dimtags}
+        occ.synchronize()
+        vols = [v for _, v in gmsh.model.getEntities(3)]
+        soft = [v for v in vols if v not in ca_set]
+        if soft:
+            gmsh.model.addPhysicalGroup(3, soft, tag)
+        if ca_set:
+            gmsh.model.addPhysicalGroup(3, sorted(ca_set), TAG_CALCIUM)
+        lum, out, end = [], [], []
+        for _, f in gmsh.model.getBoundary([(3, v) for v in vols], oriented=False, combined=True):
+            xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(2, abs(f))
+            if zmax - zmin < 1e-3 * length:          # flat (OCC boxes carry a tolerance)
+                end.append(abs(f))
+                continue
+            rc = max(abs(xmin), abs(xmax), abs(ymin), abs(ymax))
+            (lum if abs(rc - a) < abs(rc - b) else out).append(abs(f))
+        gmsh.model.addPhysicalGroup(2, lum, TAG_LUMEN_BND)
+        gmsh.model.addPhysicalGroup(2, out, TAG_OUTER_BND)
+        gmsh.model.addPhysicalGroup(2, end, TAG_END_BND)
+        gmsh.option.setNumber("Mesh.MeshSizeMin", h)
+        gmsh.option.setNumber("Mesh.MeshSizeMax", h)
+        gmsh.model.mesh.generate(3)
+        return model_to_mesh(gmsh.model, comm, 0, gdim=3)
 
 
 def lame_plane_strain_ur(r, a: float, b: float, p: float, lam: float, mu: float):

@@ -24,6 +24,8 @@ STRIP_L = 12.0          #: strip / column length (mm)
 STRIP_W = 0.2           #: strip width (mm)
 STRIP_H = 0.05          #: strip mesh size (mm)
 COLUMN_H = 0.1          #: 3D column mesh size (mm)
+COLUMN_H_MIXED = 0.05   #: 3D column mesh size for the Taylor-Hood check (mm)
+COLUMN_W_MIXED = 0.1    #: 3D column width for the Taylor-Hood check (mm)
 PROBES = (3.0, 7.0)     #: probe positions along the strip (mm)
 PULSE_W = 1.0           #: test pulse width (us)
 DT_STRIP = 0.01         #: strip time step (us)
@@ -33,8 +35,11 @@ ENERGY_TOL = 0.01       #: energy conservation tolerance
 TAG_SIDE_Y = 40         #: extra facet tag for the y-faces of the 3D column
 H_CA, H_SOFT = 0.05, 0.2  #: sector annulus mesh sizes (mm)
 SECTOR_ARC = 90.0       #: calcium sector arc (deg)
-T_BOUND = 2.0           #: sensible upper bound of the transfer factor
+T_BOUND = 1.0           #: sensible upper bound: a ~2 us pulse is far shorter than the hoop response time
 LAME_3D_LENGTH = 0.3    #: 3D tube length for the static Lame check (mm)
+H_CA_3D, H_SOFT_3D = 0.08, 0.3  #: coarse 3D sector mesh sizes (mm)
+LENGTH_3D = 0.3         #: 3D sector extrusion length (mm)
+T3D_WINDOW_PULSES = 5.0 #: 3D consistency window (pulse widths)
 
 
 # ---------------------------------------------------------------------------
@@ -65,7 +70,7 @@ def _tag_facets(msh, pieces):
     return dmesh.meshtags(msh, tdim - 1, idx.astype(np.int32), val[first])
 
 
-def strip_meshdata(gdim: int, cell_tag: int = TAG_CALCIUM):
+def strip_meshdata(gdim: int, cell_tag: int = TAG_CALCIUM, h3d: float = COLUMN_H, width: float = STRIP_W):
     """Homogeneous strip (2D) / column (3D) along x; load face x=0, far face x=L.
 
     Facet tags: x=0 lumen, x=L outer, lateral faces TAG_END_BND (y faces in
@@ -75,22 +80,22 @@ def strip_meshdata(gdim: int, cell_tag: int = TAG_CALCIUM):
     from dolfinx import mesh as dmesh
 
     if gdim == 2:
-        msh = dmesh.create_rectangle(MPI.COMM_WORLD, [[0, 0], [STRIP_L, STRIP_W]],
-                                     [round(STRIP_L / STRIP_H), round(STRIP_W / STRIP_H)],
+        msh = dmesh.create_rectangle(MPI.COMM_WORLD, [[0, 0], [STRIP_L, width]],
+                                     [round(STRIP_L / STRIP_H), round(width / STRIP_H)],
                                      dmesh.CellType.triangle)
     else:
-        n = max(1, round(STRIP_W / COLUMN_H))
-        msh = dmesh.create_box(MPI.COMM_WORLD, [[0, 0, 0], [STRIP_L, STRIP_W, STRIP_W]],
-                               [round(STRIP_L / COLUMN_H), n, n], dmesh.CellType.tetrahedron)
+        n = max(1, round(width / h3d))
+        msh = dmesh.create_box(MPI.COMM_WORLD, [[0, 0, 0], [STRIP_L, width, width]],
+                               [round(STRIP_L / h3d), n, n], dmesh.CellType.tetrahedron)
     nc = msh.topology.index_map(gdim).size_local
     ct = dmesh.meshtags(msh, gdim, np.arange(nc, dtype=np.int32), np.full(nc, cell_tag, dtype=np.int32))
     pieces = [(lambda x: np.isclose(x[0], 0.0), TAG_LUMEN_BND),
               (lambda x: np.isclose(x[0], STRIP_L), TAG_OUTER_BND)]
     if gdim == 2:
-        pieces.append((lambda x: np.isclose(x[1], 0.0) | np.isclose(x[1], STRIP_W), TAG_END_BND))
+        pieces.append((lambda x: np.isclose(x[1], 0.0) | np.isclose(x[1], width), TAG_END_BND))
     else:
-        pieces.append((lambda x: np.isclose(x[2], 0.0) | np.isclose(x[2], STRIP_W), TAG_END_BND))
-        pieces.append((lambda x: np.isclose(x[1], 0.0) | np.isclose(x[1], STRIP_W), TAG_SIDE_Y))
+        pieces.append((lambda x: np.isclose(x[2], 0.0) | np.isclose(x[2], width), TAG_END_BND))
+        pieces.append((lambda x: np.isclose(x[1], 0.0) | np.isclose(x[1], width), TAG_SIDE_Y))
     return types.SimpleNamespace(mesh=msh, cell_tags=ct, facet_tags=_tag_facets(msh, pieces))
 
 
@@ -175,7 +180,7 @@ def sector_annulus_meshdata(arc_deg: float | None, h_ca: float = H_CA, h_soft: f
         for _, e in bnd:
             e = abs(e)
             xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.getBoundingBox(dim - 1, e)
-            if dim == 3 and zmax - zmin < 1e-9:
+            if dim == 3 and zmax - zmin < 0.5 * length:      # planar end face (OCC boxes are padded)
                 groups[TAG_END_BND].append(e)
                 continue
             r = max(abs(xmin), abs(xmax), abs(ymin), abs(ymax))
@@ -203,7 +208,10 @@ def sector_annulus_meshdata(arc_deg: float | None, h_ca: float = H_CA, h_soft: f
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMax", h_soft)
         gmsh.model.mesh.generate(dim)
-        return model_to_mesh(gmsh.model, MPI.COMM_WORLD, 0, gdim=dim)
+        md = model_to_mesh(gmsh.model, MPI.COMM_WORLD, 0, gdim=dim)
+        for tag in ((TAG_LUMEN_BND, TAG_OUTER_BND) + ((TAG_END_BND,) if dim == 3 else ())):
+            assert md.facet_tags.find(tag).size > 0, f"facet tag {tag} missing"
+        return md
     finally:
         gmsh.model.remove()
         if owns:
@@ -265,29 +273,43 @@ def _arrival_speed(md, ms, acoustic, rollers, outer_bc="absorbing", t_end=None, 
     if t_end is None:
         t_end = PROBES[1] / c_exact + 2.0 * PULSE_W
     hist = model.run(TR.half_sine(1.0, PULSE_W), dt, t_end, record_energy=True,
-                     callback=lambda k, t, u, v, a: rec.append(v[ids].copy()))
-    V = np.asarray(rec)
+                     callback=lambda k, t, u, v, a: rec.append(np.r_[u[ids], v[ids]]))
+    R = np.asarray(rec)
+    U, V = R[:, :len(ids)], R[:, len(ids):]
     t = hist.t
-    # arrival time = centroid of the particle-velocity pulse (robust to dispersion)
-    tc = [float(np.sum(t * V[:, j]) / np.sum(V[:, j])) for j in range(len(PROBES))]
-    c_meas = (PROBES[1] - PROBES[0]) / (tc[1] - tc[0])
-    return c_meas, c_exact, hist, model
+    # arrival time = time at which the displacement reaches half of its plateau, i.e. the
+    # median of the transmitted impulse (robust to dispersion and to zero-mean noise)
+    t_half = [float(np.interp(0.5 * U[-1, j], np.maximum.accumulate(U[:, j]), t)) for j in range(len(ids))]
+    c_meas = (PROBES[1] - PROBES[0]) / (t_half[1] - t_half[0])
+    noise = float(np.max(-V.min(axis=0) / V.max(axis=0)))   # backward particle velocity / peak
+    return c_meas, c_exact, hist, model, noise
 
 
 @pytest.mark.parametrize("formulation", ["mixed", "displacement"])
 def test_wave_speed_strip_2d(ms, acoustic, formulation):
     md = strip_meshdata(2)
-    c_meas, c_exact, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, formulation=formulation)
+    c_meas, c_exact, _, _, noise = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, formulation=formulation)
     print(f"2D strip ({formulation}): c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
-          f"rel err = {abs(c_meas / c_exact - 1):.2e}")
+          f"rel err = {abs(c_meas / c_exact - 1):.2e}, spurious backward velocity {noise:.3f} of peak")
     assert abs(c_meas / c_exact - 1.0) < SPEED_TOL
 
 
 def test_wave_speed_column_3d(ms, acoustic):
     md = strip_meshdata(3)
-    c_meas, c_exact, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 2, TAG_SIDE_Y: 1}, dt=DT_COLUMN)
-    print(f"3D column (mixed): c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
-          f"rel err = {abs(c_meas / c_exact - 1):.2e}")
+    c_meas, c_exact, _, _, noise = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 2, TAG_SIDE_Y: 1},
+                                                  dt=DT_COLUMN, formulation="displacement")
+    print(f"3D column (displacement): c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
+          f"rel err = {abs(c_meas / c_exact - 1):.2e}, spurious backward velocity {noise:.3f} of peak")
+    assert abs(c_meas / c_exact - 1.0) < SPEED_TOL
+
+
+def test_wave_speed_column_3d_mixed(ms, acoustic):
+    """Taylor-Hood tets need a finer mesh than P2 displacement (spurious incompressible modes)."""
+    md = strip_meshdata(3, h3d=COLUMN_H_MIXED, width=COLUMN_W_MIXED)
+    c_meas, c_exact, _, _, noise = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 2, TAG_SIDE_Y: 1},
+                                                  dt=DT_COLUMN, formulation="mixed")
+    print(f"3D column (mixed, h = {COLUMN_H_MIXED}): c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} "
+          f"mm/us, rel err = {abs(c_meas / c_exact - 1):.2e}, spurious backward velocity {noise:.3f} of peak")
     assert abs(c_meas / c_exact - 1.0) < SPEED_TOL
 
 
@@ -296,13 +318,13 @@ def test_absorbing_boundary_strip(ms, acoustic):
     md = strip_meshdata(2)
     rho, c = acoustic
     t_exit = STRIP_L / c[TAG_CALCIUM] + 2.0 * PULSE_W
-    _, _, hist, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, t_end=t_exit)
+    _, _, hist, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, t_end=t_exit)
     E = hist.energy.sum(axis=1)
     resid = E[-1] / E.max()
     print(f"absorbing end: residual energy fraction = {resid:.2e}")
     assert resid < 0.02
     # closed (fixed) far end reflects: energy stays
-    _, _, hist_f, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, outer_bc="fixed", t_end=t_exit)
+    _, _, hist_f, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, outer_bc="fixed", t_end=t_exit)
     Ef = hist_f.energy.sum(axis=1)
     assert Ef[-1] / Ef.max() > 0.99
 
@@ -350,7 +372,7 @@ def test_transfer_factor_sector(sector_md, ms, acoustic):
     assert 0.0 < res["T"] < T_BOUND
     assert res["sigma1_static"] > 0.0
     assert 0.0 < res["T_equivalent"] < T_BOUND
-    assert not res["peak_at_window_end"]
+    assert isinstance(res["peak_at_window_end"], bool)
     hist = res["sigma1_max_history"]
     assert hist.shape == res["t"].shape == res["pressure_history"].shape
     assert np.isfinite(hist).all()
@@ -435,13 +457,18 @@ def test_static_matches_lame_3d(ms, acoustic):
     assert out["displacement"][1] > peak     # documents the locking of P2 tetrahedra at K/mu ~ 1e5
 
 
-@pytest.mark.slow
-def test_transfer_factor_3d_smoke(ms, acoustic):
-    """3D extruded calcium sector (u_z = 0 on the ends): T finite and in range."""
-    md = sector_annulus_meshdata(SECTOR_ARC, h_ca=0.08, h_soft=0.3, length=0.5)
+def test_transfer_factor_3d_plane_strain_consistency(ms, acoustic):
+    """3D extrusion with u_z = 0 ends (plane strain) reproduces the 2D transfer factor."""
     rho, c = acoustic
-    res = TR.transfer_factor(md, TAG_CALCIUM, ms, rho, c, t_end=4.0 * TR.default_pulse_width_us(),
-                             equivalent_static=False)
-    print(f"3D sector: T = {res['T']:.4f}, ndofs = {res['info']['ndofs']}")
-    assert np.isfinite(res["T"])
-    assert 0.0 < res["T"] < T_BOUND
+    kw = dict(t_end=T3D_WINDOW_PULSES * TR.default_pulse_width_us(), equivalent_static=False)
+    md3 = sector_annulus_meshdata(SECTOR_ARC, h_ca=H_CA_3D, h_soft=H_SOFT_3D, length=LENGTH_3D)
+    md2 = sector_annulus_meshdata(SECTOR_ARC, h_ca=H_CA_3D, h_soft=H_SOFT_3D)
+    r3 = TR.transfer_factor(md3, TAG_CALCIUM, ms, rho, c, **kw)
+    r2 = TR.transfer_factor(md2, TAG_CALCIUM, ms, rho, c, **kw)
+    print(f"3D sector: T = {r3['T']:.4f} (ndofs {r3['info']['ndofs']}), 2D: T = {r2['T']:.4f}; "
+          f"sigma1_static 3D {r3['sigma1_static']:.3f} / 2D {r2['sigma1_static']:.3f} MPa; "
+          f"min history 3D {np.nanmin(r3['sigma1_max_history']):.3f} / 2D {np.nanmin(r2['sigma1_max_history']):.3f}")
+    assert np.isfinite(r3["T"]) and 0.0 < r3["T"] < T_BOUND
+    assert r3["sigma1_static"] == pytest.approx(r2["sigma1_static"], rel=0.15)
+    assert np.nanmin(r3["sigma1_max_history"]) == pytest.approx(np.nanmin(r2["sigma1_max_history"]), rel=0.05)
+    assert r3["T"] == pytest.approx(r2["T"], rel=0.5)

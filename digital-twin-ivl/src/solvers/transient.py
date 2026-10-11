@@ -18,36 +18,57 @@ Material model (per cell tag, piecewise constant)
   density: ``M = rho c^2``, bulk modulus ``K = M - 4 mu / 3``,
   ``lambda = K - 2 mu / 3``; shear-wave speed ``c_s = sqrt(mu / rho)``.
 
-Note that the acoustic bulk moduli are 3-5 orders of magnitude above the
-shear moduli (effective Poisson ratios > 0.499, also for calcium), so the
-material is nearly incompressible. All terms are integrated exactly by
-default (``volumetric="full"``). P2 triangles/tetrahedra do not lock
-severely at these ratios but show cell-level pressure noise: on a
-pressurised annulus (K/mu = 2.4e3 and 8e4, h = 0.05-0.15 mm) the
-cell-averaged sigma1 deviates from Lame by at most 1.5-3 % in single cells
-and < 1 % at the peak. The option ``volumetric="reduced"`` (one-point rule
-for the volumetric term, i.e. the inf-sup-stable P2-P0 formulation) removes
-that noise in *static* solves but must not be used for transients: the P2
-element bubble (zero mean divergence) is then resisted by the shear modulus
-only and is strongly excited by the pressure pulse (spurious low-frequency
-modes; observed in the 1D strip test).
+Discretisation (near incompressibility)
+---------------------------------------
+The acoustic bulk moduli are 3-5 orders of magnitude above the shear moduli
+(effective Poisson ratios > 0.499, also for calcium: K/mu ~ 2.4e3 calcium,
+~8e4 wall). Two formulations are provided:
 
-Weak form (plane strain in 2D, 3D otherwise)
---------------------------------------------
-    int rho a.v dx + int 2 mu dev(eps3(u)) : dev(eps3(v)) dx
-        + int K div u div v dx
+* ``formulation="mixed"`` (default): Taylor-Hood u-p (P2 displacement,
+  continuous P1 pressure ``p = -K div u``, positive in compression).
+  Locking-free: on the pressurised wall annulus (K/mu = 8.2e4) the
+  cell-averaged sigma1 matches Lame within 0.2 % (2D, h = 0.05 mm) and
+  0.6 % (3D tube with u_z = 0 ends, h = 0.2 mm).
+* ``formulation="displacement"``: pure P2 displacement; ``volumetric="full"``
+  integrates exactly (cleanest plane-wave propagation, but P2 elements lock
+  at these ratios: 2D peak sigma1 within 0.4 % with isolated noisy cells up
+  to ~5 %; 3D tetrahedra lock badly, peak error ~170 % at h = 0.2 mm), or
+  ``volumetric="reduced"`` (one-point rule, i.e. P2-P0) which is
+  locking-free in *static* solves but must not be used for transients: the
+  element bubble (zero mean divergence) is then resisted by mu only and is
+  strongly excited by the pulse.
+
+Locking-free elements contain many discrete near-incompressible modes that
+carry only shear stiffness; with shear-wave speeds of 0.006-0.04 mm/us the
+physical shear wavelengths during a ~2 us pulse (0.01-0.08 mm) are not
+resolved by practical meshes, and mode conversion at the calcium edges
+excites these modes. The transient tensile sigma1 in calcium (small: about
+0.1-0.2 MPa against ~4 MPa compression) is therefore mesh sensitive: in the
+2D 90 deg sector test T = 0.012, 0.010, 0.006 for h_ca = 0.05, 0.025,
+0.0125 mm (mixed) and 0.009, 0.007, 0.007 (displacement), i.e. T is
+resolved to about +-0.005 at the default calcium mesh size. A 3D extrusion
+of the same section with u_z = 0 ends (plane strain) reproduces the 2D
+value with the mixed formulation (h_ca = 0.05 mm: T = 0.0124 in 3D vs
+0.0123 in 2D); the 3D displacement formulation does not (locking).
+
+Weak form (plane strain in 2D, 3D otherwise; mixed)
+---------------------------------------------------
+    int rho a.v dx + int 2 mu dev(eps3(u)) : dev(eps3(v)) dx - int p div v dx
         + int_outer (rho c_p (n.v)(n.u_t) + rho c_s (v_t . u_t,t)) ds
-        = - p(t) int_lumen n.v ds
+        = - p_lumen(t) int_lumen n.v ds,
+    int (div u + p / K) q dx = 0
 
-where ``eps3`` is the 3x3 strain (plane strain embedding), ``n`` the
-outward normal of the tissue domain (on the lumen it points into the lumen,
-so ``-p n`` pushes the wall outward) and the outer boundary carries a
-Lysmer-Kuhlemeyer dashpot (normal ``rho c_p``, tangential ``rho c_s``),
-which is exactly non-reflecting for plane waves at normal incidence
-(``outer_bc="absorbing"``). ``outer_bc="free"`` (traction-free) and
-``"fixed"`` (u = 0) give closed, energy-conserving boundaries for
-verification. Optional roller constraints ``u_i = 0`` on tagged facets
-(default in 3D: ``u_z = 0`` on ``TAG_END_BND``, as in the linear module).
+(the displacement formulation replaces the pressure by
+``+ int K div u div v dx``). ``eps3`` is the 3x3 strain (plane strain
+embedding), ``n`` the outward normal of the tissue domain (on the lumen it
+points into the lumen, so ``-p_lumen n`` pushes the wall outward) and the
+outer boundary carries a Lysmer-Kuhlemeyer dashpot (normal ``rho c_p``,
+tangential ``rho c_s``), which is exactly non-reflecting for plane waves at
+normal incidence (``outer_bc="absorbing"``). ``outer_bc="free"``
+(traction-free) and ``"fixed"`` (u = 0) give closed, energy-conserving
+boundaries for verification. Optional roller constraints ``u_i = 0`` on
+tagged facets (default in 3D: ``u_z = 0`` on ``TAG_END_BND``, as in the
+linear module).
 
 Load: lumen pressure half-sine ``p(t) = p_peak sin(pi t / tau)`` for
 ``0 <= t <= tau`` and 0 afterwards; default ``tau`` from
@@ -60,17 +81,21 @@ Time integration
 Generalized-alpha (Chung & Hulbert 1993) with spectral radius at infinity
 ``rho_inf``; the default ``rho_inf = 1`` is the non-dissipative average
 acceleration (trapezoidal) member, which conserves the discrete energy
-``1/2 v^T M v + 1/2 u^T K u`` exactly without load and damping. The
-effective matrix is factorised once (MUMPS LU via PETSc).
+``1/2 v^T M v + 1/2 u^T Kd u + 1/2 p^T Mp p`` exactly without load and
+damping. In the mixed formulation the algebraic pressure is solved for
+together with the acceleration at the generalized-alpha level
+``t_{n+1-alpha_f}``. The effective (saddle-point) matrix is factorised once
+(MUMPS LU via PETSc).
 
 Stress output
 -------------
-Cell averages of the 3x3 strain are obtained by a precomputed sparse
-operator (exact quadrature); the cell stress is
-``sigma3 = 2 mu dev(eps3) + K tr(eps) I`` (identical to the cell average of
-the pointwise stress since the coefficients are cell-wise constant). In plane
-strain ``sigma_33 = lambda tr(eps)`` is included in the maximum principal
-stress ``sigma1``.
+Cell averages of the 3x3 strain (and of the mixed pressure) are obtained by
+precomputed sparse operators (exact quadrature); the cell stress is
+``sigma3 = 2 mu dev(eps3) - p I`` with ``p`` the cell-averaged pressure
+(mixed) or ``-K tr(eps)`` (displacement), i.e. the cell average of the
+pointwise stress since the coefficients are cell-wise constant. In plane
+strain ``sigma_33 = -2 mu tr(eps)/3 - p`` is included in the maximum
+principal stress ``sigma1``.
 
 Transfer factor
 ---------------
@@ -82,8 +107,8 @@ discretisation and the same peak pressure:
 inertia and therefore no dashpot; the rigid-body modes are removed by the
 weak foundation ``loads.perivascular_k_MPa_per_mm`` on the outer boundary
 (as in design.md section 4). Additionally ``T_equivalent`` divides by the
-static sigma1 of the quasi-static model (``MaterialSet.lame`` moduli, full
-integration, as in section 4), i.e. the factor by which the peak pulse
+static sigma1 of the quasi-static model (``MaterialSet.lame`` moduli,
+displacement formulation with full integration, as in section 4), i.e. the factor by which the peak pulse
 pressure must be scaled to reproduce the transient peak in the quasi-static
 model.
 
@@ -446,13 +471,16 @@ class ElastodynamicModel:
         """Return a ``solve(b) -> x`` closure (u constraints applied, MUMPS LU)."""
         from petsc4py import PETSc
 
+        import scipy.sparse as sp
+
         fixed = self.fixed_dofs
-        if fixed.size:
-            A = A.tolil()
-            A[fixed, :] = 0.0
-            A[:, fixed] = 0.0
-            A[fixed, fixed] = 1.0
+        if fixed.size:   # A <- D A D + I_fixed with D = diag(1 - fixed indicator)
+            ind = np.zeros(A.shape[0])
+            ind[fixed] = 1.0
+            D = sp.diags(1.0 - ind)
+            A = D @ A @ D + sp.diags(ind)
         A = A.tocsr()
+        A.eliminate_zeros()
         A.sort_indices()
         Ap = PETSc.Mat().createAIJ(size=A.shape, csr=(A.indptr.astype(PETSc.IntType),
                                                       A.indices.astype(PETSc.IntType), A.data),
