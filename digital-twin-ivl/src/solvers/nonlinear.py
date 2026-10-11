@@ -147,6 +147,7 @@ STAGGER_TOL = 1e-3            #: ||Delta d||_inf tolerance of the alternate mini
 STAGGER_MAX_IT = 100          #: max alternate-minimisation iterations per increment
 MAX_HALVINGS = 6              #: min increment = nominal / 2**MAX_HALVINGS
 STEP_GROWTH = 2.0             #: increment growth after a converged step (capped at nominal)
+DAMAGE_RELAX_MAX = 10         #: max halvings of a damage increment when the u-solve fails after a d-update
 STENT_START_GAP_FRAC = 0.01   #: rigid cylinder starts 1 % inside the minimum lumen radius
 RECOIL_TOL_MM = 1e-4          #: bisection tolerance on R_final (mm)
 RECOIL_MAX_IT = 40            #: max bisection iterations
@@ -520,6 +521,30 @@ class NonlinearState:
         if not ok:
             raise SolveError(f"displacement SNES failed (reason {reason})")
 
+    def _solve_u_relaxed(self, info: dict, d_acc: np.ndarray | None) -> np.ndarray:
+        """Displacement solve with damage under-relaxation (brittle snap-through).
+
+        If the u-solve fails after a damage update, the damage increment since
+        the last equilibrated state ``d_acc`` is halved (``d = d_acc + 1/2 (d -
+        d_acc)``, which stays within the bounds [d_lb, d_ub]) and the solve is
+        retried from the last equilibrated displacement, up to
+        ``DAMAGE_RELAX_MAX`` times. The converged staggered state is unchanged;
+        only the path towards it is regularised. Returns the new ``d_acc``.
+        """
+        u_acc = self.u.x.array.copy()
+        for k in range(DAMAGE_RELAX_MAX + 1):
+            try:
+                self._solve_u(info)
+                return self.d.x.array.copy()
+            except SolveError:
+                if d_acc is None or k == DAMAGE_RELAX_MAX:
+                    raise
+                self.u.x.array[:] = u_acc
+                self.d.x.array[:] = d_acc + 0.5 * (self.d.x.array - d_acc)
+                self.d.x.scatter_forward()
+                info["damage_relaxations"] = info.get("damage_relaxations", 0) + 1
+        raise SolveError("unreachable")
+
     def _solve_d(self, info: dict) -> None:
         ok, its, reason = self._dsolver.solve()
         info["d_its"] += its
@@ -533,8 +558,9 @@ class NonlinearState:
                 "stagger_converged": True, "n_new_eroded": 0}
         if self._dsolver is not None:
             err = 0.0
+            d_acc = None                      # damage for which u is in equilibrium (None before first u-solve)
             for it in range(1, s.stagger_max_it + 1):
-                self._solve_u(info)
+                d_acc = self._solve_u_relaxed(info, d_acc)
                 d_old = self.d.x.array.copy()
                 self._solve_d(info)
                 err = float(self.comm.allreduce(np.abs(self.d.x.array - d_old).max(initial=0.0), op=_mpi_max()))
@@ -546,7 +572,7 @@ class NonlinearState:
                 log.warning("alternate minimisation not converged after %d iterations (||dd||=%.2e, loads %s)",
                             s.stagger_max_it, err, self.loads)
             if err > 0.0:
-                self._solve_u(info)
+                self._solve_u_relaxed(info, d_acc)
         elif self._eroder is not None:
             for rnd in range(1, s.erosion_max_rounds + 1):
                 self._solve_u(info)
