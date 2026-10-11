@@ -34,6 +34,7 @@ TAG_SIDE_Y = 40         #: extra facet tag for the y-faces of the 3D column
 H_CA, H_SOFT = 0.05, 0.2  #: sector annulus mesh sizes (mm)
 SECTOR_ARC = 90.0       #: calcium sector arc (deg)
 T_BOUND = 2.0           #: sensible upper bound of the transfer factor
+LAME_3D_LENGTH = 0.3    #: 3D tube length for the static Lame check (mm)
 
 
 # ---------------------------------------------------------------------------
@@ -247,9 +248,10 @@ def test_half_sine():
 # ---------------------------------------------------------------------------
 # Verification: wave speed
 # ---------------------------------------------------------------------------
-def _arrival_speed(md, ms, acoustic, rollers, outer_bc="absorbing", t_end=None, dt=DT_STRIP):
+def _arrival_speed(md, ms, acoustic, rollers, outer_bc="absorbing", t_end=None, dt=DT_STRIP,
+                   formulation="mixed"):
     rho, c = acoustic
-    model = TR.build_model(md, ms, rho, c, roller_tags=rollers, outer_bc=outer_bc)
+    model = TR.build_model(md, ms, rho, c, roller_tags=rollers, outer_bc=outer_bc, formulation=formulation)
     mat = model.materials[TAG_CALCIUM]
     c_exact = math.sqrt(mat.M / mat.rho)
     X = model.dof_coordinates()
@@ -272,10 +274,11 @@ def _arrival_speed(md, ms, acoustic, rollers, outer_bc="absorbing", t_end=None, 
     return c_meas, c_exact, hist, model
 
 
-def test_wave_speed_strip_2d(ms, acoustic):
+@pytest.mark.parametrize("formulation", ["mixed", "displacement"])
+def test_wave_speed_strip_2d(ms, acoustic, formulation):
     md = strip_meshdata(2)
-    c_meas, c_exact, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1})
-    print(f"2D strip: c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
+    c_meas, c_exact, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 1}, formulation=formulation)
+    print(f"2D strip ({formulation}): c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
           f"rel err = {abs(c_meas / c_exact - 1):.2e}")
     assert abs(c_meas / c_exact - 1.0) < SPEED_TOL
 
@@ -283,7 +286,7 @@ def test_wave_speed_strip_2d(ms, acoustic):
 def test_wave_speed_column_3d(ms, acoustic):
     md = strip_meshdata(3)
     c_meas, c_exact, _, _ = _arrival_speed(md, ms, acoustic, {TAG_END_BND: 2, TAG_SIDE_Y: 1}, dt=DT_COLUMN)
-    print(f"3D column: c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
+    print(f"3D column (mixed): c_meas = {c_meas:.5f} mm/us, sqrt(M/rho) = {c_exact:.5f} mm/us, "
           f"rel err = {abs(c_meas / c_exact - 1):.2e}")
     assert abs(c_meas / c_exact - 1.0) < SPEED_TOL
 
@@ -307,11 +310,12 @@ def test_absorbing_boundary_strip(ms, acoustic):
 # ---------------------------------------------------------------------------
 # Verification: energy conservation (closed boundaries, no damping)
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("outer_bc", ["free", "fixed"])
-def test_energy_conservation_annulus(ms, acoustic, outer_bc):
+@pytest.mark.parametrize("outer_bc,formulation", [("free", "mixed"), ("fixed", "mixed"),
+                                                  ("free", "displacement")])
+def test_energy_conservation_annulus(ms, acoustic, outer_bc, formulation):
     md = sector_annulus_meshdata(SECTOR_ARC)
     rho, c = acoustic
-    model = TR.build_model(md, ms, rho, c, outer_bc=outer_bc)
+    model = TR.build_model(md, ms, rho, c, outer_bc=outer_bc, formulation=formulation)
     width = TR.default_pulse_width_us()
     dt = model.default_dt(width)
     hist = model.run(TR.half_sine(1.0, width), dt, 3.0 * width, record_energy=True)
@@ -319,7 +323,7 @@ def test_energy_conservation_annulus(ms, acoustic, outer_bc):
     after = hist.t >= width
     E0 = E[after][0]
     drift = np.max(np.abs(E[after] - E0)) / E0
-    print(f"annulus ({outer_bc}): energy after pulse {E0:.4e}, max relative drift {drift:.2e}")
+    print(f"annulus ({outer_bc}, {formulation}): energy after pulse {E0:.4e}, max relative drift {drift:.2e}")
     assert E0 > 0.0
     assert drift < ENERGY_TOL
     # generalized-alpha with rho_inf < 1 dissipates (monotone non-increasing after the pulse)
@@ -369,44 +373,66 @@ def test_transfer_factor_defaults_and_errors(sector_md, ms):
                              equivalent_static=False, allow_pending=True)
     assert np.isfinite(res["sigma1_static"])
     assert set(res["materials"]) == {"wall", "fibrous", "calcium"}
-    # locking-free static denominator option: same transient, static peak within a few %
-    res_r = TR.transfer_factor(sector_md, TAG_CALCIUM, ms, t_end=2.0 * TR.default_pulse_width_us(),
-                               equivalent_static=False, static_volumetric="reduced", allow_pending=True)
-    assert res_r["sigma1_peak_transient"] == pytest.approx(res["sigma1_peak_transient"], rel=1e-10)
-    assert res_r["sigma1_static"] == pytest.approx(res["sigma1_static"], rel=0.1)
+    # displacement formulation: same physics, static peak within discretisation differences
+    res_d = TR.transfer_factor(sector_md, TAG_CALCIUM, ms, t_end=2.0 * TR.default_pulse_width_us(),
+                               equivalent_static=False, formulation="displacement", allow_pending=True)
+    assert res_d["sigma1_static"] == pytest.approx(res["sigma1_static"], rel=0.1)
+    assert res_d["info"]["formulation"] == "displacement"
+    with pytest.raises(ValueError):
+        TR.transfer_factor(sector_md, TAG_CALCIUM, ms, formulation="bogus")
     with pytest.raises(ValueError):
         TR.transfer_factor(sector_md, 99, ms)
 
 
-def test_static_matches_lame_homogeneous(ms, acoustic):
-    """Static branch (used for T's denominator): hoop stress of a homogeneous annulus vs Lame."""
-    md = sector_annulus_meshdata(None, h_soft=H_CA)
-    rho, c = acoustic
-    model = TR.build_model(md, ms, rho, c, outer_bc="free")
-    p = 1.0
+def _lame_errors(md, model, h, gdim):
+    """Cell sigma1 vs Lame hoop stress (p = 1) for a homogeneous annulus/tube."""
     k_found = P.get("loads.perivascular_k_MPa_per_mm").value
-    n = md.mesh.topology.index_map(2).size_local
+    n = md.mesh.topology.index_map(gdim).size_local
     cells = np.arange(n, dtype=np.int32)
     cen = md.mesh.geometry.x[md.mesh.geometry.dofmaps[0][cells]].mean(axis=1)
     r = np.hypot(cen[:, 0], cen[:, 1])
     a, _, b = _radii()
-    hoop = p * a * a / (b * b - a * a) * (1.0 + b * b / r ** 2)
-    sel = (r > a + 2 * H_CA) & (r < b - 2 * H_CA)     # interior cells (avoid boundary-layer cells)
-    s1 = model.cell_stress_operator(cells)(model.static_displacement(p, k_found))
+    hoop = a * a / (b * b - a * a) * (1.0 + b * b / r ** 2)
+    sel = (r > a + 2 * h) & (r < b - 2 * h)     # interior cells (avoid boundary-layer cells)
+    s1 = model.cell_stress_operator(cells)(*model.static_solution(1.0, k_found))
     err = np.abs(s1[sel] - hoop[sel]) / hoop.max()
-    peak_err = abs(s1.max() / hoop.max() - 1.0)
-    # reduced (P2-P0) static branch: locking-free cell values
-    model_r = TR.build_model(md, ms, rho, c, outer_bc="free", volumetric="reduced")
-    s1r = model_r.cell_stress_operator(cells)(model_r.static_displacement(p, k_found))
-    err_r = np.abs(s1r[sel] - hoop[sel]) / hoop.max()
-    print(f"static homogeneous annulus (K/mu = {model.materials[TAG_WALL].K / model.materials[TAG_WALL].mu:.3g}): "
-          f"full: peak err {peak_err:.4f}, cell err p99 {np.percentile(err, 99):.4f}, max {err.max():.4f}; "
-          f"reduced: cell err max {err_r.max():.4f}")
-    # full integration: accurate peak and bulk; isolated pressure-noise cells (documented)
-    assert peak_err < 0.01
-    assert np.percentile(err, 99) < 0.01
-    assert err.max() < 0.1
-    assert err_r.max() < 0.01
+    return err, abs(s1.max() / hoop.max() - 1.0)
+
+
+def test_static_matches_lame_homogeneous(ms, acoustic):
+    """Static branch (T's denominator), 2D: hoop stress of a homogeneous wall annulus vs Lame."""
+    md = sector_annulus_meshdata(None, h_soft=H_CA)
+    rho, c = acoustic
+    res = {}
+    for form, vol in (("mixed", "full"), ("displacement", "full"), ("displacement", "reduced")):
+        model = TR.build_model(md, ms, rho, c, outer_bc="free", formulation=form, volumetric=vol)
+        res[(form, vol)] = _lame_errors(md, model, H_CA, 2)
+        err, peak = res[(form, vol)]
+        print(f"2D Lame (K/mu = {model.materials[TAG_WALL].K / model.materials[TAG_WALL].mu:.3g}) {form}/{vol}: "
+              f"peak err {peak:.4f}, cell err p99 {np.percentile(err, 99):.4f}, max {err.max():.4f}")
+    err, peak = res[("mixed", "full")]
+    assert err.max() < 0.01 and peak < 0.01
+    # displacement/full: accurate peak and bulk, isolated pressure-noise cells (documented)
+    err, peak = res[("displacement", "full")]
+    assert peak < 0.01 and np.percentile(err, 99) < 0.01 and err.max() < 0.1
+    err, peak = res[("displacement", "reduced")]
+    assert err.max() < 0.01
+
+
+def test_static_matches_lame_3d(ms, acoustic):
+    """3D tube (u_z = 0 ends = plane strain): mixed is locking-free, P2 displacement locks."""
+    h = H_SOFT
+    md = sector_annulus_meshdata(None, h_soft=h, length=LAME_3D_LENGTH)
+    rho, c = acoustic
+    out = {}
+    for form in ("mixed", "displacement"):
+        model = TR.build_model(md, ms, rho, c, outer_bc="free", formulation=form)
+        out[form] = _lame_errors(md, model, h, 3)
+        err, peak = out[form]
+        print(f"3D Lame {form}: peak err {peak:.4f}, cell err p99 {np.percentile(err, 99):.4f}, max {err.max():.4f}")
+    err, peak = out["mixed"]
+    assert err.max() < 0.03 and peak < 0.03
+    assert out["displacement"][1] > peak     # documents the locking of P2 tetrahedra at K/mu ~ 1e5
 
 
 @pytest.mark.slow

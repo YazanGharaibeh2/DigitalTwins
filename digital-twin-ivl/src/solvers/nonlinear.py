@@ -124,7 +124,7 @@ U_SNES_OPTIONS = {
     "snes_linesearch_type": "bt",
     "snes_rtol": 1e-8,
     "snes_atol": 1e-10,
-    "snes_max_it": 30,
+    "snes_max_it": 60,            # damaged calcium (vol-dev split) needs many damped Newton steps
     "ksp_type": "preonly",
     "pc_type": "lu",
     "pc_factor_mat_solver_type": "mumps",
