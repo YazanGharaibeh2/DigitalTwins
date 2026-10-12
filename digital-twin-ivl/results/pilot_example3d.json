@@ -1,0 +1,148 @@
+{
+ "lesion": "X3D-A270-T0.6-L7-SUP",
+ "E_values_MPa": [
+  8.949999999999992,
+  1100.356701
+ ],
+ "ell_mm": 0.3,
+ "models": {
+  "3d": {
+   "mesh": {
+    "n_nodes": 12720,
+    "n_cells": 64416,
+    "n_cells_per_tag": {
+     "1": 24882,
+     "2": 26892,
+     "4": 12642
+    }
+   },
+   "by_E": [
+    {
+     "ca_E_MPa": 8.949999999999992,
+     "predictors": {
+      "sigma1_peak": 1.0562650181503268,
+      "sigma1_p95": 0.7919196695432058,
+      "sed_mean": 0.020648562968721442,
+      "sed_peak": 0.10409179287796713,
+      "frac_eps_gt_half_epsf": 1.0,
+      "frac_eps_gt_epsf": 1.0,
+      "frac_sig_gt_half_sigc": 1.0,
+      "frac_sig_gt_sigc": 1.0,
+      "scf_edge": 1.987695607181849,
+      "has_edges": true,
+      "min_thickness_high_stress": 0.32,
+      "sigma1_p99": 0.9458552854405333,
+      "sigma1_peak_nl": 1.0321182161442315,
+      "sed_peak_nl": 0.09332369536399497,
+      "scf_edge_nl": 1.921366537935576,
+      "sigma1_mean": 0.5314017973043152,
+      "ca_measure_fe": 25.098548161770992,
+      "rho_nl": 0.08,
+      "n_edge_cells": 4816,
+      "p_lumen_MPa": 0.4053,
+      "foundation_ratio": 5.653263478737273e-05,
+      "ndofs": 280968
+     },
+     "predictors_seconds": 61.94464534000144
+    },
+    {
+     "ca_E_MPa": 1100.356701,
+     "predictors": {
+      "sigma1_peak": 8.410031384990033,
+      "sigma1_p95": 5.222815844945481,
+      "sed_mean": 0.002698132376036507,
+      "sed_peak": 0.0344441350572694,
+      "frac_eps_gt_half_epsf": 0.0,
+      "frac_eps_gt_epsf": 0.0,
+      "frac_sig_gt_half_sigc": 0.0,
+      "frac_sig_gt_sigc": 0.0,
+      "scf_edge": 4.279000978947233,
+      "has_edges": true,
+      "min_thickness_high_stress": 0.6,
+      "sigma1_p99": 6.927144767160236,
+      "sigma1_peak_nl": 7.92415880698382,
+      "sed_peak_nl": 0.03046068369591348,
+      "scf_edge_nl": 3.652443439336726,
+      "sigma1_mean": 1.3266826735824822,
+      "ca_measure_fe": 25.098548161770992,
+      "rho_nl": 0.08,
+      "n_edge_cells": 4816,
+      "p_lumen_MPa": 0.4053,
+      "foundation_ratio": 4.0333478946068144e-05,
+      "ndofs": 280968
+     },
+     "predictors_seconds": 61.815833390999614
+    }
+   ]
+  },
+  "2d": {
+   "mesh": {
+    "n_nodes": 1060,
+    "n_cells": 1952,
+    "n_cells_per_tag": {
+     "1": 754,
+     "2": 596,
+     "4": 602
+    }
+   },
+   "by_E": [
+    {
+     "ca_E_MPa": 8.949999999999992,
+     "predictors": {
+      "sigma1_peak": 0.833043017907114,
+      "sigma1_p95": 0.7649180695122809,
+      "sed_mean": 0.018662512549806595,
+      "sed_peak": 0.05202353376257878,
+      "frac_eps_gt_half_epsf": 1.0,
+      "frac_eps_gt_epsf": 1.0,
+      "frac_sig_gt_half_sigc": 1.0,
+      "frac_sig_gt_sigc": 1.0,
+      "scf_edge": 1.6115201444079599,
+      "has_edges": true,
+      "min_thickness_high_stress": 0.6,
+      "sigma1_p99": 0.7946440902373072,
+      "sigma1_peak_nl": 0.8074569579717759,
+      "sed_peak_nl": 0.047979857451856484,
+      "scf_edge_nl": 1.5620239597986505,
+      "sigma1_mean": 0.5169299439400785,
+      "ca_measure_fe": 3.585506880253001,
+      "rho_nl": 0.08,
+      "n_edge_cells": 229,
+      "p_lumen_MPa": 0.4053,
+      "foundation_ratio": 4.6586194811810615e-05,
+      "ndofs": 8144
+     },
+     "predictors_seconds": 0.08894714300004125
+    },
+    {
+     "ca_E_MPa": 1100.356701,
+     "predictors": {
+      "sigma1_peak": 6.69835218552981,
+      "sigma1_p95": 4.882881910734275,
+      "sed_mean": 0.0022239288759801257,
+      "sed_peak": 0.019264511806432603,
+      "frac_eps_gt_half_epsf": 0.0,
+      "frac_eps_gt_epsf": 0.0,
+      "frac_sig_gt_half_sigc": 0.0,
+      "frac_sig_gt_sigc": 0.0,
+      "scf_edge": 3.353197073478209,
+      "has_edges": true,
+      "min_thickness_high_stress": 0.6,
+      "sigma1_p99": 6.239081188415163,
+      "sigma1_peak_nl": 6.378550389073252,
+      "sed_peak_nl": 0.017413738023887827,
+      "scf_edge_nl": 2.8949687460213744,
+      "sigma1_mean": 1.204135711378776,
+      "ca_measure_fe": 3.585506880253001,
+      "rho_nl": 0.08,
+      "n_edge_cells": 229,
+      "p_lumen_MPa": 0.4053,
+      "foundation_ratio": 2.432880694377446e-05,
+      "ndofs": 8144
+     },
+     "predictors_seconds": 0.08972535399880144
+    }
+   ]
+  }
+ }
+}
