@@ -119,6 +119,7 @@ fracture:
   ell_over_h: {value: 2.0, sens: [1.5, 3.0], basis: "ASSUMPTION: regularisation length = 2 calcium element sizes", status: ASSUMPTION}
   k_residual: 1.0e-4               # NUMERICAL: residual stiffness of fully damaged calcium; 1e-6 stalled Newton in stent contact (nonlinear module report); sensitivity 1e-5..1e-3
   d_crack: 0.9                    # cell-average d above which a cell is cracked (post-processing)
+  crack_filler: {value: matrix, sens: [none], basis: "ASSUMPTION: a fully damaged calcium band keeps the small-strain shear modulus of the fibrous matrix around it (degradation floor k = mu_fibrous/mu_calcium, never below k_residual) instead of becoming a void; Gc is scaled by (1-k) so the AT1 onset criterion is unchanged. Added because brittle crack bands with k_residual alone left near-zero-shear bands between stiff calcium pieces and the displacement Newton solve failed (E_ca >= 121 MPa). 'none' uses k_residual only.", status: ASSUMPTION}
 
 loads:
   physiological_pressure: {lit: normal_systolic_blood_pressure_upper}   # 120 mmHg (upper limit of normal systolic), in MPa

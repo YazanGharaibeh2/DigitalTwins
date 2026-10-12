@@ -67,9 +67,11 @@ def test_homogeneous_plate_erosion_criterion(mode):
     assert ER.ErosionUpdater(st).intact().sum() == 0
 
 
-def test_erosion_continuation_reaches_k_res():
-    """Adaptive log-continuation ends at eta = k_res and recovers from a failed stage."""
-    st, disp, length = _plate_state(MaterialSet.baseline())
+def test_erosion_continuation_reaches_k_floor():
+    """Adaptive log-continuation ends at eta = k_floor and recovers from a failed stage.
+
+    crack_filler="none" puts the floor at k_res, several decades below 1."""
+    st, disp, length = _plate_state(MaterialSet.baseline(crack_filler="none"))
     disp.value = 0.5 * st.ms.eps_f * length
     st._solve_u({"newton_its": 0})
     er = st._eroder
@@ -83,7 +85,7 @@ def test_erosion_continuation_reaches_k_res():
         st._solve_u({"newton_its": 0})
 
     n = er.erode_with_continuation(dofs, flaky_solve)
-    assert np.all(st.eta.x.array[dofs] == st.ms.k_res)
+    assert np.all(st.eta.x.array[dofs] == st.ms.k_floor)
     assert n >= 3 and calls["n"] == n + 1
 
 

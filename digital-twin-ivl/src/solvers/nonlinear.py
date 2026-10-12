@@ -318,7 +318,7 @@ class NonlinearState:
         self._p, self._R_in, self._on_in = const(0.0), const(1.0), const(0.0)
         self._R_cap, self._on_cap = const(1.0), const(0.0)
         self._kpen, self._kf = const(self.k_pen), const(self.k_found)
-        self._Gc, self._ell, self._kres = const(self.Gc_value), const(self.ell), const(self.ms.k_res)
+        self._Gc, self._ell, self._kres = const(self.Gc_value), const(self.ell), const(self.ms.k_floor)
         self._z0, self._z1 = const(0.0), const(0.0)
         self.loads = {"p": 0.0, "R_in": None, "R_cap": None}
 

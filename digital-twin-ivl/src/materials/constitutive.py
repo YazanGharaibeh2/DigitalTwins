@@ -9,7 +9,10 @@ Finite-strain energies (reference configuration):
   lipid     neo-Hooke: same form
   calcium   compressible neo-Hooke with volumetric-deviatoric split:
             psi+ = mu/2 (I1b-3) + U(J)[J>=1],  psi- = U(J)[J<1]
-            W = g(d) psi+ + psi-,  g(d) = (1-d)^2 + k_res
+            W = g(d) psi+ + psi-,  g(d) = (1-k)(1-d)^2 + k
+            k = k_floor: the crack-filler floor mu_fibrous/mu_calcium (a fully
+            damaged band is as stiff in shear as the fibrous matrix), never
+            below the numerical k_res; crack_filler="none" gives k = k_res.
   U(J) = K/4 (J^2 - 1 - 2 ln J)   (U''(1) = K)
 I1b = J^(-2/3) tr(C). Plane strain embeds the 2x2 deformation gradient in
 3x3 with F33 = 1.
@@ -41,6 +44,7 @@ class MaterialSet:
     sigma_c: float
     failure_mode: str = "strain"          # "strain" (primary, D5) or "stress"
     k_res: float = 1e-6
+    crack_filler: str = "matrix"          # "matrix" (baseline) or "none"
     provenance: dict = field(default_factory=dict, compare=False)
 
     @classmethod
@@ -60,6 +64,7 @@ class MaterialSet:
         vals = {k: v.value for k, v in q.items()}
         prov = {k: v.provenance for k, v in q.items()}
         vals["k_res"] = float(P.raw("fracture.k_residual"))
+        vals["crack_filler"] = str(P.raw("fracture.crack_filler")["value"])
         ms = cls(**vals, provenance=prov)
         if overrides:
             ms = replace(ms, **overrides)
@@ -116,9 +121,28 @@ class MaterialSet:
     def sigma_crit(self) -> float:
         return (2.0 * self.ca_E * self.psi_crit) ** 0.5
 
+    @property
+    def k_floor(self) -> float:
+        """Stiffness floor of fully damaged calcium, g(1) = k_floor.
+
+        ``crack_filler="matrix"``: ``max(k_res, mu_fibrous / mu_calcium)``;
+        ``"none"``: ``k_res``. The filler is undefined when calcium is not
+        stiffer in shear than the fibrous matrix (ValueError).
+        """
+        if self.crack_filler == "none":
+            return self.k_res
+        if self.crack_filler != "matrix":
+            raise ValueError(self.crack_filler)
+        ratio = self.mu_fibrous / self.ca_mu
+        if ratio >= 1.0:
+            raise ValueError(f"crack filler undefined: calcium shear modulus {self.ca_mu:.4g} MPa is not above "
+                             f"the fibrous matrix ({self.mu_fibrous:.4g} MPa)")
+        return max(self.k_res, ratio)
+
     def gc(self, ell: float) -> float:
-        """AT1: onset when psi+ = 3 Gc / (16 ell)  =>  Gc = 16 ell psi_crit / 3."""
-        return 16.0 * ell * self.psi_crit / 3.0
+        """AT1 with g(d) = (1-k)(1-d)^2 + k: onset when psi+ = 3 Gc / (16 ell (1-k)),
+        so Gc = 16 ell (1-k) psi_crit / 3 keeps the onset at psi_crit."""
+        return 16.0 * ell * (1.0 - self.k_floor) * self.psi_crit / 3.0
 
 
 # ----------------------------------------------------------------------
@@ -169,8 +193,9 @@ def psi_calcium_split(F3, mu, K):
     return psi_p, psi_m
 
 
-def degradation(d, k_res):
-    return (1.0 - d) ** 2 + k_res
+def degradation(d, k):
+    """g(d) = (1-k)(1-d)^2 + k: g(0) = 1, g(1) = k."""
+    return (1.0 - k) * (1.0 - d) ** 2 + k
 
 
 def soft_energy(tag: int, F3, ms: MaterialSet):

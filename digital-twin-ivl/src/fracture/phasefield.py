@@ -10,7 +10,7 @@ converged load step (irreversibility). With ``u`` frozen, ``d`` minimises
     Pi_d(d) = int_Ca g(d) psi+(F) dx  +  (Gc / c_w) int_Ca (d / ell + ell |grad d|^2) dx
               + 1/2 eps_reg int_soft d^2 dx
 
-with ``g(d) = (1 - d)^2 + k_res`` (:func:`dtivl.materials.constitutive.degradation`),
+with ``g(d) = (1 - k)(1 - d)^2 + k``, ``k = MaterialSet.k_floor`` (:func:`dtivl.materials.constitutive.degradation`),
 ``c_w = 8/3`` (AT1) and ``psi+`` the tensile part of the volumetric-deviatoric
 split (:func:`dtivl.materials.constitutive.psi_calcium_split`). The last term
 is purely numerical: soft-tissue DOFs carry no energy, so their rows of the
@@ -107,9 +107,10 @@ def regularisation_length(h_ca: float | None = None, ell_over_h: float | None = 
     return float(ell_over_h) * float(h_ca)
 
 
-def onset_energy(Gc: float, ell: float) -> float:
-    """AT1 damage-onset tensile energy density ``3 Gc / (16 ell)`` (MPa)."""
-    return 3.0 * Gc / (16.0 * ell)
+def onset_energy(Gc: float, ell: float, k: float = 0.0) -> float:
+    """AT1 damage-onset tensile energy density ``3 Gc / (16 ell (1-k))`` (MPa)
+    for the degradation ``g(d) = (1-k)(1-d)^2 + k``."""
+    return 3.0 * Gc / (16.0 * ell * (1.0 - k))
 
 
 def fracture_energy_density(d, Gc, ell):
@@ -239,7 +240,7 @@ def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | N
     disp = fem.Constant(msh, 0.0)
     state = NonlinearState(md, ms, fracture="phasefield", h_ca=h_ca,
                            bc_factory=_uniaxial_bcs(msh, length, disp), name=f"verif_pf{gdim}d")
-    psi_c = onset_energy(state.Gc_value, state.ell)
+    psi_c = onset_energy(state.Gc_value, state.ell, state.ms.k_floor)
     # small-strain uniaxial energy psi = E_u eps^2 / 2 (E_u = E / (1 - nu^2) in plane strain)
     E_u = ms.ca_E / (1.0 - ms.ca_nu ** 2) if gdim == 2 else ms.ca_E
     eps_pred = np.sqrt(2.0 * psi_c / E_u)
@@ -270,7 +271,8 @@ def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | N
     first = next((i for i, r in enumerate(rows) if r["d_max"] > VERIF_D_TOL), None)
     out = {"case": f"{gdim}D", "state": state_desc, "failure_mode": ms.failure_mode,
            "E_MPa": ms.ca_E, "nu": ms.ca_nu, "eps_f": ms.eps_f, "ell_mm": state.ell,
-           "Gc_N_per_mm": state.Gc_value, "psi_onset_theory_MPa": psi_c,
+           "Gc_N_per_mm": state.Gc_value, "k_floor": ms.k_floor, "crack_filler": ms.crack_filler,
+           "psi_onset_theory_MPa": psi_c,
            "psi_crit_MPa": ms.psi_crit, "strain_onset_theory": float(eps_pred), "steps": rows}
     if first is None or first == 0:
         out.update(passed=False, error="no damage onset bracketed")

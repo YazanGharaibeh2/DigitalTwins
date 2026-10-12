@@ -49,6 +49,15 @@ Definitions
   thickness. For per-cell damage arrays (erosion), which have no gradient,
   the centroid-PCA rule is kept. ``"undetermined"`` for components with
   fewer than ``MIN_CELLS_PATTERN`` cells or a degenerate tensor.
+* ``diffuse``: a component that covers at least ``DIFFUSE_REGION_FRAC`` of
+  the measure of its facet-connected calcium region is diffuse damage, not a
+  discrete crack: its ``pattern`` is ``"diffuse"`` and its
+  ``location_frac`` is ``None``. It still counts in ``n_fractures`` when it
+  is through-thickness (the deposit has lost its integrity); ``n_diffuse``
+  counts such components and ``damaged_fraction`` is
+  ``cracked_measure / ca_measure``. Added 2026-10-12 after the pilot showed
+  whole-deposit damage at tissue-level calcium moduli, which the gradient
+  rule would label circumferential or radial.
 * ``location_frac``: deposits are the wrap-aware 4-connected calcium
   components of the label map; a component is assigned to the deposit whose
   angular interval contains (or is nearest to) its circular-mean angle, and
@@ -73,6 +82,7 @@ PATTERN_ANGLE_DEG = 45.0     #: radial if the principal axis is within 45 deg of
 MIN_CELLS_PATTERN = 2        #: smaller components have no pattern
 PATTERN_NEIGHBOUR_ELL = 2.0  #: structure-tensor neighbourhood radius in units of the regularisation length
 MIN_PIECE_CELLS = 3          #: intact pieces smaller than this do not count as separated fragments
+DIFFUSE_REGION_FRAC = 0.5    #: a component covering this fraction of its calcium region is diffuse damage
 
 
 # ---------------------------------------------------------------------------
@@ -396,8 +406,10 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
             w = meas[idx]
             spans = bool(lum[idx].any() and abl[idx].any())
             cuts = False
+            region = np.where(region_of == region_of[idx[0]])[0]
+            region_frac = float(w.sum() / meas[region].sum())
+            diffuse = region_frac >= DIFFUSE_REGION_FRAC
             if spans:
-                region = np.where(region_of == region_of[idx[0]])[0]
                 cuts = _cuts_region(g_ca, region, idx, th)
             through = spans and cuts
             if through:
@@ -431,6 +443,8 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
                 cosang = float(abs(axis @ er))
                 aniso = float(ev[-1] / max(ev[0], 1e-300))
                 pattern = "radial" if cosang >= cos_pat else "circumferential"
+            if diffuse:
+                pattern = "diffuse"
             ang = float(np.mod(math.atan2((w * np.sin(th[idx])).sum(), (w * np.cos(th[idx])).sum()), 2 * math.pi))
             locf, dep_id = None, None
             if deposits:
@@ -442,12 +456,13 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
                         dist.append(max(0.0, abs(_wrap(ang - dep["theta_center"])) - dep["half_span"]))
                 dep = deposits[int(np.argmin(dist))]
                 dep_id = dep["id"]
-                if not dep["closed"]:
+                if not dep["closed"] and not diffuse:
                     locf = float(min(abs(_wrap(ang - dep["theta_center"])) / dep["half_span"], 1.0))
             comps.append({"n_cells": int(idx.size), "measure": float(w.sum()), "through": through,
                           "spans_surfaces": spans, "cuts_deposit": cuts,
                           "touches_luminal": bool(lum[idx].any()), "touches_abluminal": bool(abl[idx].any()),
-                          "depth_frac": depth, "pattern": pattern, "axis_cos_radial": cosang,
+                          "depth_frac": depth, "pattern": pattern, "diffuse": bool(diffuse),
+                          "region_frac": region_frac, "axis_cos_radial": cosang,
                           "anisotropy": aniso, "angle_deg": math.degrees(ang), "deposit": dep_id,
                           "location_frac": locf})
         comps.sort(key=lambda c: -c["measure"])
@@ -455,6 +470,9 @@ def crack_analysis(meshdata, d, plm, *, history: list | None = None, d_crack: fl
         "fracture": any(c["through"] for c in comps),
         "n_fractures": sum(c["through"] for c in comps),
         "n_partial": sum(not c["through"] for c in comps),
+        "diffuse": any(c["diffuse"] for c in comps),
+        "n_diffuse": sum(c["diffuse"] for c in comps),
+        "damaged_fraction": out["cracked_measure"] / out["ca_measure"] if out["ca_measure"] > 0 else 0.0,
         "max_depth_frac": max((c["depth_frac"] for c in comps), default=0.0),
         "pattern": [c["pattern"] for c in comps],
         "location_frac": [c["location_frac"] for c in comps],

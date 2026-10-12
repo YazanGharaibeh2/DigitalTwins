@@ -67,6 +67,7 @@ def test_crack_classification_synthetic(sector):
         assert key in out
     assert out["fracture"] is True
     assert out["n_fractures"] == 1 and out["n_partial"] == 2
+    assert out["diffuse"] is False and out["n_diffuse"] == 0
     assert out["max_depth_frac"] == 1.0
     assert out["onset_load"] == 0.2 and out["onset_phase"] == "x"
     comps = {round(c["angle_deg"]): c for c in out["components"]}
@@ -146,6 +147,10 @@ def test_no_crack_and_function_input(sector):
     full = crack_analysis(md, d, _plm([(-90.0, 90.0)]))
     assert full["fracture"] and full["n_fractures"] == 1
     assert full["cracked_measure"] == pytest.approx(full["ca_measure"])
+    # whole-deposit damage is diffuse, not a discrete crack
+    assert full["diffuse"] and full["n_diffuse"] == 1 and full["pattern"] == ["diffuse"]
+    assert full["location_frac"] == [None] and full["damaged_fraction"] == pytest.approx(1.0)
+    assert out["diffuse"] is False and out["damaged_fraction"] == 0.0
 
 
 def test_crack_analysis_3d_tube():

@@ -143,9 +143,10 @@ RECOIL_RAMP_STEPS = 5
 def _crack_summary(md, state, plm) -> dict:
     from dtivl.fracture.cracks import crack_analysis
 
-    ca = crack_analysis(md, state.d, plm, history=state.history)
-    keep = ("fracture", "n_fractures", "n_partial", "max_depth_frac", "pattern", "location_frac",
-            "onset_load", "onset_phase", "n_cracked_cells", "cracked_measure", "ca_measure")
+    ca = crack_analysis(md, state.damage_field(), plm, history=state.history)
+    keep = ("fracture", "n_fractures", "n_partial", "diffuse", "n_diffuse", "damaged_fraction", "max_depth_frac",
+            "pattern", "location_frac", "onset_load", "onset_phase", "n_cracked_cells", "cracked_measure",
+            "ca_measure")
     return {k: ca.get(k) for k in keep}
 
 
@@ -235,6 +236,13 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
             ms = MaterialSet.baseline(ca_E=E)
             T = Tmap[round(E, 6)]
             row = {"ca_E_MPa": E, "T": T}
+            try:
+                row["k_floor"] = ms.k_floor
+            except ValueError as exc:          # calcium not stiffer than the matrix: crack filler undefined
+                row["skipped"] = str(exc)
+                rows.append(row)
+                write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "rows": rows, "K_s": K_s})
+                continue
             with Timer() as t:
                 row["physiological"] = _protocol_record(run_pressure(NonlinearState(md, ms), p_phys), md, plm)
             row["physiological"]["seconds"] = t.seconds

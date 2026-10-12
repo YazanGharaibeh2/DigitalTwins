@@ -19,10 +19,28 @@ def test_regularisation_length_and_onset_energy():
     assert PF.regularisation_length(0.05, 3.0) == pytest.approx(0.15)
     ms = MaterialSet.baseline()
     ell = PF.regularisation_length()
-    # calibration: Gc = 16 ell psi_crit / 3  =>  AT1 onset energy == psi_crit
-    assert PF.onset_energy(ms.gc(ell), ell) == pytest.approx(ms.psi_crit, rel=1e-12)
+    # calibration: Gc = 16 ell (1-k) psi_crit / 3  =>  AT1 onset energy == psi_crit
+    assert PF.onset_energy(ms.gc(ell), ell, ms.k_floor) == pytest.approx(ms.psi_crit, rel=1e-12)
     stress = MaterialSet.baseline(failure_mode="stress")
-    assert PF.onset_energy(stress.gc(ell), ell) == pytest.approx(stress.psi_crit, rel=1e-12)
+    assert PF.onset_energy(stress.gc(ell), ell, stress.k_floor) == pytest.approx(stress.psi_crit, rel=1e-12)
+    assert PF.onset_energy(3.0, 1.0) == pytest.approx(3.0 * 3.0 / 16.0)
+
+
+def test_crack_filler_floor():
+    """g(0) = 1, g(1) = k_floor; the matrix filler gives a cracked band the fibrous shear modulus."""
+    from dtivl.materials.constitutive import degradation
+
+    ms = MaterialSet.baseline()
+    assert ms.crack_filler == "matrix"
+    k = ms.k_floor
+    assert k == pytest.approx(ms.mu_fibrous / ms.ca_mu)
+    assert degradation(0.0, k) == pytest.approx(1.0) and degradation(1.0, k) == pytest.approx(k)
+    assert k * ms.ca_mu == pytest.approx(ms.mu_fibrous)
+    stiff = MaterialSet.baseline(ca_E=1.0e5)
+    assert stiff.k_floor == pytest.approx(max(stiff.k_res, stiff.mu_fibrous / stiff.ca_mu))
+    assert MaterialSet.baseline(crack_filler="none").k_floor == ms.k_res
+    with pytest.raises(ValueError):
+        MaterialSet.baseline(ca_E=0.5 * ms.fibrous_E).k_floor
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +59,8 @@ def test_at1_onset_homogeneous_plate(phasefield_report):
     assert {c["case"] for c in on_disk["cases"]} == {"2D", "3D"}
     for c in rep["cases"]:
         assert c["passed"], c
-        assert c["psi_onset_theory_MPa"] == pytest.approx(3.0 * c["Gc_N_per_mm"] / (16.0 * c["ell_mm"]))
+        assert c["psi_onset_theory_MPa"] == pytest.approx(
+            3.0 * c["Gc_N_per_mm"] / (16.0 * c["ell_mm"] * (1.0 - c["k_floor"])))
         assert c["rel_err_psi"] < 0.05
         assert c["rel_err_strain"] < 0.05
         lo, hi = c["psi_bracket_MPa"]

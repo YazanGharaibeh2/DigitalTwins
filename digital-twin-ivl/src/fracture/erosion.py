@@ -3,17 +3,17 @@
 The erosion model uses the same finite-strain displacement solver as the
 phase-field model (:class:`dtivl.solvers.nonlinear.NonlinearState` built with
 ``fracture="erosion"``) but no damage field. Each calcium cell carries a DG0
-factor ``eta`` (1 = intact, ``k_res`` = eroded) that scales its energy,
-``W_Ca = eta (psi+ + psi-)`` (design.md: "energy scaled by k_res"). The
+factor ``eta`` (1 = intact, ``k_floor`` = eroded) that scales its energy,
+``W_Ca = eta (psi+ + psi-)`` (design.md: "energy scaled by k_res"; the floor is ``MaterialSet.k_floor``). The
 option ``SolverSettings(erosion_split=True)`` scales only the tensile part,
 ``W_Ca = eta psi+ + psi-`` (eroded cells keep their compressive volumetric
 stiffness, like the phase-field degradation); it is numerically fragile:
-the Hessian of an eroded cell then jumps by ``1/k_res`` at ``J = 1``, and
+the Hessian of an eroded cell then jumps by ``1/k_floor`` at ``J = 1``, and
 Newton stagnates when many eroded cells sit near ``J = 1`` (erosion
 cascades). After every converged displacement solve, intact calcium cells
 whose cell-averaged failure measure reaches the threshold are eroded and the
 displacement is re-solved at the same load, until no new cell erodes
-(:data:`ERODE_MAX_ROUNDS` at most). Newly eroded cells reach ``k_res``
+(:data:`ERODE_MAX_ROUNDS` at most). Newly eroded cells reach ``k_floor``
 through an adaptive continuation in ``log10(eta)``
 (:meth:`ErosionUpdater.erode_with_continuation`), which only helps Newton
 converge when many cells erode at once.
@@ -45,11 +45,11 @@ from dtivl.materials.constitutive import psi_calcium_split
 
 #: Maximum erosion/re-solve rounds per load increment (numerical setting).
 ERODE_MAX_ROUNDS = 200
-#: Continuation of newly eroded cells: eta goes from 1 to k_res in steps of
+#: Continuation of newly eroded cells: eta goes from 1 to k_floor in steps of
 #: log10(eta) (initially 2 decades), one displacement solve per stage; a failed
 #: stage is retried with half the log-step (at most EROSION_MAX_HALVINGS times),
 #: a converged one doubles it again (up to the initial step). Newton robustness
-#: only: the converged state at eta = k_res is unchanged.
+#: only: the converged state at eta = k_floor is unchanged.
 EROSION_CONTINUATION_DECADES = 2.0
 EROSION_MAX_HALVINGS = 6
 
@@ -147,7 +147,7 @@ class ErosionUpdater:
         return self._eta_dofs[self.intact() & (crit >= self.threshold)]
 
     def erode_with_continuation(self, dofs: np.ndarray, solve) -> int:
-        """Bring ``eta`` of ``dofs`` from 1 to ``k_res`` by adaptive log-continuation.
+        """Bring ``eta`` of ``dofs`` from 1 to ``k_floor`` by adaptive log-continuation.
 
         ``solve()`` re-solves the displacement and raises on failure (the
         displacement array is then restored and the log-step halved).
@@ -155,7 +155,7 @@ class ErosionUpdater:
         error if the step falls below the minimum.
         """
         u = self.state.u.x.array
-        target = math.log10(self.state.ms.k_res)
+        target = math.log10(self.state.ms.k_floor)
         step0 = -EROSION_CONTINUATION_DECADES
         cur, step, n = 0.0, step0, 0
         while cur > target + 1e-12:
@@ -175,12 +175,12 @@ class ErosionUpdater:
         return n
 
     def erode(self, dofs: np.ndarray, factor: float | None = None) -> None:
-        """Set ``eta = factor`` (default ``k_res``) on the given ``eta`` DOFs."""
-        self.state.eta.x.array[dofs] = self.state.ms.k_res if factor is None else factor
+        """Set ``eta = factor`` (default ``k_floor``) on the given ``eta`` DOFs."""
+        self.state.eta.x.array[dofs] = self.state.ms.k_floor if factor is None else factor
         self.state.eta.x.scatter_forward()
 
     def update(self) -> int:
-        """Erode (directly to ``k_res``) intact cells at or above the threshold; return the count."""
+        """Erode (directly to ``k_floor``) intact cells at or above the threshold; return the count."""
         new = self.find_new()
         if new.size:
             self.erode(new)
