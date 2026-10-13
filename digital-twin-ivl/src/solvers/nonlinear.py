@@ -250,13 +250,16 @@ class NonlinearState:
     bc_factory : optional callable ``V -> list[DirichletBC]`` with extra
         Dirichlet conditions (verification problems).
     settings : :class:`SolverSettings`.
+    gc_factor : optional per-cell multiplier of G_c (array over local + ghost
+        cells, 1 = baseline), for toughness-heterogeneity diagnostics; the
+        local onset energy scales with it. ``None`` (default): homogeneous.
     """
 
     def __init__(self, meshdata, ms: MaterialSet | None = None, *, fracture: str = "phasefield",
                  h_ca: float | None = None, ell: float | None = None, k_found: float | None = None,
                  k_pen: float | None = None, degree: int = 2,
                  bc_factory: Callable | None = None, settings: SolverSettings | None = None,
-                 name: str = "dtivl_nl"):
+                 name: str = "dtivl_nl", gc_factor: np.ndarray | None = None):
         from dolfinx import fem
         from dolfinx import mesh as dmesh
         from dolfinx.fem.petsc import NonlinearProblem
@@ -380,7 +383,12 @@ class NonlinearState:
                                        petsc_options_prefix=f"{name}_u_{tag}_")
         self._dsolver = None
         if fracture == "phasefield" and self.has_calcium:
-            self._dsolver = PF.DamageSolver(self.d, self.d_lb, self.d_ub, self.psi_plus, dx, self._Gc,
+            Gc_field = self._Gc
+            if gc_factor is not None:
+                self.gc_factor = fem.Function(self.Q0, name="gc_factor")
+                self.gc_factor.x.array[:] = np.asarray(gc_factor, dtype=float)
+                Gc_field = self._Gc * self.gc_factor
+            self._dsolver = PF.DamageSolver(self.d, self.d_lb, self.d_ub, self.psi_plus, dx, Gc_field,
                                             self._ell, self._kres, soft_tags=self.soft_tags,
                                             petsc_options=self.settings.d_petsc_options,
                                             prefix=f"{name}_d_{tag}_")
