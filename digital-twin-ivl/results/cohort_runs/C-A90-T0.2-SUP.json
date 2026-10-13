@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A90-T0.2-SUP",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 1927,
+  "n_cells": 3644,
+  "n_cells_per_tag": {
+   "1": 1032,
+   "2": 2003,
+   "4": 609
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 2.69350968646362,
+  "sigma1_p99": 2.840500376301257,
+  "sigma1_mean": 1.6051543576484835,
+  "sigma1_peak_nl": 2.4737468039580564,
+  "sed_mean": 0.003999837470218777,
+  "sed_peak_nl": 0.00848812448426202,
+  "scf_edge_nl": 1.4529994831382407,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.0,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.0,
+  "min_thickness_high_stress": 0.2,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.3177767519991903
+ }
+}

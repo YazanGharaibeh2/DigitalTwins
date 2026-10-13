@@ -6,3 +6,5 @@ digital-twin-ivl/cohort/meshes/verification/
 digital-twin-ivl/cohort/meshes/*.msh
 digital-twin-ivl/cohort/meshes/sizing/
 .claude/worktrees/
+digital-twin-ivl/results/cohort_runs/locks/
+digital-twin-ivl/results/cohort_runs/*.json.tmp
