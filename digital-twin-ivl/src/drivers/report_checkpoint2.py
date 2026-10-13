@@ -601,15 +601,25 @@ def decisions(facts: dict, nl: dict) -> str:
                   f"{_emp(selective10)} (meets the 10-atm contrast)" if selective10 else
                   f"{_emp(selective)} (meets the 4-atm contrast; no tested modulus meets the 10-atm one for "
                   "every pilot lesion)" if selective else "none among the tested moduli") +
-              ". This calibrates an uncertain input to one qualitative observation, and the manuscript would say so.", ""]
+              ". This calibrates an uncertain input to one qualitative observation, and the manuscript would say so."]
     cand = selective10 or selective
+    if cand:
+        Ec = cand[-1]
+        on = {l: next((r["ivl"]["cracks"]["onset_load"] for r in lr if abs(r["ca_E_MPa"] - Ec) < 1e-9 and "ivl" in r
+                       and r["ivl"]["cracks"]["fracture"]), None) for l, lr in nl.items()}
+        n_fr = sum(v is not None for v in on.values())
+        lines.append(f"  At {f(Ec)} MPa, {n_fr} of {len(on)} pilot lesions fracture with IVL, at "
+                     + "; ".join(f"{l}: {f(v)} MPa" if v is not None else f"{l}: no fracture" for l, v in on.items())
+                     + ". Whether the full cohort then shows enough yes/no variation for the ROC analysis is known "
+                     "only after the full run; the onset pressure varies continuously either way.")
+    lines.append("")
     k_base = ms.k_floor
     k_sel = MaterialSet.baseline(ca_E=cand[-1]).k_floor if cand else None
     lines += [f"**D9: crack filler (new assumption).** A fully damaged calcium band keeps the shear stiffness of the "
               f"fibrous matrix (degradation floor k = mu_fibrous / mu_calcium = {f(k_base)} at the tissue-level "
               f"baseline" + (f", {f(k_sel)} at {f(cand[-1])} MPa" if k_sel is not None else "") +
-              ") instead of becoming a void. Without it the stiff-calcium runs (E >= 121 MPa) did not converge "
-              "once a deposit cracked. G_c is rescaled so that the verified onset criterion is unchanged "
+              ") instead of becoming a void. Without it, the displacement solver failed in stiff-calcium runs once a "
+              "deposit cracked (seen during development; those runs were not kept). G_c is rescaled so that the verified onset criterion is unchanged "
               "(Section 2.3). Moduli where calcium is not stiffer than the matrix are skipped. Proposed sensitivity: "
               "k = k_residual (no filler) where the solver allows. Approve, or ask for an alternative.", ""]
     d = _load("diag_localisation")
@@ -622,7 +632,8 @@ def decisions(facts: dict, nl: dict) -> str:
             all(r["final_diffuse"] for h in e["by_h"] for r in h["by_E"])
         lines += ["**D10: fracture outcomes and the damage model.** In the pilot the damage covers the whole deposit "
                   "instead of forming discrete cracks. Diagnostics (Section 8): finer load steps, a seeded radial "
-                  "crack, a 10 % toughness heterogeneity and a 4x smaller regularisation length all end with the "
+                  f"crack, a toughness heterogeneity (coefficient of variation {pct(d['cov'], 2)}) and a regularisation "
+                  f"length reduced from {f(max(ells))} to {f(min(ells))} mm all end with the "
                   f"whole deposit damaged (all diffuse: {'yes' if diffuse_all else 'no'}). Damage starts as "
                   "circumferential bands along the luminal surface, where the sheet is bent open. My explanation, not yet "
                   "tested: the volumetric-deviatoric energy split lets damage degrade the whole high-energy luminal "
@@ -644,7 +655,9 @@ def decisions(facts: dict, nl: dict) -> str:
               " (no 4s; with D2 thicknesses only nodules exceed 0.5 mm, and 2D has no length). The Phase 5 "
               f"comparison with Fujino is then mostly a comparison with the arc criterion. IVL-treated lesions in "
               f"Disrupt CAD III had a maximum thickness of {_lit('max_calcium_thickness_DisruptCAD_III_OCT')}. "
-              "Options: keep D2 and state the limitation, or add a 0.8 mm level (+16 core lesions).", ""]
+              "Options: keep D2 and state the limitation, or add a thicker level such as 0.8 mm (+"
+              f"{len(P.raw('design.core_factorial.arc_deg')) * len(P.raw('design.core_factorial.morphology'))} "
+              "core lesions).", ""]
     ex = _load("pilot_example3d")
     t3 = []
     if ex is not None and "3d" in ex["models"]:
@@ -652,11 +665,15 @@ def decisions(facts: dict, nl: dict) -> str:
     t2 = []
     if ex is not None and "2d" in ex["models"]:
         t2 = [(r["ca_E_MPa"], r["ivl"]["seconds"]) for r in ex["models"]["2d"]["by_E"] if "ivl" in r]
-    lines += ["**D12: 3D length series (D3).** I propose running the 1/3/5 mm series after this checkpoint on a "
+    lines += ["**D12: 3D length series (D3).** I propose running the "
+              f"{'/'.join(f(x) for x in P.raw('design.lengths_3d_mm'))} mm series after this checkpoint on a "
               "subset you choose, and only up to fracture onset in 3D. Cost of the full IVL protocol on the "
               "Fujino-4 example: " + ("; ".join(f"3D, E = {f(E)} MPa: {f(t, 2)} s" for E, t in t3) or "3D not finished")
               + (" vs " + "; ".join(f"2D section, E = {f(E)} MPa: {f(t, 2)} s" for E, t in t2) if t2 else "")
-              + ". With damage spreading, a 3D step costs far more (Section 5).", ""]
+              + ". With damage spreading, a 3D step costs far more (Section 5)"
+              + (lambda on: ("; the onset-only run took " + "; ".join(
+                  f"{k.upper()}, E = {f(r['ca_E_MPa'])} MPa: {f(r['seconds'], 2)} s" for k, m in on["models"].items()
+                  for r in m["by_E"])) if on else "")(_load("pilot_example3d_onset")) + ".", ""]
     ero = []
     for lid, lr in nl.items():
         for r in lr:
@@ -665,6 +682,24 @@ def decisions(facts: dict, nl: dict) -> str:
     lines += ["**D13: erosion comparator.** It now completes. Fracture onset under IVL: " + "; ".join(ero) +
               ". Erosion uses the cell-averaged maximum principal strain, the phase field an energy criterion, so "
               "onset can differ. Keep erosion as the subset comparator?", ""]
+    lt = read_json("pilot_linear_transient")
+    p_peak = P.get("loads.ivl_peak_pressure_MPa").value
+    scale = P.get("loads.ivl_pulse_scale").value
+    p_poba = P.get("loads.poba_pressure_atm").value
+    T_star = (p_poba - p_bal) / (p_peak * scale)
+    above = {l: [r["ca_E_MPa"] for r in rec["by_E"] if r["transient"]["T_equivalent"] > T_star]
+             for l, rec in lt["lesions"].items()}
+    tmax = {l: max(r["transient"]["T_equivalent"] for r in rec["by_E"]) for l, rec in lt["lesions"].items()}
+    lines += ["**D14: how IVL is represented (limitation to accept or change).** The quasi-static IVL step adds "
+              f"T_equivalent x {f(p_peak)} MPa x pulse scale {f(scale)} to the {f(p_bal)} MPa balloon pressure, once. "
+              f"It therefore exceeds a {f(p_poba)} MPa plain balloon only where T_equivalent > {f(T_star)}. Moduli "
+              "where that holds: " + "; ".join(f"{l}: {_emp(v)} (max T_equivalent {f(tmax[l])})" for l, v in above.items())
+              + ". Where it does not hold, the model cannot reproduce 'IVL fractures what a 10-atm balloon does not', "
+              "whatever the modulus. The model has no cumulative effect of repeated pulses (no fatigue data for "
+              "calcified plaque were found; parameter table row calcium_fatigue_SN_data). Options: (a) keep the "
+              "single-pulse peak equivalence and state the limitation; (b) add a pulse-count damage accumulation "
+              "law, which would be an unverified assumption; (c) treat the pulse scale as a calibration parameter. "
+              "Recommendation: (a).", ""]
     return "\n".join(lines)
 
 
