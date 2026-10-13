@@ -2,6 +2,7 @@ assumption,value,sensitivity_values,unit,basis,status
 design.holdout_lhs.ranges.lipid_thickness_mm,0.2,,,ASSUMPTION: no verified lipid-core thickness found,ASSUMPTION
 geometry.plaque_thickness_mm,reference_vessel_diameter_IVL_OCT / 2 - sqrt(pre_procedure_MLA_IVL_lesions / pi),,,DERIVED: R_ref - r_lumen (see comment),DERIVED
 geometry.wall_thickness_mm,media_thickness_main_branches + adventitia_thickness_atherosclerotic_LAD,,,"DERIVED: media (histology median) + adventitia (IVUS, atherosclerotic LAD)",DERIVED
+geometry.calcium_iel_clearance_mm,0.05,,mm,"ASSUMPTION: minimum fibrous tissue between the calcium and the IEL (same 0.05 mm as the hold-out depth rule). D11: where depth + thickness + clearance exceeds the reference plaque thickness (0.8 mm level), the plaque grows outward (IEL and EEM radii increase, lumen unchanged).",ASSUMPTION
 geometry.nodule_height_mm,0.3,0.2 | 0.4,,ASSUMPTION: no verified OCT protrusion height found; set within the D2 thickness range,ASSUMPTION
 geometry.nodule_base_arc_deg,60,,,ASSUMPTION: nodule protrusion spans 60 deg at the centre of the calcium arc,ASSUMPTION
 geometry.fragment_pitch_deg,45,,,"ASSUMPTION: one deposit per 45 deg of arc (n = arc/45, min 2)",ASSUMPTION

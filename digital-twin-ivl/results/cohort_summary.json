@@ -1,11 +1,11 @@
 {
  "n_per_set": {
-  "core": 32,
+  "core": 48,
   "holdout": 24,
   "pilot": 3,
   "example3d": 1
  },
- "n_total": 60,
+ "n_total": 76,
  "core_geometry": {
   "r_lumen_mm": 0.8368283871884005,
   "plaque_thickness_mm": 0.8481716128115996,
@@ -23,15 +23,15 @@
  "fujino_score_counts": {
   "core": {
    "0": 16,
-   "1": 2,
+   "1": 10,
    "2": 12,
-   "3": 2
+   "3": 10
   },
   "holdout": {
-   "0": 10,
-   "1": 2,
-   "2": 8,
-   "3": 4
+   "0": 6,
+   "1": 6,
+   "2": 4,
+   "3": 8
   },
   "pilot": {
    "0": 1,
@@ -40,5 +40,159 @@
   "example3d": {
    "4": 1
   }
+ },
+ "plaque_growth": {
+  "n_grown": {
+   "core": 16,
+   "holdout": 7,
+   "pilot": 0,
+   "example3d": 0
+  },
+  "max_grown_mm": 0.6141566042082424,
+  "plaque_burden_pct_range_grown": [
+   79.91368509834311,
+   86.05380886482772
+  ],
+  "n_grown_above_nodule_cta": 5,
+  "lesions": [
+   {
+    "lesion_id": "C-A90-T0.8-SUP",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A90-T0.8-DEEP",
+    "set": "core",
+    "plaque_grown_mm": 0.3418283871884006,
+    "implied_plaque_burden_pct": 86.05380886482772
+   },
+   {
+    "lesion_id": "C-A90-T0.8-NOD",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A90-T0.8-FRAG",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A180-T0.8-SUP",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A180-T0.8-DEEP",
+    "set": "core",
+    "plaque_grown_mm": 0.3418283871884006,
+    "implied_plaque_burden_pct": 86.05380886482772
+   },
+   {
+    "lesion_id": "C-A180-T0.8-NOD",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A180-T0.8-FRAG",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A270-T0.8-SUP",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A270-T0.8-DEEP",
+    "set": "core",
+    "plaque_grown_mm": 0.3418283871884006,
+    "implied_plaque_burden_pct": 86.05380886482772
+   },
+   {
+    "lesion_id": "C-A270-T0.8-NOD",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A270-T0.8-FRAG",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A360-T0.8-SUP",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A360-T0.8-DEEP",
+    "set": "core",
+    "plaque_grown_mm": 0.3418283871884006,
+    "implied_plaque_burden_pct": 86.05380886482772
+   },
+   {
+    "lesion_id": "C-A360-T0.8-NOD",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "C-A360-T0.8-FRAG",
+    "set": "core",
+    "plaque_grown_mm": 0.16182838718840042,
+    "implied_plaque_burden_pct": 83.51119613153288
+   },
+   {
+    "lesion_id": "H-001",
+    "set": "holdout",
+    "plaque_grown_mm": 0.14544750494985817,
+    "implied_plaque_burden_pct": 79.91368509834311
+   },
+   {
+    "lesion_id": "H-006",
+    "set": "holdout",
+    "plaque_grown_mm": 0.6141566042082424,
+    "implied_plaque_burden_pct": 85.53494964913475
+   },
+   {
+    "lesion_id": "H-007",
+    "set": "holdout",
+    "plaque_grown_mm": 0.07892475406742419,
+    "implied_plaque_burden_pct": 80.37475281684058
+   },
+   {
+    "lesion_id": "H-009",
+    "set": "holdout",
+    "plaque_grown_mm": 0.3081490189405565,
+    "implied_plaque_burden_pct": 82.53799739524665
+   },
+   {
+    "lesion_id": "H-019",
+    "set": "holdout",
+    "plaque_grown_mm": 0.14311763186883278,
+    "implied_plaque_burden_pct": 84.50724283613152
+   },
+   {
+    "lesion_id": "H-021",
+    "set": "holdout",
+    "plaque_grown_mm": 0.1373799112845682,
+    "implied_plaque_burden_pct": 83.78989284421556
+   },
+   {
+    "lesion_id": "H-023",
+    "set": "holdout",
+    "plaque_grown_mm": 0.20826292917694847,
+    "implied_plaque_burden_pct": 84.10231615887011
+   }
+  ]
  }
 }

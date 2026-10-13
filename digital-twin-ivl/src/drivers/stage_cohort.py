@@ -55,5 +55,23 @@ def run() -> dict:
         "fujino_score_counts": {set_name: df[df["set"] == set_name]["fujino_score"].value_counts().sort_index().to_dict()
                                 for set_name in sets},
     }
+    # D11: lesions whose plaque grew outward to fit thick calcium have a larger EEM; per-lesion implied
+    # plaque burden (lumen area / EEM area from the spec radii; concentric approximation)
+    per = []
+    for sp in specs:
+        grown = float(sp.notes.get("plaque_grown_mm", 0.0) or 0.0)
+        r_e = sp.r_lumen + sp.plaque_thickness + t_media
+        per.append({"lesion_id": sp.lesion_id, "set": sp.set_name, "plaque_grown_mm": grown,
+                    "implied_plaque_burden_pct": 100.0 * (1.0 - (sp.r_lumen / r_e) ** 2)})
+    grown_rows = [r for r in per if r["plaque_grown_mm"] > 0]
+    summary["plaque_growth"] = {
+        "n_grown": {k: sum(1 for r in grown_rows if r["set"] == k) for k in sets},
+        "max_grown_mm": max((r["plaque_grown_mm"] for r in grown_rows), default=0.0),
+        "plaque_burden_pct_range_grown": ([min(r["implied_plaque_burden_pct"] for r in grown_rows),
+                                           max(r["implied_plaque_burden_pct"] for r in grown_rows)]
+                                          if grown_rows else None),
+        "n_grown_above_nodule_cta": sum(1 for r in grown_rows if r["implied_plaque_burden_pct"] > pb_hi),
+        "lesions": grown_rows,
+    }
     write_json("cohort_summary", summary)
     return summary

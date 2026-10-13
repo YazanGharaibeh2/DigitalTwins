@@ -120,8 +120,9 @@ def test_lipid_and_offset_plaque(geo):
 
 
 def test_invalid_geometry_raises(geo):
+    no_growth = {k: v for k, v in geo.items() if k != "iel_clearance"}
     with pytest.raises(ValueError):
-        _spec(geo, "deep_sheet", 90, 0.4, ca_depth=geo["plaque_thickness"])
+        _spec(no_growth, "deep_sheet", 90, 0.4, ca_depth=no_growth["plaque_thickness"])
     s = _spec(geo, "superficial_sheet", 90, 0.2, lipid_arc_deg=120, lipid_thickness=0.1,
               lipid_center_deg=180)
     s.lipid_center_deg = 80.0   # overlaps the calcium arc
@@ -267,12 +268,13 @@ def test_pending_refused_unless_allowed(monkeypatch):
 def test_core_specs():
     specs = cohort.core_specs(allow_pending=True)
     f = params.raw("design.core_factorial")
-    assert len(specs) == len(f["arc_deg"]) * len(f["thickness_mm"]) * len(f["morphology"]) == 32
+    n = len(f["arc_deg"]) * len(f["thickness_mm"]) * len(f["morphology"])
+    assert len(specs) == n
     ids = [s.lesion_id for s in specs]
-    assert len(set(ids)) == 32
-    assert "C-A270-T0.4-NOD" in ids
+    assert len(set(ids)) == n
+    assert "C-A270-T0.4-NOD" in ids and "C-A270-T0.8-DEEP" in ids
     combos = {(s.ca_arc_deg, s.ca_thickness, s.morphology) for s in specs}
-    assert len(combos) == 32
+    assert len(combos) == n
     geo = cohort.fixed_geometry(allow_pending=True)
     for s in specs:
         s.validate()
@@ -282,6 +284,46 @@ def test_core_specs():
         assert s.ca_depth == (geo["depth_deep"] if s.morphology == "deep_sheet" else geo["depth_superficial"])
         assert (s.nodule_height > 0) == (s.morphology == "nodule")
         assert s.plaque_offset == 0 and s.lipid_arc_deg == 0
+
+
+def test_plaque_grows_outward_for_thick_calcium(geo):
+    """D11: calcium + IEL clearance that does not fit the reference plaque grows it outward (lumen unchanged);
+    calcium that fits leaves the reference plaque untouched."""
+    c = geo["iel_clearance"]
+    thin = _spec(geo, "deep_sheet", 90, 0.2)
+    assert thin.plaque_thickness == geo["plaque_thickness"] and "plaque_grown_mm" not in thin.notes
+    thick = _spec(geo, "deep_sheet", 90, 0.8)
+    need = geo["depth_deep"] + 0.8 + c
+    assert need > geo["plaque_thickness"]
+    assert thick.plaque_thickness == pytest.approx(need)
+    assert thick.notes["plaque_grown_mm"] == pytest.approx(need - geo["plaque_thickness"])
+    assert thick.r_lumen == thin.r_lumen
+    g = lesion_polygons(thick)
+    assert g is not None
+    specs = {s.lesion_id: s for s in cohort.core_specs()}
+    grown = [s for s in specs.values() if s.notes.get("plaque_grown_mm")]
+    assert grown and all(s.ca_thickness == max(params.raw("design.core_factorial")["thickness_mm"]) for s in grown)
+
+
+def test_holdout_plaque_growth_replaces_invalid(monkeypatch):
+    """With plaque_growth: outward, a hold-out sample that cannot fit at the lowest depth grows the plaque
+    (eccentricity kept) instead of being invalid; the calcium then meets the depth rule."""
+    cfg = _patched_config(monkeypatch)
+    rule = params.raw("design.holdout_lhs.ranges.depth_rule")
+    P_ = cohort.fixed_geometry(allow_pending=True)["plaque_thickness"]
+    clearance = cohort._depth_clearance(rule)
+    d_lo = 0.16  # numerical test setting (not a literature value)
+    t_lo = P_ - d_lo - clearance + 0.005
+    cfg["design"]["holdout_lhs"]["ranges"] = {
+        "arc_deg": [340, 360], "thickness_mm": [t_lo, t_lo + 0.01], "depth_mm": [d_lo, d_lo + 0.04],
+        "ecc_index": [0.3, 0.4], "morphology": ["superficial_sheet"], "depth_rule": rule, "plaque_growth": "outward"}
+    specs = cohort.holdout_specs(n=3, seed=1, allow_pending=True)
+    assert len(specs) == 3
+    for s in specs:
+        assert s.notes["plaque_grown_mm"] > 0 and s.plaque_offset > 0
+        t_min = cohort._min_local_plaque(s.r_lumen, s.plaque_thickness, s.plaque_offset, s.ca_arc_deg,
+                                         s.ca_center_deg)
+        assert s.ca_depth + s.ca_thickness + clearance <= t_min + 1e-9
 
 
 def test_pilot_and_example3d():
@@ -420,3 +462,20 @@ def test_holdout_depth_split_by_morphology():
             assert reduced or split - 1e-9 <= s.ca_depth <= hi + 1e-9
         else:
             assert s.ca_depth <= split + 1e-9 and (reduced or s.ca_depth >= lo - 1e-9)
+
+
+def test_thick_fragments_and_nodules_adapted():
+    """D11: thick fragments get a larger fill to fit their rounded ends; a nodule protrusion wider than the
+    flat inner arc of a thick deposit is narrowed; both are recorded and the geometry builds."""
+    specs = {s.lesion_id: s for s in cohort.core_specs()}
+    frag = [s for s in specs.values() if s.morphology == "fragmented" and "fragment_fill_raised" in s.notes]
+    assert frag
+    for s in frag:
+        old, new = s.notes["fragment_fill_raised"]
+        assert new > old and s.fragment_fill == new and new <= 1.0 - cohort.FRAGMENT_MIN_GAP
+        lesion_polygons(s)
+    nod = [s for s in specs.values() if "nodule_base_arc_reduced_deg" in s.notes]
+    for s in nod:
+        old, new = s.notes["nodule_base_arc_reduced_deg"]
+        assert new < old and s.nodule_base_arc_deg == new
+        lesion_polygons(s)

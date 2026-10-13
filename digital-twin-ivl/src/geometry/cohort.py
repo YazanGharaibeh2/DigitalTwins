@@ -50,6 +50,10 @@ _log = logging.getLogger(__name__)
 
 #: seed offset of the hold-out Latin hypercube (added to design.seed)
 HOLDOUT_SEED_OFFSET = 1
+#: geometric minimum flat arc (deg) of a fragment between its rounded ends, and minimum gap fraction of the
+#: pitch between fragments, used when thick fragments need a larger fill (D11)
+FRAGMENT_MIN_FLAT_DEG = 2.0
+FRAGMENT_MIN_GAP = 0.1
 
 MORPH_CODE = {"superficial_sheet": "SUP", "deep_sheet": "DEEP", "nodule": "NOD", "fragmented": "FRAG"}
 
@@ -65,6 +69,7 @@ _GEOMETRY_KEYS = {
     "fragment_pitch_deg": "geometry.fragment_pitch_deg",
     "fragment_fill": "geometry.fragment_fill",
     "margin_3d": "geometry.margin_3d_mm",
+    "iel_clearance": "geometry.calcium_iel_clearance_mm",
 }
 
 #: preview colours (RGB) per label; wall = tissue outside the IEL
@@ -123,7 +128,40 @@ def make_spec(lesion_id: str, morphology: str, arc_deg: float, thickness_mm: flo
         notes={"pending_inputs": list(geo.get("pending_inputs", []))},
     )
     fields.update(overrides)
+    # D11: a concentric plaque grows outward (lumen unchanged) when the calcium plus the IEL clearance
+    # does not fit in it (the 0.8 mm thickness level); the growth is recorded in the notes
+    clearance = geo.get("iel_clearance")
+    if clearance is not None and fields.get("plaque_offset", 0.0) == 0.0:
+        need = fields["ca_depth"] + fields["ca_thickness"] + clearance
+        if need > fields["plaque_thickness"]:
+            fields["notes"] = {**fields["notes"], "plaque_grown_mm": need - fields["plaque_thickness"]}
+            fields["plaque_thickness"] = need
     spec = LesionSpec(**fields)
+    # D11: thick fragments need wider deposits for their rounded ends: the fragment fill is raised to
+    # fit the ends plus FRAGMENT_MIN_FLAT_DEG (recorded); gaps narrower than FRAGMENT_MIN_GAP of the pitch fail
+    if spec.morphology == "fragmented":
+        from .build import cap_half_angle
+
+        pitch = spec.ca_arc_deg / spec.n_fragments
+        need = 2 * math.degrees(cap_half_angle(spec)) + FRAGMENT_MIN_FLAT_DEG
+        if spec.fragment_fill * pitch < need:
+            fill = math.ceil(need / pitch * 1000.0) / 1000.0
+            if fill > 1.0 - FRAGMENT_MIN_GAP:
+                raise ValueError(f"{lesion_id}: fragments of {spec.ca_thickness:g} mm need fill {fill:.3f} "
+                                 f"(> {1.0 - FRAGMENT_MIN_GAP:.2f}) to fit their rounded ends")
+            spec.notes = {**spec.notes, "fragment_fill_raised": [spec.fragment_fill, fill]}
+            spec.fragment_fill = fill
+    # D11: thick deposits have wide rounded ends; a nodule protrusion wider than the flat inner arc is
+    # narrowed to that arc (recorded in the notes) instead of failing
+    if spec.morphology == "nodule" and spec.nodule_height > 0:
+        from .build import cap_half_angle, is_ring
+
+        if not is_ring(spec):
+            avail = spec.ca_arc_deg - 2 * math.degrees(cap_half_angle(spec))
+            if spec.nodule_base_arc_deg > avail:
+                new = math.floor(avail * 100.0) / 100.0
+                spec.notes = {**spec.notes, "nodule_base_arc_reduced_deg": [spec.nodule_base_arc_deg, new]}
+                spec.nodule_base_arc_deg = new
     spec.validate()
     return spec
 
@@ -169,7 +207,7 @@ _HOLDOUT_ALIASES = {"arc_deg": "ca_arc_deg", "thickness_mm": "ca_thickness", "de
                     "length_mm": "ca_length", "lumen_area_mm2": "lumen_area",
                     "cap_thickness_mm": "lipid_cap_thickness", "ecc_index": "ecc_index"}
 #: ranges keys handled as rules rather than sampled fields
-_HOLDOUT_RULE_KEYS = ("morphology", "depth_rule", "lipid_fraction", "depth_split")
+_HOLDOUT_RULE_KEYS = ("morphology", "depth_rule", "lipid_fraction", "depth_split", "plaque_growth")
 _NUM_RE = r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
 
 
@@ -330,6 +368,9 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
             raise KeyError("design.holdout_lhs.ranges: lipid_fraction > 0 requires a lipid_arc_deg entry")
         dims["_lipid_u"] = ("cont", 0.0, 1.0)
     clearance = _depth_clearance(ranges.get("depth_rule"))
+    growth = ranges.get("plaque_growth")
+    if growth not in (None, "outward"):
+        raise ValueError(f"design.holdout_lhs.ranges.plaque_growth: unknown rule {growth!r}")
     depth_split = None
     if "depth_split" in ranges:
         if dims.get("ca_depth", ("const",))[0] != "cont":
@@ -384,6 +425,14 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
                 if new_depth >= d_lo:
                     notes["adjustments"].append(f"depth {depth:.4f} -> {new_depth:.4f} mm (depth_rule)")
                     depth = new_depth
+                elif growth == "outward":
+                    new_depth = min(depth, d_lo)
+                    deficit = new_depth + need - t_min + _DEPTH_RULE_TOL
+                    notes["adjustments"].append(
+                        f"depth {depth:.4f} -> {new_depth:.4f} mm and plaque {plaque:.4f} -> {plaque + deficit:.4f} mm "
+                        "(plaque_growth: calcium does not fit at the lowest depth)")
+                    notes["plaque_grown_mm"] = deficit
+                    depth, plaque = new_depth, plaque + deficit
                 else:
                     new_depth = min(depth, d_lo)
                     lo_o, hi_o = 0.0, offset
