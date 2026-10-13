@@ -1,0 +1,59 @@
+{
+ "lesion": "X3D-A270-T0.6-L7-SUP",
+ "E_values_MPa": [
+  8.949999999999992
+ ],
+ "ell_mm": 0.3,
+ "models": {
+  "3d": {
+   "mesh": {
+    "n_nodes": 12720,
+    "n_cells": 64416,
+    "n_cells_per_tag": {
+     "1": 24882,
+     "2": 26892,
+     "4": 12642
+    }
+   },
+   "by_E": [
+    {
+     "ca_E_MPa": 8.949999999999992,
+     "predictors": {
+      "sigma1_peak": 1.0562650181503268,
+      "sigma1_p95": 0.7919196695432058,
+      "sed_mean": 0.020648562968721442,
+      "sed_peak": 0.10409179287796713,
+      "frac_eps_gt_half_epsf": 1.0,
+      "frac_eps_gt_epsf": 1.0,
+      "frac_sig_gt_half_sigc": 1.0,
+      "frac_sig_gt_sigc": 1.0,
+      "scf_edge": 1.987695607181849,
+      "has_edges": true,
+      "min_thickness_high_stress": 0.32,
+      "sigma1_p99": 0.9458552854405333,
+      "sigma1_peak_nl": 1.0321182161442315,
+      "sed_peak_nl": 0.09332369536399497,
+      "scf_edge_nl": 1.921366537935576,
+      "sigma1_mean": 0.5314017973043152,
+      "ca_measure_fe": 25.098548161770992,
+      "rho_nl": 0.08,
+      "n_edge_cells": 4816,
+      "p_lumen_MPa": 0.4053,
+      "foundation_ratio": 5.653263478737273e-05,
+      "ndofs": 280968
+     },
+     "predictors_seconds": 53.75383019600122,
+     "transient": {
+      "T": 0.026141349836919327,
+      "T_equivalent": 0.031167813049758887,
+      "sigma1_peak_transient": 0.40613706657668125,
+      "sigma1_static_equivalent": 13.030656527883117,
+      "t_peak": 2.15,
+      "peak_at_window_end": false
+     },
+     "transient_seconds": 550.9054668040008
+    }
+   ]
+  }
+ }
+}
