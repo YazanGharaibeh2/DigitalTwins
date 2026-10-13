@@ -598,9 +598,9 @@ def decisions(facts: dict, nl: dict) -> str:
                   "instead of forming discrete cracks. Diagnostics (Section 8): finer load steps, a seeded radial "
                   "crack, a 10 % toughness heterogeneity and a 4x smaller regularisation length all end with the "
                   f"whole deposit damaged (all diffuse: {'yes' if diffuse_all else 'no'}). Damage starts as "
-                  "circumferential bands along the luminal surface, where the sheet is bent open. The cause is the "
-                  "volumetric-deviatoric energy split, which degrades the whole high-energy luminal layer rather "
-                  "than opening a crack perpendicular to the hoop tension. The onset pressure is robust to the "
+                  "circumferential bands along the luminal surface, where the sheet is bent open. My explanation, not yet "
+                  "tested: the volumetric-deviatoric energy split lets damage degrade the whole high-energy luminal "
+                  "layer instead of opening a crack perpendicular to the hoop tension; option (b) would test it. The onset pressure is robust to the "
                   "regularisation length: " + "; ".join(
                       f"E = {f(E)} MPa: " + ", ".join(f"{f(onset[(l, E)])}" for l in ells if (l, E) in onset) +
                       f" MPa for ell = {', '.join(f(l) for l in ells if (l, E) in onset)} mm" for E in Es) + ".",

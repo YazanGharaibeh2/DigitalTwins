@@ -125,7 +125,7 @@ def run_example3d(e_values=None, transient=True, nonlinear=True, resume=True, mo
     return out
 
 
-def merge_example3d(parts=("pilot_example3d", "pilot_example3d_part2")) -> dict:
+def merge_example3d(parts=("pilot_example3d", "pilot_example3d_part2", "pilot_example3d_part3")) -> dict:
     """Combine 3D-example part files into ``results/pilot_example3d.json`` (rows keyed by model and modulus)."""
     from dtivl.drivers.common import read_json
 
