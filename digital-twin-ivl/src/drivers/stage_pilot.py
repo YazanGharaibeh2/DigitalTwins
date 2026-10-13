@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from dtivl import params as P
-from dtivl.drivers.common import MESH_DIR, Timer, load_mask, write_json
+from dtivl.drivers.common import MESH_DIR, ROOT, Timer, load_mask, write_json
 from dtivl.geometry import cohort
 from dtivl.materials.constitutive import MaterialSet
 from dtivl.meshing.extrude3d import mesh3d_from_labelmap
@@ -64,8 +64,13 @@ def mesh2d_like3d(lesion_id: str):
     return plm, info, load_mesh(info["msh"], gdim=2)
 
 
-def run_example3d(e_values=None, transient=True, nonlinear=True) -> dict:
-    """D1: test the 3D code on the Fujino-4 example and compare with the 2D cross-section model."""
+def run_example3d(e_values=None, transient=True, nonlinear=True, resume=True) -> dict:
+    """D1: test the 3D code on the Fujino-4 example and compare with the 2D cross-section model.
+
+    ``resume``: rows of ``results/pilot_example3d.json`` that already hold
+    every requested analysis for a (model, modulus) pair are reused.
+    """
+    from dtivl.drivers.common import read_json
     from dtivl.fracture.phasefield import regularisation_length
     from dtivl.solvers.nonlinear import NonlinearState, run_ivl
     from dtivl.solvers.transient import transfer_factor
@@ -76,10 +81,22 @@ def run_example3d(e_values=None, transient=True, nonlinear=True) -> dict:
     h_ca = float(P.raw("discretisation.example3d")["h_calcium_mm"])
     ell = regularisation_length(h_ca=h_ca)
     out = {"lesion": lid, "E_values_MPa": e_values, "ell_mm": ell, "models": {}}
+    need = {"predictors"} | ({"transient"} if transient else set()) | ({"ivl"} if nonlinear else set())
+    old = {}
+    if resume and (ROOT / "results" / "pilot_example3d.json").exists():
+        prev = read_json("pilot_example3d")
+        for key, m in prev.get("models", {}).items():
+            for r in m.get("by_E", []):
+                if need <= set(r):
+                    old[(key, round(r["ca_E_MPa"], 6))] = r
     for dim, builder in ((3, mesh3d), (2, mesh2d_like3d)):
         plm, info, md = builder(lid)
         rec = {"mesh": {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}, "by_E": []}
         for E in e_values:
+            if (f"{dim}d", round(E, 6)) in old:
+                rec["by_E"].append(old[(f"{dim}d", round(E, 6))])
+                out["models"][f"{dim}d"] = rec
+                continue
             ms = MaterialSet.baseline(ca_E=E)
             row = {"ca_E_MPa": E}
             with Timer() as t:
@@ -203,12 +220,23 @@ def identify_stent_stiffness(lesion_id: str | None = None) -> dict:
     return out
 
 
-def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_erosion=True) -> dict:
+def _expected_protocols(E, stent_e_values, include_erosion) -> set:
+    keys = {"physiological", "balloon_only", "ivl"}
+    if any(abs(E - e) < 1e-9 for e in stent_e_values):
+        keys |= {"stent_post_ivl", "stent_no_ivl"} | ({"ivl_erosion"} if include_erosion else set())
+    return keys
+
+
+def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_erosion=True, resume=True) -> dict:
     """Nonlinear phase-field pilot over the modulus sweep.
 
     For every lesion and modulus: physiological pressure, IVL balloon only
     (4 atm, cap) and IVL with the lesion- and modulus-specific transient T.
     For ``stent_e_values``: stent deployment without IVL and after IVL.
+    ``resume``: rows of ``results/pilot_nonlinear_<lesion>.json`` that are
+    complete for a modulus (or skipped) are reused, so an interrupted run
+    continues where it stopped; the per-lesion file is rewritten after
+    every modulus.
     """
     from dtivl.drivers.common import read_json
     from dtivl.solvers.nonlinear import NonlinearState, run_ivl, run_pressure, run_stent
@@ -227,12 +255,20 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     R_ivl = 0.5 * P.get("geometry.ivl_balloon_diameter_mm").value
     out = {"K_s": K_s, "p_phys": p_phys, "p_bal": p_bal, "R_ivl": R_ivl, "lesions": {}}
     for lid in lesions:
+        done = {}
+        if resume and (ROOT / "results" / f"pilot_nonlinear_{lid}.json").exists():
+            for r in read_json(f"pilot_nonlinear_{lid}").get("rows", []):
+                if "skipped" in r or _expected_protocols(r["ca_E_MPa"], stent_e_values, include_erosion) <= set(r):
+                    done[round(r["ca_E_MPa"], 6)] = r
         plm, info, md = mesh2d(lid)
         # T_equivalent = transient peak / static sigma1 of the *quasi-static* model (MaterialSet moduli),
         # i.e. the factor that reproduces the transient peak inside run_ivl (design.md section 5.4).
         Tmap = {round(r["ca_E_MPa"], 6): r["transient"]["T_equivalent"] for r in lt["lesions"][lid]["by_E"]}
         rows = []
         for E in e_values:
+            if round(E, 6) in done:
+                rows.append(done[round(E, 6)])
+                continue
             ms = MaterialSet.baseline(ca_E=E)
             T = Tmap[round(E, 6)]
             row = {"ca_E_MPa": E, "T": T}
