@@ -7,12 +7,11 @@ only grow inside calcium: the upper bound is 1 on every DOF of a calcium
 cell and 0 elsewhere, and the lower bound is the damage of the last
 converged load step (irreversibility). With ``u`` frozen, ``d`` minimises
 
-    Pi_d(d) = int_Ca g(d) psi+(F) dx  +  (Gc / c_w) int_Ca (d / ell + ell |grad d|^2) dx
+    Pi_d(d) = int_Ca g(d) psi_d(F) dx  +  (Gc / c_w) int_Ca (d / ell + ell |grad d|^2) dx
               + 1/2 eps_reg int_soft d^2 dx
 
 with ``g(d) = (1 - k)(1 - d)^2 + k``, ``k = MaterialSet.k_floor`` (:func:`dtivl.materials.constitutive.degradation`),
-``c_w = 8/3`` (AT1) and ``psi+`` the tensile part of the volumetric-deviatoric
-split (:func:`dtivl.materials.constitutive.psi_calcium_split`). The last term
+``c_w = 8/3`` (AT1) and ``psi_d`` the damage driving force (next section). The last term
 is purely numerical: soft-tissue DOFs carry no energy, so their rows of the
 reduced (inactive-set) Jacobian of ``vinewtonrsls`` would be empty and the LU
 factorisation singular. ``eps_reg = D_REG_REL * Gc / (c_w ell)`` is so small
@@ -21,13 +20,44 @@ that its residual contribution at calcium-interface DOFs is negligible
 bounded to zero. The problem is quadratic in ``d`` and is solved by PETSc
 SNES ``vinewtonrsls`` (reduced-space active-set Newton) with MUMPS LU.
 
+Damage driving force (``SolverSettings.driving_force``, default from the
+config entry ``fracture.driving_force``; it enters the damage sub-problem
+only, the displacement problem always minimises ``g(d) psi+ + psi-``):
+
+* ``"energy"`` (default, the formulation used up to Checkpoint 2):
+  ``psi_d = psi+``, the tensile part of the volumetric-deviatoric split
+  (:func:`dtivl.materials.constitutive.psi_calcium_split`). The forms are
+  exactly those of the code before the option existed.
+* ``"rankine"`` (Checkpoint 2 decision D10, time-boxed test): a hybrid
+  formulation, isotropic split for the elastic problem and a principal-strain
+  driving force for damage,
+  ``psi_d = psi_R = (E / 2) <e1>+^2``, with ``E`` the calcium Young modulus
+  and ``e1`` the maximum principal Green-Lagrange strain of ``C = F^T F``
+  (:func:`dtivl.materials.constitutive.max_principal_green_lagrange`: closed-form
+  eigenvalue of the in-plane 2x2 block; the out-of-plane principal strain is
+  zero in plane strain, so ``e1 = max(e1_in-plane, 0)``). ``psi_R`` does not
+  depend on the volumetric or deviatoric character of the strain, only on
+  the largest principal stretch, so damage is driven where and in the
+  direction in which the material is stretched most; the crack band is
+  expected to grow perpendicular to the maximum principal strain. Because
+  ``psi_R`` is not the elastic energy that ``g(d)`` degrades, the coupled
+  problem is no longer the minimisation of a single energy: the alternate
+  minimisation then seeks a fixed point of the two sub-problems (each of
+  which is still a minimisation). 2D plane strain only: 3D raises
+  ``NotImplementedError``.
+
 Calibration (AT1, homogeneous state): at ``d = 0`` the residual density is
-``-2 psi+ + Gc / (c_w ell)``, so damage starts at
-``psi+ = Gc / (2 c_w ell) = 3 Gc / (16 ell)``. With
-``Gc = MaterialSet.gc(ell) = 16 ell psi_crit / 3`` the onset is at
-``psi+ = psi_crit`` (``E eps_f^2 / 2`` in the primary strain-controlled mode),
-independent of ``ell``. The regularisation length is
-``ell = fracture.ell_over_h * h_ca`` (:func:`regularisation_length`).
+``-2 (1 - k) psi_d + Gc / (c_w ell)``, so damage starts at
+``psi_d = Gc / (2 c_w ell (1 - k)) = 3 Gc / (16 ell (1 - k))``. With
+``Gc = MaterialSet.gc(ell) = 16 ell (1 - k) psi_crit / 3`` the onset is at
+``psi_d = psi_crit`` (``E eps_f^2 / 2`` in the primary strain-controlled mode),
+independent of ``ell``. For the energy force this is ``psi+ = psi_crit``;
+for the Rankine force it is ``e1 = sqrt(2 psi_crit / E)``, i.e. ``e1 = eps_f``
+in strain mode (``sigma_c / E`` in stress mode) in any stress state. ``e1`` is
+a Green-Lagrange strain whereas ``eps_f`` is a failure stretch minus one;
+at ``eps_f = 0.02`` the two measures differ by ``eps_f^2 / 2``, about 1 %
+of ``eps_f`` (the erosion comparator uses the stretch, ``sqrt(lambda_max(C)) - 1``).
+The regularisation length is ``ell = fracture.ell_over_h * h_ca`` (:func:`regularisation_length`).
 
 Verification
 ------------
@@ -45,6 +75,12 @@ The homogeneous AT1 relation ``psi+ (1 - d) = 3 Gc / (16 ell)`` at the first
 damaged step is reported separately (``psi_equilibrium_MPa``): it holds for
 any damaged homogeneous equilibrium and so checks the damage solver, not the
 onset.
+
+``onset_check(2, driving_force="rankine")`` repeats the plane-strain plate
+test with the Rankine force: the energies are then ``psi_R`` and the onset is
+also reported as the axial Green-Lagrange strain ``E_xx`` (the maximum
+principal strain of the plate; theory ``sqrt(2 psi_crit / E)``, i.e.
+``eps_f`` in strain mode) and as the cell-averaged ``e1``.
 """
 from __future__ import annotations
 
@@ -58,11 +94,13 @@ import ufl
 from dtivl import ROOT
 from dtivl import params as P
 from dtivl.geometry.labels import TAG_CALCIUM
-from dtivl.materials.constitutive import MaterialSet, degradation
+from dtivl.materials.constitutive import MaterialSet, degradation, max_principal_green_lagrange
 
 
 #: AT1 normalisation constant c_w = 4 int_0^1 sqrt(w(s)) ds with w(d) = d.
 AT1_CW = 8.0 / 3.0
+#: Damage driving forces (``SolverSettings.driving_force``, config ``fracture.driving_force``).
+DRIVING_FORCES = ("energy", "rankine")
 #: Relative weight of the numerical d-regularisation outside calcium.
 D_REG_REL = 1e-6
 #: PETSc options of the bound-constrained damage problem (numerical settings).
@@ -89,6 +127,8 @@ VERIF_FINE_STEP = 0.005              #: then steps of 0.5 % of the predicted ons
 VERIF_MAX_FRAC = 1.3                 #: give up beyond 1.3 x predicted onset strain
 VERIF_D_TOL = 1e-8                   #: "damaged" = max d above this value
 VERIF_TOL = 0.05                     #: 5 % tolerance (design.md section 5.7)
+VERIF_E1_REL_TOL = 1e-10             #: closed-form e1 vs E_xx in the homogeneous plate (rounding only)
+VERIF_BRACKET_ROUND = 1e-12          #: relative rounding allowance of the bracket test (a step can land on the onset)
 
 
 # ---------------------------------------------------------------------------
@@ -111,6 +151,56 @@ def onset_energy(Gc: float, ell: float, k: float = 0.0) -> float:
     """AT1 damage-onset tensile energy density ``3 Gc / (16 ell (1-k))`` (MPa)
     for the degradation ``g(d) = (1-k)(1-d)^2 + k``."""
     return 3.0 * Gc / (16.0 * ell * (1.0 - k))
+
+
+def config_driving_force() -> str:
+    """Damage driving force of the study configuration (``fracture.driving_force``)."""
+    return str(P.raw("fracture.driving_force")["value"])
+
+
+def check_driving_force(name: str, gdim: int | None = None) -> str:
+    """Validate a driving-force name (:data:`DRIVING_FORCES`) and return it.
+
+    ``ValueError`` for an unknown name; ``NotImplementedError`` for
+    ``"rankine"`` when ``gdim == 3`` (the closed-form principal strain is
+    implemented for 2D plane strain only).
+    """
+    if name not in DRIVING_FORCES:
+        raise ValueError(f"unknown damage driving force {name!r}; expected one of {DRIVING_FORCES}")
+    if name == "rankine" and gdim is not None and gdim != 2:
+        raise NotImplementedError(
+            f"driving_force='rankine' is implemented for 2D plane strain only (gdim={gdim}); the 3D maximum "
+            "principal strain (3x3 eigenvalue) is not implemented. Use driving_force='energy' in 3D.")
+    return name
+
+
+def rankine_driving_force(F3, E, gdim: int):
+    """Rankine-type driving force ``psi_R = (E / 2) <e1>+^2`` (UFL, 2D plane strain).
+
+    ``e1`` is the maximum principal Green-Lagrange strain
+    (:func:`dtivl.materials.constitutive.max_principal_green_lagrange`) and
+    ``E`` the calcium Young modulus (float or ``fem.Constant``). In uniaxial
+    tension ``psi_R`` equals the small-strain uniaxial-stress energy
+    ``E e1^2 / 2``, so the AT1 calibration ``psi_R = psi_crit`` puts the onset
+    at ``e1 = eps_f`` (strain mode).
+    """
+    check_driving_force("rankine", gdim)
+    e1 = max_principal_green_lagrange(F3, gdim)
+    e1p = ufl.conditional(ufl.gt(e1, 0.0), e1, 0.0)
+    return 0.5 * E * e1p ** 2
+
+
+def driving_force_density(name: str, *, psi_plus, F3=None, E=None, gdim: int | None = None):
+    """UFL driving force ``psi_d`` of the damage sub-problem.
+
+    ``"energy"``: returns ``psi_plus`` itself (the same UFL object, so the
+    compiled damage forms are exactly those of the energy formulation);
+    ``"rankine"``: :func:`rankine_driving_force` ``(F3, E, gdim)``.
+    """
+    check_driving_force(name, gdim)
+    if name == "energy":
+        return psi_plus
+    return rankine_driving_force(F3, E, gdim)
 
 
 def fracture_energy_density(d, Gc, ell):
@@ -142,8 +232,10 @@ class DamageSolver:
     d_lb, d_ub : P1 functions with the lower (irreversibility) and upper
         (calcium confinement) bounds; they are passed by reference to SNES,
         so updating their arrays updates the bounds.
-    psi_plus : UFL expression of the tensile energy density (depends on the
-        frozen displacement function).
+    psi_plus : UFL expression of the damage driving force ``psi_d`` (the
+        tensile energy density ``psi+`` or the Rankine force ``psi_R``, see
+        :func:`driving_force_density`; it depends on the frozen displacement
+        function).
     dx : cell measure with the cell tags as subdomain data.
     Gc, ell, k_res : fracture toughness (N/mm), regularisation length (mm)
         and residual stiffness (UFL constants or floats).
@@ -222,41 +314,68 @@ def _uniaxial_bcs(msh, length: float, disp_const):
     return factory
 
 
-def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | None = None) -> dict:
+def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | None = None,
+                driving_force: str | None = None) -> dict:
     """Homogeneous AT1 onset test in uniaxial tension (plane strain or 3D).
 
-    Returns a dict with the predicted and measured onset tensile energy and
-    strain, relative errors, the step bracket and ``passed`` (energy and
-    strain both within :data:`VERIF_TOL`).
+    Returns a dict with the predicted and measured onset driving-force
+    energy and strain, relative errors, the step bracket and ``passed``
+    (energy and strain both within :data:`VERIF_TOL`).
+
+    ``driving_force`` (default: the config entry ``fracture.driving_force``):
+    ``"energy"`` checks ``psi+ = psi_crit`` (keys ``psi_*`` refer to ``psi+``);
+    ``"rankine"`` (2D only) checks ``psi_R = psi_crit`` (keys ``psi_*`` refer
+    to ``psi_R``) and, in addition, the onset in terms of the axial
+    Green-Lagrange strain ``E_xx`` (``gl_axial_*``; ``E_xx`` is the maximum
+    principal strain of the plate, theory ``sqrt(2 psi_crit / E)``, i.e.
+    ``eps_f`` in strain mode); ``e1_matches_gl_axial`` compares the
+    closed-form ``e1`` with ``E_xx``.
     """
     from dolfinx import fem
 
-    from dtivl.solvers.nonlinear import NonlinearState
+    from dtivl.solvers.nonlinear import NonlinearState, SolverSettings
 
     ms = MaterialSet.baseline() if ms is None else ms
+    settings = SolverSettings() if driving_force is None else SolverSettings(driving_force=driving_force)
+    rankine = check_driving_force(settings.driving_force, gdim) == "rankine"
     md = _box_meshdata(gdim)
     msh = md.mesh
     length = (VERIF_PLATE if gdim == 2 else VERIF_BAR)[0]
     disp = fem.Constant(msh, 0.0)
-    state = NonlinearState(md, ms, fracture="phasefield", h_ca=h_ca,
+    state = NonlinearState(md, ms, fracture="phasefield", h_ca=h_ca, settings=settings,
                            bc_factory=_uniaxial_bcs(msh, length, disp), name=f"verif_pf{gdim}d")
     psi_c = onset_energy(state.Gc_value, state.ell, state.ms.k_floor)
-    # small-strain uniaxial energy psi = E_u eps^2 / 2 (E_u = E / (1 - nu^2) in plane strain)
-    E_u = ms.ca_E / (1.0 - ms.ca_nu ** 2) if gdim == 2 else ms.ca_E
-    eps_pred = np.sqrt(2.0 * psi_c / E_u)
+    if rankine:
+        # psi_R = E e1^2 / 2 with e1 = E_xx = eps + eps^2 / 2 (eps = applied engineering strain)
+        gl_pred = np.sqrt(2.0 * psi_c / ms.ca_E)
+        eps_pred = np.sqrt(1.0 + 2.0 * gl_pred) - 1.0
+    else:
+        # small-strain uniaxial energy psi = E_u eps^2 / 2 (E_u = E / (1 - nu^2) in plane strain)
+        E_u = ms.ca_E / (1.0 - ms.ca_nu ** 2) if gdim == 2 else ms.ca_E
+        eps_pred = np.sqrt(2.0 * psi_c / E_u)
     state_desc = ("plane strain, uniaxial in-plane stress (sigma_yy = 0, eps_zz = 0)" if gdim == 2
                   else "3D uniaxial stress")
-    psi_form = fem.form(state.psi_plus * state.dx(TAG_CALCIUM))
-    vol = state.comm.allreduce(fem.assemble_scalar(fem.form(1.0 * state.dx(TAG_CALCIUM))))
+    key = "psi_R" if rankine else "psi_plus"
+    dxc = state.dx(TAG_CALCIUM)
+    forms = {key: fem.form(state.psi_drive * dxc)}
+    if rankine:
+        from dtivl.materials.constitutive import max_principal_green_lagrange
+
+        forms["psi_plus"] = fem.form(state.psi_plus * dxc)
+        forms["e1"] = fem.form(max_principal_green_lagrange(state.F3, gdim) * dxc)
+        forms["gl_axial"] = fem.form(0.5 * ((state.F3.T * state.F3)[0, 0] - 1.0) * dxc)
+    vol = state.comm.allreduce(fem.assemble_scalar(fem.form(1.0 * dxc)))
 
     def step(eps):
         disp.value = eps * length
         state.solve_step()
         state.commit()
-        psi = state.comm.allreduce(fem.assemble_scalar(psi_form)) / vol
         dmax = float(state.comm.allreduce(state.d.x.array.max(), op=_mpi_max()))
         dmean = float(state.comm.allreduce(state.d.x.array.sum()) / state.comm.allreduce(state.d.x.array.size))
-        return {"strain": float(eps), "psi_plus": float(psi), "d_max": dmax, "d_mean": dmean}
+        row = {"strain": float(eps)}
+        row.update({k: float(state.comm.allreduce(fem.assemble_scalar(f)) / vol) for k, f in forms.items()})
+        row.update(d_max=dmax, d_mean=dmean)
+        return row
 
     rows = []
     for k in range(1, VERIF_PRE_STEPS + 1):
@@ -274,31 +393,54 @@ def onset_check(gdim: int = 2, ms: MaterialSet | None = None, *, h_ca: float | N
            "Gc_N_per_mm": state.Gc_value, "k_floor": ms.k_floor, "crack_filler": ms.crack_filler,
            "psi_onset_theory_MPa": psi_c,
            "psi_crit_MPa": ms.psi_crit, "strain_onset_theory": float(eps_pred), "steps": rows}
+    if rankine:
+        out = {"driving_force": "rankine", **out, "gl_axial_onset_theory": float(gl_pred)}
     if first is None or first == 0:
         out.update(passed=False, error="no damage onset bracketed")
         return out
     lo, hi = rows[first - 1], rows[first]
     # The observed onset lies in [lo, hi]; the error bound is the farther bracket end from theory.
-    # (psi+ (1 - d) at the first damaged step equals 3 Gc / (16 ell) for ANY homogeneous damaged
+    # (psi_d (1 - d) at the first damaged step equals 3 Gc / (16 ell (1 - k)) for ANY homogeneous damaged
     # equilibrium, wherever the onset happened, so it only checks the damage solver, not the onset.)
-    psi_equil = hi["psi_plus"] * (1.0 - hi["d_mean"])
-    psi_est = 0.5 * (lo["psi_plus"] + hi["psi_plus"])
-    eps_est = hi["strain"] * np.sqrt(1.0 - hi["d_mean"])       # psi+ ~ strain^2 near onset
+    psi_equil = hi[key] * (1.0 - hi["d_mean"])
+    psi_est = 0.5 * (lo[key] + hi[key])
+    eps_est = hi["strain"] * np.sqrt(1.0 - hi["d_mean"])       # psi_d ~ strain^2 near onset
     out.update({
-        "psi_bracket_MPa": [lo["psi_plus"], hi["psi_plus"]],
+        "psi_bracket_MPa": [lo[key], hi[key]],
         "strain_bracket": [lo["strain"], hi["strain"]],
         "psi_onset_measured_MPa": float(psi_est),
         "psi_equilibrium_MPa": float(psi_equil),
         "rel_err_psi_equilibrium": float(abs(psi_equil / psi_c - 1.0)),
         "strain_onset_measured": float(eps_est),
-        "rel_err_psi": float(max(abs(lo["psi_plus"] / psi_c - 1.0), abs(hi["psi_plus"] / psi_c - 1.0))),
+        "rel_err_psi": float(max(abs(lo[key] / psi_c - 1.0), abs(hi[key] / psi_c - 1.0))),
         "rel_err_strain": float(abs(eps_est / eps_pred - 1.0)),
-        "bracket_contains_theory": bool(lo["psi_plus"] <= psi_c <= hi["psi_plus"]),
+        "bracket_contains_theory": _in_bracket(lo[key], psi_c, hi[key]),
         "d_uniformity": float(hi["d_max"] - hi["d_mean"]),
     })
-    out["passed"] = bool(out["rel_err_psi"] < VERIF_TOL and out["rel_err_strain"] < VERIF_TOL
-                         and out["bracket_contains_theory"])
+    passed = out["rel_err_psi"] < VERIF_TOL and out["rel_err_strain"] < VERIF_TOL and out["bracket_contains_theory"]
+    if rankine:
+        # onset in terms of the axial Green-Lagrange strain: the bracket [lo, hi] contains the observed onset,
+        # the error bound is the farther bracket end from theory (no use of the damaged-equilibrium relation)
+        e1_dev = max(abs(r["e1"] / r["gl_axial"] - 1.0) for r in rows if r["gl_axial"] > 0.0)
+        out.update({
+            "gl_axial_bracket": [lo["gl_axial"], hi["gl_axial"]],
+            "gl_axial_onset_measured": float(0.5 * (lo["gl_axial"] + hi["gl_axial"])),
+            "rel_err_gl_axial": float(max(abs(lo["gl_axial"] / gl_pred - 1.0), abs(hi["gl_axial"] / gl_pred - 1.0))),
+            "gl_axial_bracket_contains_theory": _in_bracket(lo["gl_axial"], gl_pred, hi["gl_axial"]),
+            "e1_matches_gl_axial": float(e1_dev),
+        })
+        passed = (passed and out["rel_err_gl_axial"] < VERIF_TOL and out["gl_axial_bracket_contains_theory"]
+                  and e1_dev < VERIF_E1_REL_TOL)
+    out["passed"] = bool(passed)
     return out
+
+
+def _in_bracket(lo: float, x: float, hi: float) -> bool:
+    """``lo <= x <= hi`` up to the relative rounding allowance :data:`VERIF_BRACKET_ROUND`
+    (a load step that lands on the onset leaves ``d = 0`` with the driving force equal to the
+    onset value up to rounding)."""
+    tol = VERIF_BRACKET_ROUND * abs(x)
+    return bool(lo - tol <= x <= hi + tol)
 
 
 def _mpi_max():

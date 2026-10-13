@@ -133,3 +133,105 @@ def test_damage_confined_to_calcium_and_irreversible():
     assert status == "ok"
     assert np.all(state.d.x.array >= d_loaded - 1e-12)
     assert state.history[-1]["E_fracture"] > 0.0
+
+
+# ---------------------------------------------------------------------------
+# Damage driving force (D10 option b): "energy" (default) vs "rankine"
+# ---------------------------------------------------------------------------
+def test_driving_force_option_and_config():
+    """SolverSettings takes its default from fracture.driving_force (energy); unknown names are refused."""
+    from dtivl.solvers.nonlinear import SolverSettings
+
+    entry = P.raw("fracture.driving_force")
+    assert entry["value"] == "energy" and entry["sens"] == ["rankine"] and entry["status"] == "ASSUMPTION"
+    assert PF.config_driving_force() == "energy"
+    assert SolverSettings().driving_force == "energy"
+    assert SolverSettings(driving_force="rankine").driving_force == "rankine"
+    assert set(PF.DRIVING_FORCES) == {"energy", "rankine"}
+    with pytest.raises(ValueError):
+        PF.check_driving_force("tresca")
+    assert PF.check_driving_force("rankine", 2) == "rankine"
+
+
+def test_energy_driving_force_is_psi_plus():
+    """Default: the damage problem is driven by the very same UFL psi+ (unchanged forms)."""
+    from dtivl.solvers.nonlinear import NonlinearState, SolverSettings
+
+    md = PF._box_meshdata(2)
+    st = NonlinearState(md, MaterialSet.baseline(), fracture="phasefield")
+    assert st.driving_force == "energy"
+    assert st.psi_drive is st.psi_plus
+    st_r = NonlinearState(md, MaterialSet.baseline(), settings=SolverSettings(driving_force="rankine"))
+    assert st_r.driving_force == "rankine"
+    assert st_r.psi_drive is not st_r.psi_plus
+
+
+@pytest.mark.parametrize("grad", [
+    [[0.03, 0.01], [-0.02, -0.01]],      # general in-plane state with shear (principal axes rotated)
+    [[0.0, 0.04], [0.04, 0.0]],          # pure shear: e1 > 0 although E11 = E22 ~ 0
+    [[-0.02, 0.0], [0.0, -0.01]],        # biaxial compression: in-plane e1 < 0, so e1 = E33 = 0
+])
+def test_max_principal_green_lagrange_closed_form(grad):
+    """Closed-form e1 (UFL) equals the largest eigenvalue of the 3x3 plane-strain Green-Lagrange tensor."""
+    import ufl
+    from dolfinx import fem
+
+    from dtivl.materials.constitutive import deformation_gradient, max_principal_green_lagrange
+
+    md = PF._box_meshdata(2)
+    V = fem.functionspace(md.mesh, ("Lagrange", 1, (2,)))
+    u = fem.Function(V)
+    G = np.asarray(grad)
+    u.interpolate(lambda x: G @ x[:2])
+    _, F3 = deformation_gradient(u, plane_strain=True)
+    dx = ufl.dx(domain=md.mesh)
+    area = PF.VERIF_PLATE[0] * PF.VERIF_PLATE[1]
+    F = np.eye(3)
+    F[:2, :2] += G
+    e1_ref = np.linalg.eigvalsh(0.5 * (F.T @ F - np.eye(3)))[-1]
+    e1 = fem.assemble_scalar(fem.form(max_principal_green_lagrange(F3, 2) * dx)) / area
+    assert e1 == pytest.approx(e1_ref, abs=1e-14)
+    psi_R = fem.assemble_scalar(fem.form(PF.rankine_driving_force(F3, 2.0, 2) * dx)) / area
+    assert psi_R == pytest.approx(max(e1_ref, 0.0) ** 2, abs=1e-14)
+    with pytest.raises(NotImplementedError):
+        max_principal_green_lagrange(F3, 3)
+
+
+@pytest.mark.parametrize("modulus", ["baseline", "tissue_level"])
+def test_rankine_onset_homogeneous_plate(modulus):
+    """Plane-strain plate in uniaxial tension with the Rankine force: damage starts when the axial
+    Green-Lagrange strain (the maximum principal strain) reaches eps_f, within 5 %, at the D8 baseline
+    calcium modulus and at the tissue-level modulus (the onset strain does not depend on E)."""
+    ms = (MaterialSet.baseline() if modulus == "baseline"
+          else MaterialSet.baseline(ca_E=P.get("materials.calcium.E_tissue_level").value))
+    assert ms.failure_mode == "strain"
+    c = PF.onset_check(2, ms, driving_force="rankine")
+    assert c["passed"], {k: v for k, v in c.items() if k != "steps"}
+    assert c["driving_force"] == "rankine"
+    assert c["gl_axial_onset_theory"] == pytest.approx(ms.eps_f, rel=1e-12)
+    lo, hi = c["gl_axial_bracket"]
+    assert lo <= ms.eps_f * (1 + 1e-12) and hi >= ms.eps_f
+    assert c["rel_err_gl_axial"] < 0.05
+    assert c["gl_axial_onset_measured"] == pytest.approx(ms.eps_f, rel=0.05)
+    # AT1 calibration kept: onset at psi_R = psi_crit
+    assert c["psi_onset_theory_MPa"] == pytest.approx(ms.psi_crit, rel=1e-12)
+    assert c["rel_err_psi"] < 0.05
+    # e1 from the closed-form eigenvalue is the axial strain of the plate; damage stays homogeneous
+    assert c["e1_matches_gl_axial"] < 1e-10
+    assert c["d_uniformity"] < 1e-6
+    # no damage while the axial strain is below eps_f
+    for r in c["steps"]:
+        if r["gl_axial"] < ms.eps_f * (1 - 1e-12):
+            assert r["d_max"] <= PF.VERIF_D_TOL
+
+
+def test_rankine_3d_not_implemented():
+    from dtivl.solvers.nonlinear import NonlinearState, SolverSettings
+
+    md = PF._box_meshdata(3)
+    with pytest.raises(NotImplementedError, match="2D plane strain only"):
+        NonlinearState(md, MaterialSet.baseline(), settings=SolverSettings(driving_force="rankine"))
+    with pytest.raises(NotImplementedError):
+        PF.onset_check(3, driving_force="rankine")
+    # the option only acts on the phase-field damage problem: accepted without a phase field
+    NonlinearState(md, MaterialSet.baseline(), fracture="none", settings=SolverSettings(driving_force="rankine"))

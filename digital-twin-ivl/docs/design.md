@@ -170,6 +170,33 @@ becoming a void. Gc = 16 ℓ (1−k) ψ_crit / 3 keeps the AT1 onset at ψ⁺ = 
 `crack_filler="none"` gives k = k_res. Undefined (ValueError) when μ_Ca ≤ μ_fibrous;
 the pilot skips such moduli. Optional `gc_factor` (per-cell G_c multiplier) for
 the heterogeneity diagnostics only.
+
+Damage driving force (Checkpoint 2 decision D10, option b; `SolverSettings.driving_force`,
+default from `fracture.driving_force`). The displacement problem always uses
+W = g(d) ψ⁺ + ψ⁻ above. The damage sub-problem (u frozen) minimises
+∫ g(d) ψ_d dx(Ca) + Π_frac in d, with
+* `"energy"` (default, the formulation used up to Checkpoint 2): ψ_d = ψ⁺. The
+  damage forms are identical to those before the option existed (results
+  bit-identical).
+* `"rankine"` (time-boxed test): ψ_d = ψ_R = (E/2) ⟨e₁⟩₊², E the calcium Young
+  modulus and e₁ the maximum principal Green–Lagrange strain of C = FᵀF. In
+  2D plane strain e₁ is the closed-form largest eigenvalue of the in-plane
+  2×2 block of E = (C − I)/2,
+  (E₁₁ + E₂₂)/2 + √(((E₁₁ − E₂₂)/2)² + E₁₂²), compared with the out-of-plane
+  principal strain E₃₃ = 0, so e₁ = max(e₁,in-plane, 0)
+  (`constitutive.max_principal_green_lagrange`). 3D raises
+  `NotImplementedError`. This is a hybrid formulation: isotropic
+  (volumetric–deviatoric) split for the elastic problem, principal-strain
+  driving force for damage; damage is driven by the largest principal
+  stretch, independent of its volumetric or deviatoric character, so the
+  crack band is expected to open perpendicular to the maximum principal
+  strain. ψ_R is not the energy that g(d) degrades, so the coupled problem
+  is no longer the minimisation of one energy; the alternate minimisation
+  seeks a fixed point of the two sub-problems.
+* Calibration is unchanged: the homogeneous onset is ψ_d = 3Gc/(16ℓ(1−k)) =
+  ψ_crit, i.e. e₁ = √(2ψ_crit/E) = ε_f in strain mode (σ_c/E in stress mode),
+  in any stress state. e₁ is a Green–Lagrange strain whereas ε_f is a failure
+  stretch minus one; at ε_f = 0.02 they differ by ε_f²/2 (about 1 % of ε_f).
 Lumen follower pressure: residual term `+∫ p J F⁻ᵀN·v dS(lumen)` (in the
 convention R = ∫P:∇v dX + ∫pJF⁻ᵀN·v dS = 0 with N the outward normal of
 the tissue domain).
@@ -247,6 +274,11 @@ with eroded cells as "cracked".
 * AT1 homogeneous bar/plate (calcium only, uniaxial tension, ends displaced):
   damage onset at ψ⁺ = 3Gc/(16ℓ) within 5 %, i.e. at the calibrated
   ε_f (strain mode) — reported in `results/verification_phasefield.json`.
+  Rankine driving force (2D plate, `onset_check(2, driving_force="rankine")`,
+  tests/test_phasefield.py): onset at ψ_R = ψ_crit and at an axial
+  Green–Lagrange strain E_xx (the maximum principal strain of the plate)
+  equal to ε_f within 5 %, at the baseline and at the tissue-level calcium
+  modulus; the closed-form e₁ equals E_xx; 3D raises `NotImplementedError`.
 * Hyperelastic thick cylinder (single soft material) under pressure: compare
   small-load response to Lamé (< 1 %).
 * Contact: homogeneous tube expanded by a rigid cylinder to R: lumen nodes
@@ -277,5 +309,10 @@ baseline (5 points before Checkpoint 2; the 5 old points are a subset).
 `run_nonlinear(..., resume=True)` and `run_example3d(..., resume=True)` reuse
 complete rows of their result files, so an interrupted run continues.
 `src/drivers/stage_diagnostics.py` writes `results/diag_localisation.json`
-(fine stepping, seeded crack, G_c heterogeneity; Checkpoint 2 decision D10).
+(fine stepping, seeded crack, G_c heterogeneity; Checkpoint 2 decision D10),
+`results/diag_ell.json` (ℓ and h_ca refined together) and
+`results/diag_rankine.json` (`rankine_test`, D10 option b: IVL on the pilot
+lesions at the baseline modulus with the `"energy"` and `"rankine"` damage
+driving forces, T = the lesion's `T_equivalent`; protocol record, crack
+summary and wall time per run).
 `src/drivers/report_checkpoint2.py` builds `CHECKPOINT_2.md` from the result files.
