@@ -270,7 +270,91 @@ def sec_nonlinear(nl: dict, lt: dict) -> tuple[str, dict]:
                 rows), ""]
     s.append(f"Figure: `{fig_onset(nl, lt)}`.")
     s.append("")
+    mtxt, window = outcome_matrix(nl)
+    facts["ivl_only_window"] = window
+    s.insert(s.index(f"Stent radial stiffness K_s = {f(cal['K_s_MPa_per_mm'])} MPa/mm, identified so that the calcium-free "
+                     f"template ({cal['lesion_template']}) recoils by {f(cal['recoil_target_pct'])} % (clinical acute recoil). "
+                     "Onset is the first load step with max d >= d_crack; for stents the load is the cylinder radius (mm).") + 2,
+             mtxt)
     return "\n".join(s), facts
+
+
+def outcome_matrix(nl: dict) -> tuple[str, dict]:
+    """Modulus x lesion matrix of fracture outcomes (B = balloon only, I = IVL, S = stent without IVL)."""
+    Es = sorted({r["ca_E_MPa"] for lr in nl.values() for r in lr})
+    window = {}
+    rows = []
+    for E in Es:
+        cells = []
+        for lid, lr in nl.items():
+            r = next((x for x in lr if abs(x["ca_E_MPa"] - E) < 1e-9), None)
+            if r is None:
+                cells.append("not run")
+                continue
+            if "skipped" in r:
+                cells.append("skipped")
+                continue
+            parts = []
+            for key, tag in (("balloon_only", "B"), ("ivl", "I"), ("stent_no_ivl", "S")):
+                rec = r.get(key)
+                if rec is None:
+                    continue
+                c = rec["cracks"]
+                mark = "–" if not c["fracture"] else ("diffuse" if c["diffuse"] else f"{c['n_fractures']} crack(s)")
+                if rec["status"] != "ok":
+                    mark += f" ({rec['status']})"
+                parts.append(f"{tag}: {mark}")
+            b, i = r.get("balloon_only"), r.get("ivl")
+            if b and i and i["cracks"]["fracture"] and not b["cracks"]["fracture"]:
+                window.setdefault(lid, []).append(E)
+            cells.append("; ".join(parts))
+        rows.append([f(E)] + cells)
+    txt = ["### 4.1 Fracture outcome by calcium modulus", "",
+           "B = IVL balloon alone (4 atm), I = IVL (balloon + pulse), S = stent without IVL "
+           "(run at two moduli only); – = no fracture.", "",
+           table(["E (MPa)"] + list(nl), rows), ""]
+    if window:
+        txt.append("Moduli at which IVL fractures the calcium but the balloon alone does not: " + "; ".join(
+            f"{lid}: {', '.join(f(e) for e in v)} MPa" for lid, v in window.items()) + ".")
+    else:
+        txt.append("At no tested modulus does IVL fracture the calcium while the balloon alone does not.")
+    txt.append("")
+    return "\n".join(txt), window
+
+
+def sec_diagnostics() -> str:
+    """Section on damage localisation (decision D10), from the diagnostics result files."""
+    d = _load("diag_localisation")
+    e = _load("diag_ell")
+    s = ["## 8. Why the damage is diffuse (diagnostics for D10)", ""]
+    if d is not None:
+        rows = []
+        for r in d["by_E"]:
+            for k, lab in (("fine", "fine steps"), ("seeded", "seeded radial crack"),
+                           ("heterogeneous", f"G_c heterogeneity (CoV {f(d['cov'], 2)})")):
+                x = r[k]
+                first = next((st for st in x["steps"] if st.get("damaged_fraction", 0.0) > 0.0), None)
+                rows.append([f(r["ca_E_MPa"]), lab, f(x["first_damaged_p"]),
+                             "–" if first is None else ", ".join(first["pattern"]) or "–",
+                             pct(x["final_damaged_fraction"], 3), f(x["final_diffuse"])])
+        s += [f"Lesion {d['lesion']}, IVL balloon cap, pressure steps of {f(d['dp_MPa'])} MPa up to "
+              f"{f(d['p_end_MPa'])} MPa (`results/diag_localisation.json`).", "",
+              table(["E (MPa)", "Experiment", "first cracked step p (MPa)", "pattern at that step",
+                     "damaged area at the end", "diffuse at the end"], rows), ""]
+    if e is not None:
+        rows = []
+        for h in e["by_h"]:
+            for r in h["by_E"]:
+                last = r["steps"][-1] if r["steps"] else {}
+                rows.append([f(h["h_ca_mm"]), f(h["ell_mm"]), h["n_cells_calcium"], f(r["ca_E_MPa"]),
+                             f(r["first_damaged_p"]), pct(r["final_damaged_fraction"], 3), f(r["final_diffuse"]),
+                             f(last.get("n_fractures")), ", ".join(last.get("pattern", [])) or "–",
+                             f(r["seconds"], 2)])
+        s += ["Regularisation length refined with the calcium mesh (ell / h fixed; `results/diag_ell.json`):", "",
+              table(["h_Ca (mm)", "ell (mm)", "calcium cells", "E (MPa)", "first cracked p (MPa)",
+                     "damaged area at the end", "diffuse", "through-thickness components", "patterns",
+                     "run time (s)"], rows), ""]
+    return "\n".join(s)
 
 
 def sec_example3d() -> str:
@@ -437,7 +521,7 @@ def build() -> str:
             "`results/*.json`, `cohort/cohort.csv` and the parameter files. No number below is typed by hand.",
             "Nothing here is validated against patients; this checkpoint covers verification and a pilot.", ""]
     text = "\n".join(head + [DECISIONS, sec_cohort(), sec_verification(), sec_transient(lt, nl), nl_text,
-                             sec_example3d(), sec_findings(facts, nl), sec_consistency(nl)])
+                             sec_example3d(), sec_findings(facts, nl), sec_consistency(nl), sec_diagnostics()])
     OUT.write_text(text)
     return str(OUT)
 

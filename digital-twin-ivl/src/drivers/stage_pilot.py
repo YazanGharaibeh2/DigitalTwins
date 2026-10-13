@@ -265,6 +265,13 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
         # i.e. the factor that reproduces the transient peak inside run_ivl (design.md section 5.4).
         Tmap = {round(r["ca_E_MPa"], 6): r["transient"]["T_equivalent"] for r in lt["lesions"][lid]["by_E"]}
         rows = []
+        def _save():
+            # every write holds all rows known so far (resumed rows not yet reached included)
+            have = {round(x["ca_E_MPa"], 6) for x in rows}
+            allrows = rows + [r for e, r in done.items() if e not in have]
+            write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "K_s": K_s,
+                                                 "rows": sorted(allrows, key=lambda x: x["ca_E_MPa"])})
+
         for E in e_values:
             if round(E, 6) in done:
                 rows.append(done[round(E, 6)])
@@ -277,7 +284,7 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
             except ValueError as exc:          # calcium not stiffer than the matrix: crack filler undefined
                 row["skipped"] = str(exc)
                 rows.append(row)
-                write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "rows": rows, "K_s": K_s})
+                _save()
                 continue
             with Timer() as t:
                 row["physiological"] = _protocol_record(run_pressure(NonlinearState(md, ms), p_phys), md, plm)
@@ -304,7 +311,7 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
                                                               md, plm)
                     row["ivl_erosion"]["seconds"] = t.seconds
             rows.append(row)
-            write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "rows": rows, "K_s": K_s})
+            _save()
         out["lesions"][lid] = rows
     if aggregate:
         write_json("pilot_nonlinear", out)
