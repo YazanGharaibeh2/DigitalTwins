@@ -1,0 +1,2793 @@
+{
+ "lesion": "P-A90-T0.2-SUP",
+ "dp_MPa": 0.002,
+ "p_end_MPa": 0.4053,
+ "ell_over_h": 2.0,
+ "h_soft_mm": 0.15,
+ "by_h": [
+  {
+   "h_ca_mm": 0.04,
+   "ell_mm": 0.08,
+   "n_cells": 3644,
+   "n_cells_calcium": 609,
+   "by_E": [
+    {
+     "steps": [
+      {
+       "p": 0.002,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.219359536394503,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.004,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2263073246647327,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.006,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2332961889646654,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.008,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.240326501787593,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.01,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2473986402721557,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.012,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.25451298627728,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.014,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2616699264585542,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.016,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.268869852346168,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.018000000000000002,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2761131604243645,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.020000000000000004,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2834002522124925,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.022,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.290731534347683,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.024,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.2981074186691814,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.026000000000000002,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.305528322304393,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.028000000000000004,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.312994667756655,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.03,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.3205068829948257,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.032,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.328065401544665,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.034,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.3356706625821015,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.036000000000000004,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.3433231110284494,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.038000000000000006,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.3510231976475437,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.04,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.358771379144917,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.042,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.366568118269043,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.044000000000000004,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.37441388391468,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.046,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.3823091512284025,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.048,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.390254401716323,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.05,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.398250123354123,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.052000000000000005,
+       "max_d": 0.0,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.406296810699413,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.054000000000000006,
+       "max_d": 0.0007793880392196769,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.4143952896014573,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.056,
+       "max_d": 0.007739232270349749,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.422559641407681,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.058,
+       "max_d": 0.03262099714440071,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.4308617375870827,
+       "stagger_its": 4,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.060000000000000005,
+       "max_d": 0.7990150912968434,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.450653940255506,
+       "stagger_its": 58,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.062,
+       "max_d": 0.799410213030066,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.461968518956324,
+       "stagger_its": 34,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.064,
+       "max_d": 0.8000859769896477,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.473431765455151,
+       "stagger_its": 33,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.066,
+       "max_d": 0.806961205305306,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.4849098317799267,
+       "stagger_its": 34,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.068,
+       "max_d": 0.806961205305306,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.5012464399292282,
+       "stagger_its": 29,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.07,
+       "max_d": 0.8202424893465426,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.511176396306841,
+       "stagger_its": 4,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.07200000000000001,
+       "max_d": 0.8349291431459123,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.5212978358662563,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.07400000000000001,
+       "max_d": 0.8476073667700185,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.531460774943652,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.076,
+       "max_d": 0.858656728698058,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.54165118805655,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.078,
+       "max_d": 0.8684117340254365,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.5518792822381458,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.08,
+       "max_d": 0.8771035689425792,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.5621528454068057,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.082,
+       "max_d": 0.8849052075998839,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.572477949456354,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.084,
+       "max_d": 0.8919504751864813,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.582859486198228,
+       "stagger_its": 3,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.08600000000000001,
+       "max_d": 0.898304963325274,
+       "damaged_fraction": 0.0,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [],
+       "lumen_area": 2.5933000891097633,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.08800000000000001,
+       "max_d": 0.9041460537583967,
+       "damaged_fraction": 0.015257541672487324,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [
+        "circumferential",
+        "circumferential"
+       ],
+       "lumen_area": 2.603806396295374,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.09,
+       "max_d": 0.9094903749515191,
+       "damaged_fraction": 0.1371567424026375,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [
+        "circumferential",
+        "circumferential",
+        "circumferential",
+        "circumferential",
+        "circumferential",
+        "undetermined",
+        "undetermined",
+        "undetermined",
+        "undetermined"
+       ],
+       "lumen_area": 2.614379506622093,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.092,
+       "max_d": 0.9143970551851863,
+       "damaged_fraction": 0.2464021671692095,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [
+        "circumferential"
+       ],
+       "lumen_area": 2.625022062190974,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.094,
+       "max_d": 0.9189160998952084,
+       "damaged_fraction": 0.3235087466290472,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [
+        "circumferential"
+       ],
+       "lumen_area": 2.635736440827521,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.096,
+       "max_d": 0.9230898940440587,
+       "damaged_fraction": 0.4247717908584098,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": false,
+       "pattern": [
+        "circumferential"
+       ],
+       "lumen_area": 2.6465248026941195,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.098,
+       "max_d": 0.9269546832971453,
+       "damaged_fraction": 0.5085537370845162,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.6573891374753145,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.1,
+       "max_d": 0.9305417055556044,
+       "damaged_fraction": 0.5902012236898901,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.6683313004779428,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.10200000000000001,
+       "max_d": 0.9338780677685403,
+       "damaged_fraction": 0.6934162249154306,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.679353040611837,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.10400000000000001,
+       "max_d": 0.9369874354287054,
+       "damaged_fraction": 0.7796501598231564,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.690456022395435,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.10600000000000001,
+       "max_d": 0.9398905818461605,
+       "damaged_fraction": 0.8928214969120759,
+       "fracture": false,
+       "n_fractures": 0,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.7016418434546416,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.108,
+       "max_d": 0.94260583078067,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.712912048639579,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.11,
+       "max_d": 0.9451494168211292,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.7242681415076677,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.112,
+       "max_d": 0.9475357815167603,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.7357115937710286,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.114,
+       "max_d": 0.9497778187492301,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.747243853142037,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.116,
+       "max_d": 0.9518870795871371,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.7588663499086477,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.11800000000000001,
+       "max_d": 0.9538739444931597,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.770580502494371,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.12000000000000001,
+       "max_d": 0.9557477689990896,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.7823877222005704,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.122,
+       "max_d": 0.9575170076485969,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.7942894172859623,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.124,
+       "max_d": 0.9591893200103421,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.8062869965057504,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.126,
+       "max_d": 0.9607716617999329,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.818381872207935,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.128,
+       "max_d": 0.9622703635580292,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.8305754630650246,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.13,
+       "max_d": 0.9636911988702528,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.842869196504546,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.132,
+       "max_d": 0.9650394437510684,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.8552645108898655,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.134,
+       "max_d": 0.9663199285253071,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.8677628574934912,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.136,
+       "max_d": 0.9675370833103495,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.8803657022977913,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.138,
+       "max_d": 0.9686949780163102,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.8930745276519105,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.14,
+       "max_d": 0.9697973576311135,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.9058908338089924,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.14200000000000002,
+       "max_d": 0.9708476734347155,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.918816140363954,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.14400000000000002,
+       "max_d": 0.9718491106861896,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.9318519876087774,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.14600000000000002,
+       "max_d": 0.9728046132445912,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.944999937819829,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.148,
+       "max_d": 0.9737169055153887,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.958261576489482,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.15,
+       "max_d": 0.9745885120585774,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.971638513512679,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.152,
+       "max_d": 0.9754217751443399,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.985132384337448,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.154,
+       "max_d": 0.9762188705045046,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 2.998744851087327,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.156,
+       "max_d": 0.9769818214927123,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.01247760366263,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.158,
+       "max_d": 0.9777125118380834,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.0263323608264847,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.16,
+       "max_d": 0.9784126971527904,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.0403108712811004,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.162,
+       "max_d": 0.9790840153332137,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.0544149147389845,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.164,
+       "max_d": 0.9797279959766324,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.0686463029933098,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.166,
+       "max_d": 0.9803460689201938,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.0830068809913254,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.168,
+       "max_d": 0.980939571995827,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.0974985279142806,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.17,
+       "max_d": 0.9815097580834655,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.1121231582670434,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.17200000000000001,
+       "max_d": 0.98205637588501,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.1268826862433032,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.17400000000000002,
+       "max_d": 0.9825835072585959,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.1417791772817174,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.17600000000000002,
+       "max_d": 0.9830906230059725,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.1568146180648253,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.178,
+       "max_d": 0.9835786920016464,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.1719910754795633,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.18,
+       "max_d": 0.984048629563704,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.1873106575663086,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.182,
+       "max_d": 0.9845012970262972,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.2027755145777173,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.184,
+       "max_d": 0.9849375055153383,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.2183878402091493,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.186,
+       "max_d": 0.9853580194286822,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.2341498728585316,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.188,
+       "max_d": 0.985763559636107,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.25006389691719,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.19,
+       "max_d": 0.9861548064247954,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.2661322440936065,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.192,
+       "max_d": 0.9865324022134115,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.2823572947721593,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.194,
+       "max_d": 0.9868969540555005,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.298741479408703,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.196,
+       "max_d": 0.9872490359508549,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.3152872799650557,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.198,
+       "max_d": 0.9875891909816359,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.3319972313842516,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.2,
+       "max_d": 0.9879179332883847,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.348873923108616,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.202,
+       "max_d": 0.9882357498995975,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.3659200006425993,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.20400000000000001,
+       "max_d": 0.9885431024272163,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.3831381671624294,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.20600000000000002,
+       "max_d": 0.9888404286392273,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.4005311851716447,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.20800000000000002,
+       "max_d": 0.9891281439195014,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.418101878222465,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.21000000000000002,
+       "max_d": 0.9894066426240797,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.435853132659964,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.212,
+       "max_d": 0.9896762993422598,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.453787899452156,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.214,
+       "max_d": 0.9899374700700825,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.4719091960618944,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.216,
+       "max_d": 0.9901904933031416,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.490220108381631,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.218,
+       "max_d": 0.9904356910550196,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.5087237927301174,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.22,
+       "max_d": 0.9906733698071057,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.5274234779135027,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.222,
+       "max_d": 0.9909038213950497,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.5463224673531433,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.224,
+       "max_d": 0.9911273238366543,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.5654241412827057,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.226,
+       "max_d": 0.9913441421056008,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.584731959017004,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.228,
+       "max_d": 0.9915545288550369,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.604249461295231,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.23,
+       "max_d": 0.9917587250947094,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.6239802727012256,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.232,
+       "max_d": 0.9919569608250353,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.643928104163444,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.234,
+       "max_d": 0.9921494556312136,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.6640967555374555,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.23600000000000002,
+       "max_d": 0.9923364192402393,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.684490118273796,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.23800000000000002,
+       "max_d": 0.9925180520434468,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.705112178173989,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.24000000000000002,
+       "max_d": 0.9926945455870009,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.7259670182377325,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.242,
+       "max_d": 0.992866083032566,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.7470588216041816,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.244,
+       "max_d": 0.9930328395902095,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.7683918745903577,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.246,
+       "max_d": 0.9931949829254341,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.789970569829736,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.248,
+       "max_d": 0.9933526735420916,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.811799409514037,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.25,
+       "max_d": 0.9935060651427969,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.8338830087413815,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.252,
+       "max_d": 0.9936553049683381,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.8562260989737887,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.254,
+       "max_d": 0.9938005341174674,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.878833531607213,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.256,
+       "max_d": 0.9939418878483568,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.9017102816570914,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.258,
+       "max_d": 0.9940794958629058,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.9248614515624065,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.26,
+       "max_d": 0.9942134825750029,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.9482922751112968,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.262,
+       "max_d": 0.9943439673637644,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.9720081214909047,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.264,
+       "max_d": 0.9944710648127,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 3.9960144994644096,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.266,
+       "max_d": 0.9945948849356848,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.020317061677675,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.268,
+       "max_d": 0.9947155333905607,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.044921609097956,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.27,
+       "max_d": 0.9948331116811271,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.069834095586925,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.272,
+       "max_d": 0.9949477173482321,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.095060632609884,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.274,
+       "max_d": 0.9950594441506235,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.120607494082733,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.276,
+       "max_d": 0.9951683822361778,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.146481121357991,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.278,
+       "max_d": 0.9952746183040768,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.172688128350615,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.28,
+       "max_d": 0.9953782357584721,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.199235306803867,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.28200000000000003,
+       "max_d": 0.9954793148541323,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.226129631694928,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.28400000000000003,
+       "max_d": 0.9955779328345435,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.2533782667792055,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.28600000000000003,
+       "max_d": 0.9956741640628934,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.2809885702715365,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.28800000000000003,
+       "max_d": 0.995768080146353,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.308968100661516,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.29000000000000004,
+       "max_d": 0.9958597500540289,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.337324622659166,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.292,
+       "max_d": 0.995949240228949,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.366066113266074,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.294,
+       "max_d": 0.9960366146944103,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.395200767965495,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.296,
+       "max_d": 0.9961219817534406,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.424737007023769,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.298,
+       "max_d": 0.9962054135318397,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.454683481893326,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.3,
+       "max_d": 0.9962869044342738,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.48504908170582,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.302,
+       "max_d": 0.9963665098791411,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.51584293984167,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.304,
+       "max_d": 0.9964442833195098,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.547074440559776,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.306,
+       "max_d": 0.9965202763216192,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.578753225668494,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.308,
+       "max_d": 0.9965945386395568,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.610889201215843,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.31,
+       "max_d": 0.9966671182863106,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.643492544173417,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.312,
+       "max_d": 0.9967380616013861,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.676573709084725,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.314,
+       "max_d": 0.9968074133151603,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.7101434346443005,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.316,
+       "max_d": 0.9968752166101431,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.744212750169371,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.318,
+       "max_d": 0.9969415131792981,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.778792981920414,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.32,
+       "max_d": 0.9970063432815736,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.813895759221309,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.322,
+       "max_d": 0.9970697457947804,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.849533020323459,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.324,
+       "max_d": 0.997131758265949,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.885717017951083,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.326,
+       "max_d": 0.9971924169592895,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.9224603244574325,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.328,
+       "max_d": 0.9972517569018724,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.959775836513268,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.33,
+       "max_d": 0.9973098119271416,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 4.997676779239798,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.332,
+       "max_d": 0.9973666147163675,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.036176709688551,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.334,
+       "max_d": 0.9974221968381379,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.075289519560018,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.336,
+       "max_d": 0.9974765887859908,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.1150294370413905,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.338,
+       "max_d": 0.9975298200142735,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.155411027631877,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.34,
+       "max_d": 0.997581918972328,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.196449193810616,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.342,
+       "max_d": 0.9976329131370812,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.238159173389251,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.34400000000000003,
+       "max_d": 0.9976828290441346,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.280556536376299,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.34600000000000003,
+       "max_d": 0.9977316923174285,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.323657180166204,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.34800000000000003,
+       "max_d": 0.9977795276975711,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.367477322850176,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.35000000000000003,
+       "max_d": 0.9978263590689095,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.412033494431087,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.35200000000000004,
+       "max_d": 0.9978722094854291,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.457342525708714,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.354,
+       "max_d": 0.9979171011955601,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.503421534586805,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.356,
+       "max_d": 0.9979610556659801,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.550287909538943,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.358,
+       "max_d": 0.9980040936044918,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.59795928995663,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.36,
+       "max_d": 0.9980462349820689,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.646453543091467,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.362,
+       "max_d": 0.9980874990541557,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.695788737293487,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.364,
+       "max_d": 0.998127904381314,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.7459831112414035,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.366,
+       "max_d": 0.998167468849311,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.797055038857228,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.368,
+       "max_d": 0.9982062096887472,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.849022989599846,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.37,
+       "max_d": 0.9982441434943246,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.901905483839243,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.372,
+       "max_d": 0.9982812862438578,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 5.955721043027554,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.374,
+       "max_d": 0.9983176533171373,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.010488134404977,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.376,
+       "max_d": 0.9983532595147495,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.066225110010255,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.378,
+       "max_d": 0.9983881190769691,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.122950139807084,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.38,
+       "max_d": 0.9984222457028302,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.180681138791685,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.382,
+       "max_d": 0.9984556525694909,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.239435688013021,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.384,
+       "max_d": 0.9984883523519968,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.299230949518145,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.386,
+       "max_d": 0.9985203572435523,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.360083575329952,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.388,
+       "max_d": 0.9985516789763953,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.422009610675675,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.39,
+       "max_d": 0.9985823288433716,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.485024391810035,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.392,
+       "max_d": 0.9986123177202832,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.549142438917634,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.394,
+       "max_d": 0.9986416560890826,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.6143773447335725,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.396,
+       "max_d": 0.9986703540619581,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.680741659686792,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.398,
+       "max_d": 0.998698421406341,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.748246774545352,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.4,
+       "max_d": 0.9987258675708365,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.816902801721932,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.402,
+       "max_d": 0.9987527017120567,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.886718456577211,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.404,
+       "max_d": 0.9987789327223016,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 6.95770094023172,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.406,
+       "max_d": 0.9988045692579982,
+       "damaged_fraction": 1.0,
+       "fracture": true,
+       "n_fractures": 1,
+       "diffuse": true,
+       "pattern": [
+        "diffuse"
+       ],
+       "lumen_area": 7.029855825557372,
+       "stagger_its": 1,
+       "stagger_converged": true
+      }
+     ],
+     "seed": null,
+     "first_damaged_p": 0.08800000000000001,
+     "final_damaged_fraction": 1.0,
+     "final_diffuse": true,
+     "final_n_fractures": 1,
+     "seconds": 149.65912215200024,
+     "ca_E_MPa": 8.949999999999992
+    }
+   ]
+  }
+ ]
+}
