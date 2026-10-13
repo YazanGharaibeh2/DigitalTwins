@@ -230,7 +230,7 @@ EVOLUTION_KEYS = ("fracture", "n_fractures", "n_partial", "diffuse", "n_diffuse"
                   "max_depth_frac", "pattern")
 #: crack-evolution keys of the first cracked step copied into the table row (prefixed ``first_crack_``)
 FIRST_CRACK_KEYS = ("p", "phase", "n_crack_cells", "damaged_fraction", "n_fractures", "n_partial", "diffuse",
-                    "pattern")
+                    "pattern", "stagger_converged")
 
 
 def _rankine_row(rec: dict) -> dict:
@@ -263,7 +263,8 @@ def _track_crack_evolution(st, md, plm) -> tuple[list, dict]:
             w0, c0 = time.perf_counter(), time.process_time()
             ca = crack_analysis(md, st.d, plm, history=st.history)
             evo.append({"step": rec["step"], "phase": rec["phase"], "p": rec["p"], "max_d": rec["max_d"],
-                        "n_crack_cells": n, **{k: ca.get(k) for k in EVOLUTION_KEYS}})
+                        "n_crack_cells": n, "stagger_converged": rec.get("stagger_converged"),
+                        "stagger_err": rec.get("stagger_err"), **{k: ca.get(k) for k in EVOLUTION_KEYS}})
             timing["seconds"] += time.perf_counter() - w0
             timing["cpu_seconds"] += time.process_time() - c0
         return rec

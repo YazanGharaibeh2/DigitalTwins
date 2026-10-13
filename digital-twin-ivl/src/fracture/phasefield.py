@@ -37,9 +37,12 @@ only, the displacement problem always minimises ``g(d) psi+ + psi-``):
   eigenvalue of the in-plane 2x2 block; the out-of-plane principal strain is
   zero in plane strain, so ``e1 = max(e1_in-plane, 0)``). ``psi_R`` does not
   depend on the volumetric or deviatoric character of the strain, only on
-  the largest principal stretch, so damage is driven where and in the
-  direction in which the material is stretched most; the crack band is
-  expected to grow perpendicular to the maximum principal strain. Because
+  the largest principal stretch, so damage is driven where the material is
+  stretched most. The degradation stays isotropic (the volumetric-deviatoric
+  ``psi+`` is degraded in the displacement problem), so there is no
+  directional mechanism: a band perpendicular to the maximum principal strain
+  can only arise if the damage localises. In the pilot it did not
+  (``results/diag_rankine.json``): end states are diffuse with either force. Because
   ``psi_R`` is not the elastic energy that ``g(d)`` degrades, the coupled
   problem is no longer the minimisation of a single energy: the alternate
   minimisation then seeks a fixed point of the two sub-problems (each of
@@ -458,7 +461,8 @@ def verification_phasefield(out_json: str | Path | None = None, *, ms: MaterialS
     import dolfinx
 
     out_json = ROOT / "results" / "verification_phasefield.json" if out_json is None else Path(out_json)
-    cases = [onset_check(g, ms) for g in dims]
+    # this report verifies the default formulation (energy driving force) explicitly
+    cases = [onset_check(g, ms, driving_force="energy") for g in dims]
     report = {
         "check": "AT1 damage onset in homogeneous uniaxial tension (design.md section 5.7)",
         "theory": "psi+ = 3 Gc / (16 ell) = psi_crit; onset strain from the small-strain uniaxial energy",

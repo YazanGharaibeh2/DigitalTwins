@@ -188,9 +188,15 @@ W = g(d) ψ⁺ + ψ⁻ above. The damage sub-problem (u frozen) minimises
   `NotImplementedError`. This is a hybrid formulation: isotropic
   (volumetric–deviatoric) split for the elastic problem, principal-strain
   driving force for damage; damage is driven by the largest principal
-  stretch, independent of its volumetric or deviatoric character, so the
-  crack band is expected to open perpendicular to the maximum principal
-  strain. ψ_R is not the energy that g(d) degrades, so the coupled problem
+  stretch, independent of its volumetric or deviatoric character. The
+  degradation stays isotropic, so a band perpendicular to the maximum
+  principal strain can only arise if damage localises. Result of the
+  time-boxed D10(b) test (`results/diag_rankine.json`, 3 pilot lesions at
+  365 MPa, default IVL increments): every run ends with whole-deposit damage
+  under both forces, with onset in the same load increment; the deep sheet
+  passes through one radial crack at steps whose staggered loop did not
+  converge. Only the driving force was changed, not the degraded energy, so
+  the vol-dev hypothesis of Checkpoint 2 is only partly tested. ψ_R is not the energy that g(d) degrades, so the coupled problem
   is no longer the minimisation of one energy; the alternate minimisation
   seeks a fixed point of the two sub-problems.
 * Calibration is unchanged: the homogeneous onset is ψ_d = 3Gc/(16ℓ(1−k)) =

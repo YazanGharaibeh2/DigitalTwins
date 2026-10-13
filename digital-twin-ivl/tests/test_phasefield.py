@@ -170,6 +170,8 @@ def test_energy_driving_force_is_psi_plus():
     [[0.03, 0.01], [-0.02, -0.01]],      # general in-plane state with shear (principal axes rotated)
     [[0.0, 0.04], [0.04, 0.0]],          # pure shear: e1 > 0 although E11 = E22 ~ 0
     [[-0.02, 0.0], [0.0, -0.01]],        # biaxial compression: in-plane e1 < 0, so e1 = E33 = 0
+    [[0.02, 0.0], [0.0, 0.02]],          # equibiaxial: coincident eigenvalues (sqrt of zero)
+    [[0.0, 0.0], [0.0, 0.0]],            # undeformed
 ])
 def test_max_principal_green_lagrange_closed_form(grad):
     """Closed-form e1 (UFL) equals the largest eigenvalue of the 3x3 plane-strain Green-Lagrange tensor."""
