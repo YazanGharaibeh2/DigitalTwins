@@ -19,7 +19,7 @@ from dtivl.meshing.mask_to_mesh import load_mesh, mesh_from_labelmap
 from dtivl.metrics.predictors import predictor_analysis
 
 #: Number of log-spaced calcium moduli between the cited sensitivity bounds.
-N_E_SWEEP = 5
+N_E_SWEEP = 9   # log-spaced points over sens_E (was 5 before Checkpoint 2; 9 keeps the 5 old points and halves the spacing)
 
 
 def e_sweep() -> list[float]:

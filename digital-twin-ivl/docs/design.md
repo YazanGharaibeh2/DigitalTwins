@@ -163,6 +163,13 @@ integrals `dx(tag)`.
 Π_int = Σ_soft ∫ W_soft(F) dx(tag) + ∫ [g(d) ψ⁺(F) + ψ⁻(F)] dx(Ca)
 Π_frac = (Gc/c_w) ∫ (d/ℓ + ℓ|∇d|²) dx(Ca), c_w = 8/3 (AT1), Gc = `ms.gc(ℓ)`,
 ℓ = `fracture.ell_over_h` × h_ca.
+Degradation (decision 2026-10-12, "crack filler", `fracture.crack_filler`):
+g(d) = (1−k)(1−d)² + k with k = `ms.k_floor` = max(k_res, μ_fibrous/μ_Ca), so a
+fully damaged calcium band keeps the fibrous matrix shear modulus instead of
+becoming a void. Gc = 16 ℓ (1−k) ψ_crit / 3 keeps the AT1 onset at ψ⁺ = ψ_crit.
+`crack_filler="none"` gives k = k_res. Undefined (ValueError) when μ_Ca ≤ μ_fibrous;
+the pilot skips such moduli. Optional `gc_factor` (per-cell G_c multiplier) for
+the heterogeneity diagnostics only.
 Lumen follower pressure: residual term `+∫ p J F⁻ᵀN·v dS(lumen)` (in the
 convention R = ∫P:∇v dX + ∫pJF⁻ᵀN·v dS = 0 with N the outward normal of
 the tissue domain).
@@ -217,7 +224,9 @@ thickness), `pattern` per component (`radial` if the principal axis of the
 crack line, taken perpendicular to the principal eigenvector of the
 damage-gradient structure tensor, is within 45° of the radial direction, else
 `circumferential`; decision 2026-10-11 replacing the centroid-PCA rule, which
-mislabels through-thickness cuts of thin sheets), `location_frac` (angular position of each component
+mislabels through-thickness cuts of thin sheets; `diffuse` if the component
+covers ≥ 50 % of its calcium region, decision 2026-10-12), `diffuse`,
+`n_diffuse`, `damaged_fraction` (cracked area / calcium area), `location_frac` (angular position of each component
 relative to its deposit: 0 = centre, 1 = end), `onset_load` (first load
 parameter with max d ≥ 0.9). Stent metrics: `lumen_area_pre`,
 `lumen_area_post`, `lumen_gain`, `msa` (π R_final²), `stent_expansion_pct`
@@ -230,7 +239,7 @@ circumference with gap > threshold), `reached_target` (bool),
 ### 5.6 Element erosion comparator (`src/fracture/erosion.py`)
 Same u-solver without phase field; after each converged increment, cells of
 calcium with cell-averaged max principal Cauchy stress ≥ `ms.sigma_crit`
-(strain mode: equivalently ε1 ≥ ε_f) are eroded (energy scaled by k_res);
+(strain mode: equivalently ε1 ≥ ε_f) are eroded (energy scaled by `ms.k_floor`);
 re-solve at the same load until no new erosion. Same crack post-processing
 with eroded cells as "cracked".
 
@@ -261,3 +270,12 @@ homogeneous medium matches √(M/ρ) within 2 %.
 ## 7. Result files
 All drivers write JSON/CSV under `results/` with lesion id keys. Field names
 above are the column names. No plotting in core modules.
+
+Pilot drivers (`src/drivers/stage_pilot.py`): the calcium-modulus sweep has
+`N_E_SWEEP` = 9 log-spaced points over `materials.calcium.sens_E` plus the
+baseline (5 points before Checkpoint 2; the 5 old points are a subset).
+`run_nonlinear(..., resume=True)` and `run_example3d(..., resume=True)` reuse
+complete rows of their result files, so an interrupted run continues.
+`src/drivers/stage_diagnostics.py` writes `results/diag_localisation.json`
+(fine stepping, seeded crack, G_c heterogeneity; Checkpoint 2 decision D10).
+`src/drivers/report_checkpoint2.py` builds `CHECKPOINT_2.md` from the result files.

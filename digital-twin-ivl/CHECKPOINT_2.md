@@ -94,19 +94,19 @@ Hyperelastic (fibrous) small-load limit: max rel. error of u_r 0.14 % at the lum
 
 ### 2.4 Mesh convergence (three grids, refinement factors 2.00, 1.00, 0.500; Celik GCI)
 
-| Quantity | max rel. change default vs fine | max GCI (fine) | convergence class | status |
+| Quantity | max rel. change default vs fine | max GCI (fine), monotonic cases only | convergence class | status |
 |---|---|---|---|---|
-| sigma1_peak | 5.9 % | 5.7 % | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: divergent | mesh-dependent (not a predictor) |
-| sigma1_peak_nl | 0.55 % | 10 % | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: divergent | accepted |
-| sigma1_p99 | 0.11 % | 0.061 % | C-A180-T0.2-SUP: monotonic, C-A360-T0.4-NOD: oscillatory | accepted |
-| sigma1_p95 | 0.31 % | 0.53 % | C-A180-T0.2-SUP: oscillatory, C-A360-T0.4-NOD: monotonic | accepted |
+| sigma1_peak | 5.9 % | n/a (no monotonic case) | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: divergent | mesh-dependent (not a predictor) |
+| sigma1_peak_nl | 0.55 % | n/a (no monotonic case) | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: divergent | accepted |
+| sigma1_p99 | 0.11 % | 3.5e-04 % | C-A180-T0.2-SUP: monotonic, C-A360-T0.4-NOD: oscillatory | accepted |
+| sigma1_p95 | 0.31 % | 0.082 % | C-A180-T0.2-SUP: oscillatory, C-A360-T0.4-NOD: monotonic | accepted |
 | sigma1_mean | 0.011 % | 0.021 % | C-A180-T0.2-SUP: monotonic, C-A360-T0.4-NOD: monotonic | accepted |
-| sed_mean | 0.051 % | 0.15 % | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: monotonic | accepted |
-| sed_peak | 9.8 % | 16 % | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: divergent | mesh-dependent (not a predictor) |
-| sed_peak_nl | 0.58 % | 0.86 % | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: oscillatory | accepted |
+| sed_mean | 0.051 % | 6.4e-04 % | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: monotonic | accepted |
+| sed_peak | 9.8 % | n/a (no monotonic case) | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: divergent | mesh-dependent (not a predictor) |
+| sed_peak_nl | 0.58 % | n/a (no monotonic case) | C-A180-T0.2-SUP: divergent, C-A360-T0.4-NOD: oscillatory | accepted |
 | scf_edge_nl | 0.26 % | 0.046 % | C-A180-T0.2-SUP: monotonic, C-A360-T0.4-NOD: converged | accepted |
 
-Acceptance: relative change below 2.0 % between the default and fine grids. The raw peaks are singular at deposit corners and are not used as predictors; the nonlocal (critical-distance) peaks replace them.
+Acceptance: relative change below 2.0 % between the default and fine grids. The GCI is defined only for monotonic convergence (Celik et al.); for oscillatory or divergent triplets the relative change is the criterion. The raw peaks are singular at deposit corners and are not used as predictors; the nonlocal (critical-distance) peaks replace them.
 
 ## 3. Pilot (3 lesions): linear predictors and IVL transfer factor
 
@@ -160,7 +160,16 @@ Stent radial stiffness K_s = 6.07 MPa/mm, identified so that the calcium-free te
 | P-A90-T0.2-SUP | 1100 | Stent, no IVL | ok | none | 0 (–) | 0 % | 8.08 | 81.6 % / 5.18 % / 0.531 MPa |
 | P-A90-T0.2-SUP | 1100 | Stent after IVL | ok | none | 0 (–) | 0 % | 8.08 | 81.6 % / 5.18 % / 0.531 MPa |
 | P-A90-T0.2-SUP | 1100 | IVL, erosion comparator | ok | none | 0 (–) | 0 % | 7.99 |  |
+| P-A90-T0.2-SUP | 10000 | Physiological pressure | ok | none | 0 (–) | 0 % | 2.26 |  |
+| P-A90-T0.2-SUP | 10000 | IVL balloon only | ok | none | 0 (–) | 0 % | 5.08 |  |
+| P-A90-T0.2-SUP | 10000 | IVL (balloon + pulse) | ok | none | 0 (–) | 0 % | 7.99 |  |
 | P-A270-T0.4-DEEP | 1.47 | all | skipped | crack filler undefined: calcium shear modulus 0.5638 MPa is not above the fibrous matrix (0.7707 MPa) |  |  |  |  |
+| P-A270-T0.4-DEEP | 8.95 | Physiological pressure | ok | none | 0 (–) | 0 % | 2.26 |  |
+| P-A270-T0.4-DEEP | 8.95 | IVL balloon only | ok | 0.122 MPa | 1 (diffuse) | 100 % | 7.56 |  |
+| P-A270-T0.4-DEEP | 8.95 | IVL (balloon + pulse) | ok | 0.122 MPa | 1 (diffuse) | 100 % | 8.00 |  |
+| P-A270-T0.4-DEEP | 8.95 | Stent, no IVL | ok | 0.947 mm | 1 (diffuse) | 100 % | 8.08 | 83.4 % / 4.13 % / 0.417 MPa |
+| P-A270-T0.4-DEEP | 8.95 | Stent after IVL | ok | 0.122 MPa | 1 (diffuse) | 100 % | 8.08 | 83.4 % / 4.13 % / 0.417 MPa |
+| P-A270-T0.4-DEEP | 8.95 | IVL, erosion comparator | ok | 0.0811 MPa | 1 (diffuse) | 100 % | 8.00 |  |
 | P-A360-T0.2-NOD | 1.47 | all | skipped | crack filler undefined: calcium shear modulus 0.5638 MPa is not above the fibrous matrix (0.7707 MPa) |  |  |  |  |
 
 Figure: `figures/checkpoint2_pilot_onset.png`.
@@ -178,11 +187,31 @@ Regularisation length in this example: 0.300 mm (coarser 3D mesh).
 
 ## 6. What the pilot shows
 
-* P-A90-T0.2-SUP: the IVL balloon alone (0.405 MPa, 4.00 atm) fractures the calcium at E = 8.95, 13.3, 121 MPa; no fracture at E = 1100 MPa.
-* P-A270-T0.4-DEEP: the IVL balloon alone (0.405 MPa, 4.00 atm) fractures the calcium at E = none of the tested moduli MPa.
-* P-A360-T0.2-NOD: the IVL balloon alone (0.405 MPa, 4.00 atm) fractures the calcium at E = none of the tested moduli MPa.
+* P-A90-T0.2-SUP, IVL balloon only: fracture at E = 8.95, 13.3, 121 MPa; no fracture at E = 1100, 10000 MPa.
+* P-A90-T0.2-SUP, IVL (balloon + pulse): fracture at E = 8.95, 13.3, 121 MPa; no fracture at E = 1100, 10000 MPa.
+* P-A270-T0.4-DEEP, IVL balloon only: fracture at E = 8.95 MPa; no fracture at E = none MPa.
+* P-A270-T0.4-DEEP, IVL (balloon + pulse): fracture at E = 8.95 MPa; no fracture at E = none MPa.
+* P-A360-T0.2-NOD, IVL balloon only: not run yet.
+* P-A360-T0.2-NOD, IVL (balloon + pulse): not run yet.
+  (IVL balloon pressure 0.405 MPa = 4.00 atm.)
 
-* Baseline calcium modulus (E = 8.95 MPa, secant modulus at failure of tissue-level calcification) gives a failure stress of 0.179 MPa. Fractured outcomes with diffuse whole-deposit damage: 9; with discrete cracks: 0.
+* Baseline calcium modulus (E = 8.95 MPa, secant modulus at failure of tissue-level calcification) gives a failure stress of 0.179 MPa. Fractured outcomes with diffuse whole-deposit damage: 14; with discrete cracks: 0.
 * Moduli skipped because the calcium is not stiffer than the fibrous matrix (E_fibrous = 2.31 MPa): P-A90-T0.2-SUP: 1.47 MPa; P-A270-T0.4-DEEP: 1.47 MPa; P-A360-T0.2-NOD: 1.47 MPa.
 * Protocols that did not finish: none.
 * Stent deployment uses the rated pressure 1.62 MPa as the expansion limit.
+
+## 7. Consistency with published observations (preliminary, qualitative)
+
+These are comparisons with published cohorts, not validation: no patient-specific outcome data exist for these idealised lesions.
+
+| Observation | Published value [status] | Pilot |
+|---|---|---|
+| No fracture at physiological pressure | expected (no source needed) | 0 of 6 runs fracture |
+| Balloon fracture predicted by arc > 225 deg and thickness < 0.240 mm (P-A90-T0.2-SUP: arc 89.0 deg, thickness 0.200 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | balloon-only fracture at E = 8.95, 13.3, 121 of 8.95, 13.3, 121, 1100, 10000 MPa |
+| Balloon fracture predicted by arc > 225 deg and thickness < 0.240 mm (P-A270-T0.4-DEEP: arc 269 deg, thickness 0.400 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | balloon-only fracture at E = 8.95 of 8.95 MPa |
+| Balloon fracture predicted by arc > 225 deg and thickness < 0.240 mm (P-A360-T0.2-NOD: arc 360 deg, thickness 0.500 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | balloon-only fracture at E = none of none MPa |
+| Nodular calcium fractures less often after IVL than sheets | 0.24 (95% CI 0.08-0.70) OR [VERIFIED] | P-A90-T0.2-SUP: IVL fracture at E = 8.95, 13.3, 121 MPa; P-A270-T0.4-DEEP: IVL fracture at E = 8.95 MPa; P-A360-T0.2-NOD: IVL fracture at E = none MPa |
+| Most IVL fractures are full thickness | 72 % of fractures [VERIFIED] | 14 of 14 damaged components through-thickness (14 diffuse) |
+| Several fractures per lesion | 3.1 (SD 2.7) count [VERIFIED] | discrete crack count not defined when damage is diffuse (see D10) |
+| Stent expansion at the minimum stent area | 78.4 (SD 25.8) % [VERIFIED] | 81.6-83.4 % over 6 stent runs |
+| Lumen gain after IVL alone (before stenting) | 1.77 / 2.59 / 5.22 (SD 0.72 / 1.11 / 1.69) mm^2 [VERIFIED] | 2.21 vs 2.21 mm² (after IVL vs no IVL); 2.21 vs 2.21 mm² (after IVL vs no IVL); 2.21 vs 2.21 mm² (after IVL vs no IVL) — no residual gain: the model is hyperelastic with damage and has no permanent set |

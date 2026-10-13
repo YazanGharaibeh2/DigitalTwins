@@ -328,6 +328,62 @@ def sec_findings(facts: dict, nl: dict) -> str:
     return "\n".join(lines)
 
 
+def _lit(name: str) -> str:
+    """'value (range) unit [STATUS]' of a literature row, for comparison tables."""
+    q = P.load_literature()[name]
+    rng = f" ({q.range_str})" if q.range_str and q.range_str != "nan" else ""
+    return f"{q.value_str}{rng} {q.unit} [{q.status}]"
+
+
+def sec_consistency(nl: dict) -> str:
+    """Preliminary comparison with published observations (qualitative; no patient data)."""
+    df = pd.read_csv(COHORT_DIR / "cohort.csv").set_index("lesion_id")
+    L = P.load_literature()
+    a_cut = L["fracture_angle_cutoff_balloon"].value
+    t_cut = L["fracture_thickness_cutoff_balloon"].value
+    rows = []
+    phys = [r["physiological"]["cracks"]["fracture"] for lr in nl.values() for r in lr if "physiological" in r]
+    rows.append(["No fracture at physiological pressure", "expected (no source needed)",
+                 f"{sum(phys)} of {len(phys)} runs fracture"])
+    for lid, lr in nl.items():
+        arc, thk = df.loc[lid, "ca_arc_total_deg"], df.loc[lid, "ca_thickness_max"]
+        expect = arc > a_cut and thk < t_cut
+        hit = [r["ca_E_MPa"] for r in lr if "stent_no_ivl" in r and r["stent_no_ivl"]["cracks"]["fracture"]]
+        tested = [r["ca_E_MPa"] for r in lr if "stent_no_ivl" in r]
+        rows.append([f"Fracture after high-pressure dilation (no IVL) predicted by arc > {f(a_cut)} deg and "
+                     f"thickness < {f(t_cut)} mm ({lid}: arc {f(arc)} deg, max thickness {f(thk)} mm -> "
+                     f"{'fracture' if expect else 'no fracture'} expected)",
+                     f"{_lit('fracture_angle_cutoff_balloon')}; {_lit('fracture_thickness_cutoff_balloon')}",
+                     f"stent without IVL: fracture at E = {', '.join(f(e) for e in hit) or 'none'} of "
+                     f"{', '.join(f(e) for e in tested) or 'none'} MPa"])
+    ivl = {lid: [r["ca_E_MPa"] for r in lr if "ivl" in r and r["ivl"]["cracks"]["fracture"]] for lid, lr in nl.items()}
+    rows.append(["Nodular calcium fractures less often after IVL than sheets",
+                 _lit("nodular_calcium_odds_ratio_for_fracture"),
+                 "; ".join(f"{lid}: IVL fracture at E = {', '.join(f(e) for e in v) or 'none'} MPa" for lid, v in ivl.items())])
+    comps = [c for lr in nl.values() for r in lr for k in PROTOCOLS if k in r and k != "physiological"
+             for c in [r[k]["cracks"]] if c["fracture"] or c["n_partial"]]
+    n_thr = sum(c["n_fractures"] for c in comps)
+    n_all = n_thr + sum(c["n_partial"] for c in comps)
+    rows.append(["Most IVL fractures are full thickness", _lit("full_thickness_fracture_fraction_pooled_IVL_OCT"),
+                 f"{n_thr} of {n_all} damaged components through-thickness" + (
+                     f" ({sum(c['n_diffuse'] for c in comps)} diffuse)" if n_all else "")])
+    rows.append(["Several fractures per lesion", _lit("fractures_per_lesion_pooled_IVL_OCT"),
+                 "discrete crack count not defined when damage is diffuse (see D10)"])
+    exp = [r[k]["summary"]["metrics"]["stent_expansion_pct"] for lr in nl.values() for r in lr
+           for k in ("stent_no_ivl", "stent_post_ivl") if k in r and r[k]["summary"].get("metrics")]
+    rows.append(["Stent expansion at the minimum stent area", _lit("stent_expansion_MSA_site_DisruptCAD_III"),
+                 f"{f(min(exp))}-{f(max(exp))} % over {len(exp)} stent runs" if exp else "–"])
+    gain = [(r["stent_post_ivl"]["summary"]["metrics"]["lumen_area_pre"], r["stent_no_ivl"]["summary"]["metrics"]["lumen_area_pre"])
+            for lr in nl.values() for r in lr if "stent_post_ivl" in r and "stent_no_ivl" in r]
+    rows.append(["Lumen gain after IVL alone (before stenting)", _lit("COCALP_MLA_pre_post_IVL_post_stent"),
+                 "; ".join(f"{f(a)} vs {f(b)} mm² (after IVL vs no IVL)" for a, b in gain) +
+                 " — no residual gain: the model is hyperelastic with damage and has no permanent set"])
+    return "\n".join(["## 7. Consistency with published observations (preliminary, qualitative)", "",
+                      "These are comparisons with published cohorts, not validation: no patient-specific outcome "
+                      "data exist for these idealised lesions.", "",
+                      table(["Observation", "Published value [status]", "Pilot"], rows), ""])
+
+
 DECISIONS = """## 0. Decisions needed before the full cohort run
 
 **D8: calcium modulus regime (the main one).** The pilot shows that the result depends on which
@@ -381,7 +437,7 @@ def build() -> str:
             "`results/*.json`, `cohort/cohort.csv` and the parameter files. No number below is typed by hand.",
             "Nothing here is validated against patients; this checkpoint covers verification and a pilot.", ""]
     text = "\n".join(head + [DECISIONS, sec_cohort(), sec_verification(), sec_transient(lt, nl), nl_text,
-                             sec_example3d(), sec_findings(facts, nl)])
+                             sec_example3d(), sec_findings(facts, nl), sec_consistency(nl)])
     OUT.write_text(text)
     return str(OUT)
 
