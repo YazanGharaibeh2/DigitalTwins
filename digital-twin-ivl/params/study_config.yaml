@@ -39,6 +39,7 @@ design:
       arc_deg: [60, 360]                                   # user brief
       thickness_mm: [0.2, 0.4]                             # D2 bounds
       depth_mm: [{lit: calcium_depth_ex_vivo_FDOCT, transform: value-sd}, {lit: calcium_depth_ex_vivo_FDOCT, transform: value+sd}]
+      depth_split: {lit: calcium_depth_ex_vivo_FDOCT}         # DESIGN: deep sheets sample [mean, mean+sd], other morphologies [mean-sd, mean]
       lumen_area_mm2: [{lit: pre_procedure_MLA_IVL_lesions, transform: value-sd}, {lit: pre_procedure_MLA_IVL_lesions, transform: value+sd}]
       ecc_index: [0.0, {expr: "1 - 1 / eccentric_plaque_threshold_max_over_min"}]   # (max-min)/max, eccentric limit
       lipid_fraction: 0.5                                  # DESIGN: half of the hold-out lesions carry a lipid pool

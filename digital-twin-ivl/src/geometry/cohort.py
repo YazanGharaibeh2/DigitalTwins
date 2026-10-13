@@ -169,7 +169,7 @@ _HOLDOUT_ALIASES = {"arc_deg": "ca_arc_deg", "thickness_mm": "ca_thickness", "de
                     "length_mm": "ca_length", "lumen_area_mm2": "lumen_area",
                     "cap_thickness_mm": "lipid_cap_thickness", "ecc_index": "ecc_index"}
 #: ranges keys handled as rules rather than sampled fields
-_HOLDOUT_RULE_KEYS = ("morphology", "depth_rule", "lipid_fraction")
+_HOLDOUT_RULE_KEYS = ("morphology", "depth_rule", "lipid_fraction", "depth_split")
 _NUM_RE = r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
 
 
@@ -272,7 +272,10 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
       intima thickness, realised by the IEL offset
       ``o = ecc * P / (2 - ecc)`` toward the calcium (t = P +/- o).
 
-    Rule keys: ``morphology`` (``balanced_cycle`` -> lesion i gets
+    Rule keys: ``depth_split`` (a depth in the ``depth_mm`` range: deep
+    sheets sample depth in ``[split, hi]`` and every other morphology in
+    ``[lo, split]``, so the superficial/deep labels keep their meaning),
+    ``morphology`` (``balanced_cycle`` -> lesion i gets
     ``design.core_factorial.morphology[i % 4]``; a list -> categorical LHS
     dimension; default balanced_cycle), ``lipid_fraction`` (an LHS indicator
     dimension: lesion carries lipid if u < fraction; default 0) and
@@ -327,6 +330,13 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
             raise KeyError("design.holdout_lhs.ranges: lipid_fraction > 0 requires a lipid_arc_deg entry")
         dims["_lipid_u"] = ("cont", 0.0, 1.0)
     clearance = _depth_clearance(ranges.get("depth_rule"))
+    depth_split = None
+    if "depth_split" in ranges:
+        if dims.get("ca_depth", ("const",))[0] != "cont":
+            raise KeyError("design.holdout_lhs.ranges: depth_split requires a depth_mm range [lo, hi]")
+        depth_split = _number(ranges["depth_split"], "depth_split", allow_pending)
+        if not dims["ca_depth"][1] < depth_split < dims["ca_depth"][2]:
+            raise ValueError("design.holdout_lhs.ranges.depth_split must lie inside the depth_mm range")
 
     sampled = [k for k, d in dims.items() if d[0] != "const"]
     u = qmc.LatinHypercube(d=max(1, len(sampled)), rng=np.random.default_rng(seed)).random(n)
@@ -354,6 +364,13 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
         ecc = vals.pop("ecc_index", None)
         offset = vals.get("plaque_offset", ecc * plaque / (2.0 - ecc) if ecc is not None else 0.0)
         depth = vals.get("ca_depth", _depth_for(morph, geo))
+        depth_lo = dims["ca_depth"][1] if dims.get("ca_depth", ("const",))[0] == "cont" else 0.0
+        if depth_split is not None:
+            # deep sheets sample [split, hi], every other morphology [lo, split]
+            x = u[i, sampled.index("ca_depth")]
+            lo, hi = ((depth_split, dims["ca_depth"][2]) if morph == "deep_sheet"
+                      else (dims["ca_depth"][1], depth_split))
+            depth, depth_lo = lo + x * (hi - lo), lo
         if ecc is not None:
             notes["ecc_index_target"] = ecc
 
@@ -362,7 +379,7 @@ def holdout_specs(n: int | None = None, seed: int | None = None, *, allow_pendin
             need = t + clearance
             t_min = _min_local_plaque(r_lumen, plaque, offset, arc, center)
             if depth + need > t_min:
-                d_lo = dims["ca_depth"][1] if dims.get("ca_depth", ("const",))[0] == "cont" else 0.0
+                d_lo = depth_lo
                 new_depth = t_min - need
                 if new_depth >= d_lo:
                     notes["adjustments"].append(f"depth {depth:.4f} -> {new_depth:.4f} mm (depth_rule)")

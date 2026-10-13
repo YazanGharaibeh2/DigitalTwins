@@ -405,3 +405,18 @@ def test_holdout_lipid_fraction_requires_lipid_arc(monkeypatch):
                                               "lipid_fraction": 1.0, "lipid_thickness_mm": 0.2}
     with pytest.raises(KeyError, match="lipid_arc_deg"):
         cohort.holdout_specs(n=2, seed=1, allow_pending=True)
+
+
+def test_holdout_depth_split_by_morphology():
+    """Deep sheets sample depth in [split, hi], other morphologies in [lo, split] (before the depth rule)."""
+    from dtivl.geometry.cohort import holdout_specs
+
+    ranges = params.raw("design.holdout_lhs.ranges")
+    split = params.resolve(ranges["depth_split"]).value
+    lo, hi = (params.resolve(v).value for v in ranges["depth_mm"])
+    for s in holdout_specs():
+        reduced = any("depth_rule" in a for a in s.notes.get("adjustments", []))
+        if s.morphology == "deep_sheet":
+            assert reduced or split - 1e-9 <= s.ca_depth <= hi + 1e-9
+        else:
+            assert s.ca_depth <= split + 1e-9 and (reduced or s.ca_depth >= lo - 1e-9)
