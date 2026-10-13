@@ -64,11 +64,14 @@ def mesh2d_like3d(lesion_id: str):
     return plm, info, load_mesh(info["msh"], gdim=2)
 
 
-def run_example3d(e_values=None, transient=True, nonlinear=True, resume=True) -> dict:
+def run_example3d(e_values=None, transient=True, nonlinear=True, resume=True, models=("3d", "2d"),
+                  out_name: str = "pilot_example3d") -> dict:
     """D1: test the 3D code on the Fujino-4 example and compare with the 2D cross-section model.
 
-    ``resume``: rows of ``results/pilot_example3d.json`` that already hold
-    every requested analysis for a (model, modulus) pair are reused.
+    ``resume``: rows of ``results/<out_name>.json`` that already hold every
+    requested analysis for a (model, modulus) pair are reused. ``models`` and
+    ``out_name`` let parts run in separate processes; :func:`merge_example3d`
+    combines the part files.
     """
     from dtivl.drivers.common import read_json
     from dtivl.fracture.phasefield import regularisation_length
@@ -83,13 +86,15 @@ def run_example3d(e_values=None, transient=True, nonlinear=True, resume=True) ->
     out = {"lesion": lid, "E_values_MPa": e_values, "ell_mm": ell, "models": {}}
     need = {"predictors"} | ({"transient"} if transient else set()) | ({"ivl"} if nonlinear else set())
     old = {}
-    if resume and (ROOT / "results" / "pilot_example3d.json").exists():
-        prev = read_json("pilot_example3d")
+    if resume and (ROOT / "results" / f"{out_name}.json").exists():
+        prev = read_json(out_name)
         for key, m in prev.get("models", {}).items():
             for r in m.get("by_E", []):
                 if need <= set(r):
                     old[(key, round(r["ca_E_MPa"], 6))] = r
     for dim, builder in ((3, mesh3d), (2, mesh2d_like3d)):
+        if f"{dim}d" not in models:
+            continue
         plm, info, md = builder(lid)
         rec = {"mesh": {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}, "by_E": []}
         for E in e_values:
@@ -116,7 +121,30 @@ def run_example3d(e_values=None, transient=True, nonlinear=True, resume=True) ->
                 row["ivl"]["seconds"] = t.seconds
             rec["by_E"].append(row)
             out["models"][f"{dim}d"] = rec
-            write_json("pilot_example3d", out)
+            write_json(out_name, out)
+    return out
+
+
+def merge_example3d(parts=("pilot_example3d", "pilot_example3d_part2")) -> dict:
+    """Combine 3D-example part files into ``results/pilot_example3d.json`` (rows keyed by model and modulus)."""
+    from dtivl.drivers.common import read_json
+
+    out, rows = None, {}
+    for name in parts:
+        if not (ROOT / "results" / f"{name}.json").exists():
+            continue
+        part = read_json(name)
+        out = out or {k: v for k, v in part.items() if k != "models"}
+        for key, m in part["models"].items():
+            for r in m["by_E"]:
+                old = rows.get((key, round(r["ca_E_MPa"], 6)), ({}, None))[0]
+                if len(r) >= len(old):           # keep the most complete row
+                    rows[(key, round(r["ca_E_MPa"], 6))] = (r, m["mesh"])
+    out["models"] = {}
+    for (key, _), (r, mesh) in sorted(rows.items(), key=lambda kv: (kv[0][0] != "3d", kv[0][1])):
+        out["models"].setdefault(key, {"mesh": mesh, "by_E": []})["by_E"].append(r)
+    out["E_values_MPa"] = sorted({e for (_, e) in rows})
+    write_json("pilot_example3d", out)
     return out
 
 
@@ -171,7 +199,9 @@ def _protocol_record(res, md, plm, *, with_cracks=True) -> dict:
     st = res.state
     rec = {"status": res.status, "summary": {k: v for k, v in res.summary.items()
                                              if k not in ("lumen_pre_xy", "lumen_post_xy")},
-           "n_steps": len(st.history)}
+           "n_steps": len(st.history),
+           # quality flag: accepted steps whose staggered (u, d) loop hit the iteration limit
+           "n_steps_unconverged_stagger": sum(1 for h in res.history if h.get("stagger_converged") is False)}
     if st.history:
         last = st.history[-1]
         rec["final"] = {k: last.get(k) for k in ("p", "R_in", "R_cap", "lumen_area", "max_d", "n_crack_cells",
@@ -221,7 +251,7 @@ def identify_stent_stiffness(lesion_id: str | None = None) -> dict:
 
 
 def _expected_protocols(E, stent_e_values, include_erosion) -> set:
-    keys = {"physiological", "balloon_only", "ivl"}
+    keys = {"physiological", "balloon_only", "balloon_10atm", "ivl"}
     if any(abs(E - e) < 1e-9 for e in stent_e_values):
         keys |= {"stent_post_ivl", "stent_no_ivl"} | ({"ivl_erosion"} if include_erosion else set())
     return keys
@@ -231,12 +261,15 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     """Nonlinear phase-field pilot over the modulus sweep.
 
     For every lesion and modulus: physiological pressure, IVL balloon only
-    (4 atm, cap) and IVL with the lesion- and modulus-specific transient T.
-    For ``stent_e_values``: stent deployment without IVL and after IVL.
-    ``resume``: rows of ``results/pilot_nonlinear_<lesion>.json`` that are
-    complete for a modulus (or skipped) are reused, so an interrupted run
-    continues where it stopped; the per-lesion file is rewritten after
-    every modulus.
+    (4 atm, cap), a plain balloon at ``loads.poba_pressure_atm`` (10 atm,
+    same cap; the balloon-only arm of the cadaver comparison) and IVL with
+    the lesion- and modulus-specific transient T. For ``stent_e_values``:
+    stent deployment without IVL and after IVL, and the erosion comparator.
+    ``resume``: protocols already stored in
+    ``results/pilot_nonlinear_<lesion>.json`` are reused and only missing
+    ones are run (the post-IVL stent re-runs IVL if needed), so an
+    interrupted or extended run continues; the file is rewritten after
+    every modulus and always holds every row known so far.
     """
     from dtivl.drivers.common import read_json
     from dtivl.solvers.nonlinear import NonlinearState, run_ivl, run_pressure, run_stent
@@ -252,33 +285,39 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     K_s = read_json("calibration_stent")["K_s_MPa_per_mm"]
     p_phys = P.get("loads.physiological_pressure").value
     p_bal = P.get("loads.ivl_balloon_pressure_atm").value
+    p_poba = P.get("loads.poba_pressure_atm").value
     R_ivl = 0.5 * P.get("geometry.ivl_balloon_diameter_mm").value
-    out = {"K_s": K_s, "p_phys": p_phys, "p_bal": p_bal, "R_ivl": R_ivl, "lesions": {}}
+    out = {"K_s": K_s, "p_phys": p_phys, "p_bal": p_bal, "p_poba": p_poba, "R_ivl": R_ivl, "lesions": {}}
     for lid in lesions:
-        done = {}
+        old = {}
         if resume and (ROOT / "results" / f"pilot_nonlinear_{lid}.json").exists():
-            for r in read_json(f"pilot_nonlinear_{lid}").get("rows", []):
-                if "skipped" in r or _expected_protocols(r["ca_E_MPa"], stent_e_values, include_erosion) <= set(r):
-                    done[round(r["ca_E_MPa"], 6)] = r
+            old = {round(r["ca_E_MPa"], 6): r for r in read_json(f"pilot_nonlinear_{lid}").get("rows", [])}
         plm, info, md = mesh2d(lid)
         # T_equivalent = transient peak / static sigma1 of the *quasi-static* model (MaterialSet moduli),
         # i.e. the factor that reproduces the transient peak inside run_ivl (design.md section 5.4).
         Tmap = {round(r["ca_E_MPa"], 6): r["transient"]["T_equivalent"] for r in lt["lesions"][lid]["by_E"]}
         rows = []
+
         def _save():
             # every write holds all rows known so far (resumed rows not yet reached included)
             have = {round(x["ca_E_MPa"], 6) for x in rows}
-            allrows = rows + [r for e, r in done.items() if e not in have]
+            allrows = rows + [r for e, r in old.items() if e not in have]
             write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "K_s": K_s,
                                                  "rows": sorted(allrows, key=lambda x: x["ca_E_MPa"])})
 
+        def _timed(row, key, fn):
+            with Timer() as t:
+                row[key] = fn()
+            row[key]["seconds"] = t.seconds
+
         for E in e_values:
-            if round(E, 6) in done:
-                rows.append(done[round(E, 6)])
+            prev = old.get(round(E, 6), {})
+            if "skipped" in prev or _expected_protocols(E, stent_e_values, include_erosion) <= set(prev):
+                rows.append(prev)
                 continue
             ms = MaterialSet.baseline(ca_E=E)
             T = Tmap[round(E, 6)]
-            row = {"ca_E_MPa": E, "T": T}
+            row = {"ca_E_MPa": E, "T": T, **{k: v for k, v in prev.items() if isinstance(v, dict)}}
             try:
                 row["k_floor"] = ms.k_floor
             except ValueError as exc:          # calcium not stiffer than the matrix: crack filler undefined
@@ -286,30 +325,29 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
                 rows.append(row)
                 _save()
                 continue
-            with Timer() as t:
-                row["physiological"] = _protocol_record(run_pressure(NonlinearState(md, ms), p_phys), md, plm)
-            row["physiological"]["seconds"] = t.seconds
-            with Timer() as t:
-                row["balloon_only"] = _protocol_record(
-                    run_pressure(NonlinearState(md, ms), p_bal, cap_radius=R_ivl, phase="balloon_only"), md, plm)
-            row["balloon_only"]["seconds"] = t.seconds
-            st_ivl = NonlinearState(md, ms)
-            with Timer() as t:
-                res_ivl = run_ivl(st_ivl, T=T)
-                row["ivl"] = _protocol_record(res_ivl, md, plm)
-            row["ivl"]["seconds"] = t.seconds
-            if any(abs(E - e) < 1e-9 for e in stent_e_values):
-                with Timer() as t:
-                    row["stent_post_ivl"] = _protocol_record(run_stent(st_ivl, K_s=K_s), md, plm)
-                row["stent_post_ivl"]["seconds"] = t.seconds
-                with Timer() as t:
-                    row["stent_no_ivl"] = _protocol_record(run_stent(NonlinearState(md, ms), K_s=K_s), md, plm)
-                row["stent_no_ivl"]["seconds"] = t.seconds
-                if include_erosion:
-                    with Timer() as t:
-                        row["ivl_erosion"] = _protocol_record(run_ivl(NonlinearState(md, ms, fracture="erosion"), T=T),
-                                                              md, plm)
-                    row["ivl_erosion"]["seconds"] = t.seconds
+            stent = any(abs(E - e) < 1e-9 for e in stent_e_values)
+            if "physiological" not in row:
+                _timed(row, "physiological",
+                       lambda: _protocol_record(run_pressure(NonlinearState(md, ms), p_phys), md, plm))
+            if "balloon_only" not in row:
+                _timed(row, "balloon_only", lambda: _protocol_record(
+                    run_pressure(NonlinearState(md, ms), p_bal, cap_radius=R_ivl, phase="balloon_only"), md, plm))
+            if "balloon_10atm" not in row:
+                _timed(row, "balloon_10atm", lambda: _protocol_record(
+                    run_pressure(NonlinearState(md, ms), p_poba, cap_radius=R_ivl, phase="balloon_10atm"), md, plm))
+            st_ivl = None
+            if "ivl" not in row or (stent and "stent_post_ivl" not in row):
+                st_ivl = NonlinearState(md, ms)
+                _timed(row, "ivl", lambda: _protocol_record(run_ivl(st_ivl, T=T), md, plm))
+            if stent:
+                if "stent_post_ivl" not in row:
+                    _timed(row, "stent_post_ivl", lambda: _protocol_record(run_stent(st_ivl, K_s=K_s), md, plm))
+                if "stent_no_ivl" not in row:
+                    _timed(row, "stent_no_ivl",
+                           lambda: _protocol_record(run_stent(NonlinearState(md, ms), K_s=K_s), md, plm))
+                if include_erosion and "ivl_erosion" not in row:
+                    _timed(row, "ivl_erosion", lambda: _protocol_record(
+                        run_ivl(NonlinearState(md, ms, fracture="erosion"), T=T), md, plm))
             rows.append(row)
             _save()
         out["lesions"][lid] = rows

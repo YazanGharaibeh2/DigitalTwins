@@ -125,6 +125,7 @@ fracture:
 loads:
   physiological_pressure: {lit: normal_systolic_blood_pressure_upper}   # 120 mmHg (upper limit of normal systolic), in MPa
   ivl_balloon_pressure_atm: {lit: ivl_balloon_inflation_pressure}
+  poba_pressure_atm: {lit: poba_pressure_cadaver_IVL_balloon}            # 10 atm plain balloon (no pulses), pilot comparison protocol, in MPa
   ivl_peak_pressure_MPa: {lit: ivl_peak_positive_pressure}
   ivl_pulse_scale: {value: 1.0, sens: [0.5, 1.0], basis: "ASSUMPTION: unknown attenuation between emitter and tissue", status: ASSUMPTION}
   balloon_rated_pressure_atm: {lit: stent_rated_burst_pressure}        # 16 atm, in MPa

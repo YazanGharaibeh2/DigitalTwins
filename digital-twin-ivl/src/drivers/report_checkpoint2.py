@@ -21,8 +21,9 @@ from dtivl.drivers.common import COHORT_DIR, RESULTS_DIR, read_json
 from dtivl.materials.constitutive import MaterialSet
 
 OUT = ROOT / "CHECKPOINT_2.md"
-PROTOCOLS = ("physiological", "balloon_only", "ivl", "stent_no_ivl", "stent_post_ivl", "ivl_erosion")
-PROTOCOL_LABEL = {"physiological": "Physiological pressure", "balloon_only": "IVL balloon only",
+PROTOCOLS = ("physiological", "balloon_only", "balloon_10atm", "ivl", "stent_no_ivl", "stent_post_ivl", "ivl_erosion")
+PROTOCOL_LABEL = {"physiological": "Physiological pressure", "balloon_only": "IVL balloon only (4 atm)",
+                  "balloon_10atm": "Plain balloon, 10 atm",
                   "ivl": "IVL (balloon + pulse)", "stent_no_ivl": "Stent, no IVL",
                   "stent_post_ivl": "Stent after IVL", "ivl_erosion": "IVL, erosion comparator"}
 ATM_MPA = 0.101325
@@ -223,6 +224,17 @@ def sec_transient(lt: dict, nl: dict) -> str:
     return "\n".join(s)
 
 
+def DEFAULT_STEPS_TXT() -> str:
+    from dtivl.solvers.nonlinear import DEFAULT_STEPS
+
+    p_bal = P.get("loads.ivl_balloon_pressure_atm").value
+    p_poba = P.get("loads.poba_pressure_atm").value
+    return (f"pressure ramps use {DEFAULT_STEPS['pressure']} increments (4 atm: "
+            f"{f(p_bal / DEFAULT_STEPS['pressure'])} MPa; 10 atm: {f(p_poba / DEFAULT_STEPS['pressure'])} MPa), "
+            f"IVL inflation {DEFAULT_STEPS['ivl_inflate']} increments to the balloon pressure and "
+            f"{DEFAULT_STEPS['ivl_pulse']} to the pulse peak; increments are halved only when a step fails")
+
+
 def _onset_str(rec: dict) -> str:
     c = rec["cracks"]
     if not c["fracture"]:
@@ -233,10 +245,11 @@ def _onset_str(rec: dict) -> str:
 
 def sec_nonlinear(nl: dict, lt: dict) -> tuple[str, dict]:
     cal = read_json("calibration_stent")
-    s = ["## 4. Pilot (3 lesions): nonlinear phase-field outcomes", "",
-         f"Stent radial stiffness K_s = {f(cal['K_s_MPa_per_mm'])} MPa/mm, identified so that the calcium-free "
-         f"template ({cal['lesion_template']}) recoils by {f(cal['recoil_target_pct'])} % (clinical acute recoil). "
-         "Onset is the first load step with max d >= d_crack; for stents the load is the cylinder radius (mm).", ""]
+    intro = (f"Stent radial stiffness K_s = {f(cal['K_s_MPa_per_mm'])} MPa/mm, identified so that the calcium-free "
+             f"template ({cal['lesion_template']}) recoils by {f(cal['recoil_target_pct'])} % (clinical acute recoil). "
+             "Onset is the first load step with max d >= d_crack; for stents the load is the cylinder radius (mm). "
+             f"Onset is resolved only to the load step: {DEFAULT_STEPS_TXT()}.")
+    s = ["## 4. Pilot (3 lesions): nonlinear phase-field outcomes", "", intro, ""]
     rows, facts = [], {"balloon_fracture_E": {}, "ivl_fracture_E": {}, "skipped": {}, "failed": [],
                        "diffuse": 0, "discrete": 0}
     for lid, lrows in nl.items():
@@ -252,7 +265,15 @@ def sec_nonlinear(nl: dict, lt: dict) -> tuple[str, dict]:
                     continue
                 c, m = rec["cracks"], rec["summary"].get("metrics", {})
                 if rec["status"] != "ok":
-                    facts["failed"].append((lid, E, proto, rec["status"], rec["summary"].get("failed_phase")))
+                    facts["failed"].append((lid, E, proto, rec["status"], rec["summary"].get("failed_phase")
+                                            or rec["summary"].get("expand_status")))
+                nu = rec.get("n_steps_unconverged_stagger")
+                facts.setdefault("unconverged", {"recorded": 0, "not_recorded": 0, "steps": 0})
+                if nu is None:
+                    facts["unconverged"]["not_recorded"] += 1
+                else:
+                    facts["unconverged"]["recorded"] += 1
+                    facts["unconverged"]["steps"] += nu
                 if c["fracture"]:
                     facts["diffuse" if c["diffuse"] else "discrete"] += 1
                 if proto == "balloon_only" and c["fracture"]:
@@ -260,8 +281,15 @@ def sec_nonlinear(nl: dict, lt: dict) -> tuple[str, dict]:
                 if proto == "ivl" and c["fracture"]:
                     facts["ivl_fracture_E"].setdefault(lid, []).append(E)
                 pattern = ", ".join(c["pattern"]) if c["pattern"] else "–"
-                stent = (f"{f(m.get('stent_expansion_pct'))} % / {f(m.get('acute_recoil_pct'))} % / "
-                         f"{f(rec['summary'].get('P_dep'))} MPa" if m else "")
+                if m and rec["status"] == "ok":
+                    stent = (f"{f(m.get('stent_expansion_pct'))} % / {f(m.get('acute_recoil_pct'))} % / "
+                             f"{f(rec['summary'].get('P_dep'))} MPa")
+                elif m:
+                    stent = (f"not valid: solver failed at cylinder radius {f(rec['summary'].get('R_dep'))} mm, "
+                             f"mean contact pressure {f(rec['summary'].get('P_dep'))} MPa "
+                             f"({pct(rec['summary'].get('P_dep') / rec['summary'].get('p_rated'), 2)} of rated)")
+                else:
+                    stent = ""
                 rows.append([lid, f(E), PROTOCOL_LABEL[proto], rec["status"], _onset_str(rec),
                              f"{c['n_fractures']} ({pattern})", pct(c["damaged_fraction"], 3),
                              f(rec.get("max_lumen_area")), stent])
@@ -272,10 +300,7 @@ def sec_nonlinear(nl: dict, lt: dict) -> tuple[str, dict]:
     s.append("")
     mtxt, window = outcome_matrix(nl)
     facts["ivl_only_window"] = window
-    s.insert(s.index(f"Stent radial stiffness K_s = {f(cal['K_s_MPa_per_mm'])} MPa/mm, identified so that the calcium-free "
-                     f"template ({cal['lesion_template']}) recoils by {f(cal['recoil_target_pct'])} % (clinical acute recoil). "
-                     "Onset is the first load step with max d >= d_crack; for stents the load is the cylinder radius (mm).") + 2,
-             mtxt)
+    s.insert(s.index(intro) + 2, mtxt)
     return "\n".join(s), facts
 
 
@@ -295,7 +320,7 @@ def outcome_matrix(nl: dict) -> tuple[str, dict]:
                 cells.append("skipped")
                 continue
             parts = []
-            for key, tag in (("balloon_only", "B"), ("ivl", "I"), ("stent_no_ivl", "S")):
+            for key, tag in (("balloon_only", "B"), ("balloon_10atm", "P"), ("ivl", "I"), ("stent_no_ivl", "S")):
                 rec = r.get(key)
                 if rec is None:
                     continue
@@ -310,8 +335,8 @@ def outcome_matrix(nl: dict) -> tuple[str, dict]:
             cells.append("; ".join(parts))
         rows.append([f(E)] + cells)
     txt = ["### 4.1 Fracture outcome by calcium modulus", "",
-           "B = IVL balloon alone (4 atm), I = IVL (balloon + pulse), S = stent without IVL "
-           "(run at two moduli only); – = no fracture.", "",
+           "B = IVL balloon alone (4 atm), P = plain balloon at 10 atm (same size), I = IVL (balloon + pulse), "
+           "S = stent without IVL (run at two moduli only); – = no fracture.", "",
            table(["E (MPa)"] + list(nl), rows), ""]
     if window:
         txt.append("Moduli at which IVL fractures the calcium but the balloon alone does not: " + "; ".join(
@@ -334,26 +359,28 @@ def sec_diagnostics() -> str:
                            ("heterogeneous", f"G_c heterogeneity (CoV {f(d['cov'], 2)})")):
                 x = r[k]
                 first = next((st for st in x["steps"] if st.get("damaged_fraction", 0.0) > 0.0), None)
+                nu = sum(1 for st in x["steps"] if st.get("stagger_converged") is False)
                 rows.append([f(r["ca_E_MPa"]), lab, f(x["first_damaged_p"]),
                              "–" if first is None else ", ".join(first["pattern"]) or "–",
-                             pct(x["final_damaged_fraction"], 3), f(x["final_diffuse"])])
+                             pct(x["final_damaged_fraction"], 3), f(x["final_diffuse"]), nu])
         s += [f"Lesion {d['lesion']}, IVL balloon cap, pressure steps of {f(d['dp_MPa'])} MPa up to "
               f"{f(d['p_end_MPa'])} MPa (`results/diag_localisation.json`).", "",
               table(["E (MPa)", "Experiment", "first cracked step p (MPa)", "pattern at that step",
-                     "damaged area at the end", "diffuse at the end"], rows), ""]
+                     "damaged area at the end", "diffuse at the end", "steps with unconverged (u, d) loop"], rows), ""]
     if e is not None:
         rows = []
         for h in e["by_h"]:
             for r in h["by_E"]:
                 last = r["steps"][-1] if r["steps"] else {}
+                nu = sum(1 for st in r["steps"] if st.get("stagger_converged") is False)
                 rows.append([f(h["h_ca_mm"]), f(h["ell_mm"]), h["n_cells_calcium"], f(r["ca_E_MPa"]),
                              f(r["first_damaged_p"]), pct(r["final_damaged_fraction"], 3), f(r["final_diffuse"]),
                              f(last.get("n_fractures")), ", ".join(last.get("pattern", [])) or "–",
-                             f(r["seconds"], 2)])
+                             nu, f(r["seconds"], 2)])
         s += ["Regularisation length refined with the calcium mesh (ell / h fixed; `results/diag_ell.json`):", "",
               table(["h_Ca (mm)", "ell (mm)", "calcium cells", "E (MPa)", "first cracked p (MPa)",
                      "damaged area at the end", "diffuse", "through-thickness components", "patterns",
-                     "run time (s)"], rows), ""]
+                     "unconverged (u, d) steps", "run time (s)"], rows), ""]
     return "\n".join(s)
 
 
@@ -440,6 +467,13 @@ def sec_consistency(nl: dict) -> str:
                      f"{_lit('fracture_angle_cutoff_balloon')}; {_lit('fracture_thickness_cutoff_balloon')}",
                      f"stent without IVL: fracture at E = {', '.join(f(e) for e in hit) or 'none'} of "
                      f"{', '.join(f(e) for e in tested) or 'none'} MPa"])
+    poba = {lid: ([r["ca_E_MPa"] for r in lr if "balloon_10atm" in r],
+                  [r["ca_E_MPa"] for r in lr if "balloon_10atm" in r and r["balloon_10atm"]["cracks"]["fracture"]])
+            for lid, lr in nl.items()}
+    rows.append(["Plain balloon at 10 atm does not fracture calcium; IVL does (cadaver histology)",
+                 _lit("calcium_fracture_rate_POBA_10atm_cadaver_histology"),
+                 "; ".join(f"{lid}: 10-atm balloon fractures at E = {_elist(v[1])} of {_emp(v[0])}"
+                           for lid, v in poba.items()) + " (calibration target under D8 option (c))"])
     ivl = {lid: [r["ca_E_MPa"] for r in lr if "ivl" in r and r["ivl"]["cracks"]["fracture"]] for lid, lr in nl.items()}
     rows.append(["Nodular calcium fractures less often after IVL than sheets",
                  _lit("nodular_calcium_odds_ratio_for_fracture"),
@@ -454,62 +488,154 @@ def sec_consistency(nl: dict) -> str:
     rows.append(["Several fractures per lesion", _lit("fractures_per_lesion_pooled_IVL_OCT"),
                  "discrete crack count not defined when damage is diffuse (see D10)"])
     exp = [r[k]["summary"]["metrics"]["stent_expansion_pct"] for lr in nl.values() for r in lr
-           for k in ("stent_no_ivl", "stent_post_ivl") if k in r and r[k]["summary"].get("metrics")]
+           for k in ("stent_no_ivl", "stent_post_ivl")
+           if k in r and r[k]["summary"].get("metrics") and r[k]["status"] == "ok"]
+    n_bad = sum(1 for lr in nl.values() for r in lr for k in ("stent_no_ivl", "stent_post_ivl")
+                if k in r and r[k]["status"] != "ok")
     rows.append(["Stent expansion at the minimum stent area", _lit("stent_expansion_MSA_site_DisruptCAD_III"),
-                 f"{f(min(exp))}-{f(max(exp))} % over {len(exp)} stent runs" if exp else "–"])
-    gain = [(r["stent_post_ivl"]["summary"]["metrics"]["lumen_area_pre"], r["stent_no_ivl"]["summary"]["metrics"]["lumen_area_pre"])
-            for lr in nl.values() for r in lr if "stent_post_ivl" in r and "stent_no_ivl" in r]
+                 (f"{f(min(exp))}-{f(max(exp))} % over {len(exp)} completed stent runs" if exp else "–") +
+                 (f"; {n_bad} stent runs failed and are excluded" if n_bad else "")])
+    # unloaded lumen after the IVL protocol vs the unloaded lumen of the same lesion without IVL
+    gain = [(lid, r["ca_E_MPa"], r["ivl"]["final"]["lumen_area"], r["stent_no_ivl"]["summary"]["metrics"]["lumen_area_pre"])
+            for lid, lr in nl.items() for r in lr if "stent_no_ivl" in r and "ivl" in r]
     rows.append(["Lumen gain after IVL alone (before stenting)", _lit("COCALP_MLA_pre_post_IVL_post_stent"),
-                 "; ".join(f"{f(a)} vs {f(b)} mm² (after IVL vs no IVL)" for a, b in gain) +
-                 " — no residual gain: the model is hyperelastic with damage and has no permanent set"])
+                 "; ".join(f"{lid} E={f(E)}: {f(a)} vs {f(b)} mm² (after IVL vs no IVL)" for lid, E, a, b in gain) +
+                 ". No residual gain: the model is hyperelastic with damage and has no permanent set"])
     return "\n".join(["## 7. Consistency with published observations (preliminary, qualitative)", "",
                       "These are comparisons with published cohorts, not validation: no patient-specific outcome "
                       "data exist for these idealised lesions.", "",
                       table(["Observation", "Published value [status]", "Pilot"], rows), ""])
 
 
-DECISIONS = """## 0. Decisions needed before the full cohort run
+def _fracture_sets(nl: dict, proto: str) -> dict:
+    """lesion -> (tested moduli, moduli with fracture) for one protocol."""
+    out = {}
+    for lid, lr in nl.items():
+        tested = [r["ca_E_MPa"] for r in lr if proto in r]
+        hit = [r["ca_E_MPa"] for r in lr if proto in r and r[proto]["cracks"]["fracture"]]
+        out[lid] = (tested, hit)
+    return out
 
-**D8: calcium modulus regime (the main one).** The pilot shows that the result depends on which
-calcium modulus is the baseline (Section 6). At the tissue-level baseline (secant modulus at failure),
-calcium is only a few times stiffer than the fibrous matrix: it fails at about 1 atm under the
-balloon alone, the whole deposit fails at once, and IVL adds nothing. That does not match the
-clinical picture IVL was designed for (calcium that resists high-pressure balloons). Stiffer calcium
-(particle/nanoindentation range) reverses this. Options:
-  (a) keep the tissue-level baseline and report the regime problem as a finding;
-  (b) baseline at a GPa-level modulus (literature nanoindentation range), with the strain-controlled
-      criterion of D5 unchanged, and report the tissue-level case as a sensitivity;
-  (c) choose the baseline as the modulus at which the 3 pilot lesions best match published qualitative
-      observations (balloon alone rarely fractures; IVL fractures thin, wide arcs). This is calibration
-      and would be reported as such, and those observations could then not be reused as a consistency check.
-  My recommendation: (b), with (a) as the sensitivity. It keeps the calibration separate from the
-  consistency checks.
 
-**D9: crack filler (new assumption).** A fully damaged calcium band keeps the shear stiffness of the
-fibrous matrix around it (degradation floor k = mu_fibrous / mu_calcium) instead of becoming a void.
-Without it, stiff calcium (E >= 121 MPa) left near-zero-stiffness bands and the solver failed. G_c is
-rescaled so the verified onset criterion is unchanged (Section 2.3). Sensitivity: k = k_residual
-('none') where the solver allows. Approve, or ask for an alternative.
+def _elist(es) -> str:
+    return ", ".join(f(e) for e in es) if es else "none"
 
-**D10: fracture outcomes when damage is diffuse.** In thin sheets under balloon pressure, damage spreads
-over the whole deposit rather than forming discrete cracks (seeded cracks and a 10 % toughness
-heterogeneity did not change this at the tested moduli). I added a "diffuse" label (a damaged zone
-covering at least half of its deposit). Proposed primary outcomes: fracture yes/no, onset pressure,
-damaged fraction and max depth. Number of fractures and radial/circumferential pattern would be reported
-only where cracks are discrete. Approve, or keep crack count/pattern as primary outcomes.
 
-**D11: Fujino range.** With D2 thickness levels (0.2, 0.4 mm) and no length in 2D, the core set spans
-Fujino scores 0–3 (mostly 0 and 2; the 3s are nodules, whose thickness includes the protrusion). The
-Fujino comparison in Phase 5 will be limited to arc. The IVL-treated lesions in Disrupt CAD III had a
-mean maximum thickness near 1 mm. Options: keep D2 (and say so), or add a 0.8 mm level (+16 core lesions).
+def _emp(es) -> str:
+    """Moduli list with unit, or 'none'."""
+    return f"{_elist(es)} MPa" if es else "none"
 
-**D12: 3D length series (D3).** I propose running the 1/3/5 mm length series after this checkpoint,
-on the subset you choose, because one 3D nonlinear run costs much more than a 2D run (Section 5).
 
-**D13: erosion comparator.** The erosion model now completes. It uses the cell-averaged maximum
-principal strain, the phase field uses an energy criterion, so onset can differ. Keep it as the
-subset comparator?
-"""
+def decisions(facts: dict, nl: dict) -> str:
+    ms = MaterialSet.baseline()
+    p_bal = P.get("loads.ivl_balloon_pressure_atm").value
+    bal, ivl = _fracture_sets(nl, "balloon_only"), _fracture_sets(nl, "ivl")
+    poba = _fracture_sets(nl, "balloon_10atm")
+    common = sorted(set.intersection(*[set(bal[l][0]) & set(ivl[l][0]) for l in nl])) if nl else []
+    selective = [E for E in common if not any(E in bal[l][1] for l in nl) and any(E in ivl[l][1] for l in nl)]
+    discriminating = [E for E in selective if not all(E in ivl[l][1] for l in nl)]
+    common10 = sorted(set.intersection(*[set(poba[l][0]) & set(ivl[l][0]) for l in nl])) if nl else []
+    selective10 = [E for E in common10 if not any(E in poba[l][1] for l in nl) and any(E in ivl[l][1] for l in nl)]
+    L = P.load_literature()
+    kaw = L["calcium_fracture_rate_POBA_10atm_cadaver_histology"]
+    nano = L["calcification_modulus_nanoindentation_carotid"]
+    loree = L["calcified_tissue_tangential_modulus"]
+    base_on = {l: next((r["balloon_only"]["cracks"]["onset_load"] for r in lr
+                        if abs(r["ca_E_MPa"] - ms.ca_E) < 1e-9 and "balloon_only" in r), None) for l, lr in nl.items()}
+    lines = ["## 0. Decisions needed before the full cohort run", ""]
+    lines += ["**D8: calcium modulus regime (the main decision).** The pilot outcome depends on the calcium "
+              "modulus more than on anything else (Section 4.1). Per lesion, moduli (MPa) at which the calcium fractures:", "",
+              table(["Lesion", "IVL balloon alone (4 atm)", "plain balloon (10 atm)", "IVL (balloon + pulse)",
+                     "no fracture even with IVL"],
+                    [[l, _elist(bal[l][1]), _elist(poba[l][1]) if poba[l][0] else "not run", _elist(ivl[l][1]),
+                      _elist([e for e in ivl[l][0] if e not in ivl[l][1]])] for l in nl]), "",
+              f"* Baseline (E = {f(ms.ca_E)} MPa, secant modulus at failure of tissue-level calcification; failure "
+              f"stress {f(ms.sigma_crit)} MPa): the 4-atm balloon alone fractures every pilot lesion ("
+              + "; ".join(f"{l} at {f(v)} MPa = {f(v / ATM_MPA)} atm" for l, v in base_on.items() if v is not None)
+              + ") and the whole deposit is damaged. IVL then adds nothing, and every lesion would have the "
+              "same outcome, so the Phase 5 ROC analysis would have no events to discriminate.",
+              f"* Published contrast: in human coronary cadaver lesions a plain balloon at 10 atm fractured "
+              f"{kaw.value_str} % ({kaw.range_str}) [{kaw.status}]. Measured calcium moduli span tissue-level "
+              f"tension tests ({loree.value_str} {loree.unit}, Loree 1994) to nanoindentation "
+              f"({nano.value_str} {nano.unit}, {nano.range_str}) [{nano.status}].",
+              f"* Moduli at which no pilot lesion fractures under the 4-atm IVL balloon alone but at least one "
+              f"fractures with IVL: {_emp(selective)} (lesions also differ in IVL outcome at: "
+              f"{_emp(discriminating)}). The stricter version with the 10-atm plain balloon of the cadaver "
+              f"study: {_emp(selective10)}.", "",
+              "Options:",
+              "  (a) keep the tissue-level baseline and report that the model then cannot separate lesions;",
+              "  (b) use a GPa-level baseline (nanoindentation range): at the GPa moduli tested no pilot lesion "
+              "fractures even with IVL, which also leaves nothing to predict and contradicts the IVL fracture rates;",
+              "  (c) calibrate: take the baseline from the moduli listed above (balloon alone does not fracture, IVL "
+              "does), keep the strain criterion of D5 (failure stress = E eps_f), and report the whole sweep as the "
+              "sensitivity analysis. The cadaver balloon-vs-IVL contrast is then used for calibration and cannot "
+              "also be reported as a consistency check; the other comparisons (nodule effect, arc/thickness "
+              "cut-offs, fracture rates, stent expansion) stay independent.",
+              "  Recommendation: (c). Candidate baselines: " + (
+                  f"{_emp(selective10)} (meets the 10-atm contrast)" if selective10 else
+                  f"{_emp(selective)} (meets the 4-atm contrast; no tested modulus meets the 10-atm one for "
+                  "every pilot lesion)" if selective else "none among the tested moduli") +
+              ". This calibrates an uncertain input to one qualitative observation, and the manuscript would say so.", ""]
+    cand = selective10 or selective
+    k_base = ms.k_floor
+    k_sel = MaterialSet.baseline(ca_E=cand[-1]).k_floor if cand else None
+    lines += [f"**D9: crack filler (new assumption).** A fully damaged calcium band keeps the shear stiffness of the "
+              f"fibrous matrix (degradation floor k = mu_fibrous / mu_calcium = {f(k_base)} at the tissue-level "
+              f"baseline" + (f", {f(k_sel)} at {f(cand[-1])} MPa" if k_sel is not None else "") +
+              ") instead of becoming a void. Without it the stiff-calcium runs (E >= 121 MPa) did not converge "
+              "once a deposit cracked. G_c is rescaled so that the verified onset criterion is unchanged "
+              "(Section 2.3). Moduli where calcium is not stiffer than the matrix are skipped. Proposed sensitivity: "
+              "k = k_residual (no filler) where the solver allows. Approve, or ask for an alternative.", ""]
+    d = _load("diag_localisation")
+    e = _load("diag_ell")
+    if d is not None and e is not None:
+        onset = {(h["ell_mm"], round(r["ca_E_MPa"], 6)): r["first_damaged_p"] for h in e["by_h"] for r in h["by_E"]}
+        Es = sorted({k[1] for k in onset})
+        ells = sorted({k[0] for k in onset}, reverse=True)
+        diffuse_all = all(r[k]["final_diffuse"] for r in d["by_E"] for k in ("fine", "seeded", "heterogeneous")) and \
+            all(r["final_diffuse"] for h in e["by_h"] for r in h["by_E"])
+        lines += ["**D10: fracture outcomes and the damage model.** In the pilot the damage covers the whole deposit "
+                  "instead of forming discrete cracks. Diagnostics (Section 8): finer load steps, a seeded radial "
+                  "crack, a 10 % toughness heterogeneity and a 4x smaller regularisation length all end with the "
+                  f"whole deposit damaged (all diffuse: {'yes' if diffuse_all else 'no'}). Damage starts as "
+                  "circumferential bands along the luminal surface, where the sheet is bent open. The cause is the "
+                  "volumetric-deviatoric energy split, which degrades the whole high-energy luminal layer rather "
+                  "than opening a crack perpendicular to the hoop tension. The onset pressure is robust to the "
+                  "regularisation length: " + "; ".join(
+                      f"E = {f(E)} MPa: " + ", ".join(f"{f(onset[(l, E)])}" for l in ells if (l, E) in onset) +
+                      f" MPa for ell = {', '.join(f(l) for l in ells if (l, E) in onset)} mm" for E in Es) + ".",
+                  "Options:",
+                  "  (a) keep the model; primary outcomes = fracture yes/no, onset pressure and damaged fraction "
+                  "(all robust); crack number and radial/circumferential pattern not reported;",
+                  "  (b) replace the energy split by a principal-strain (spectral) driving force, which opens cracks "
+                  "perpendicular to the maximum principal strain, and re-test localisation on the pilot before the "
+                  "full run (about one more pilot cycle);",
+                  "  Recommendation: (a) for the main analysis, plus a time-boxed (b) on the three pilot lesions; if (b) "
+                  "gives discrete cracks, crack number and pattern become secondary outcomes.", ""]
+    cs = read_json("cohort_summary")
+    core = cs["fujino_score_counts"]["core"]
+    lines += ["**D11: Fujino range.** Core-set Fujino scores: " + ", ".join(f"{k}: {v}" for k, v in sorted(core.items())) +
+              " (no 4s; with D2 thicknesses only nodules exceed 0.5 mm, and 2D has no length). The Phase 5 "
+              f"comparison with Fujino is then mostly a comparison with the arc criterion. IVL-treated lesions in "
+              f"Disrupt CAD III had a maximum thickness of {_lit('max_calcium_thickness_DisruptCAD_III_OCT')}. "
+              "Options: keep D2 and state the limitation, or add a 0.8 mm level (+16 core lesions).", ""]
+    ex = _load("pilot_example3d")
+    t3 = None
+    if ex is not None and "3d" in ex["models"]:
+        t3 = [r["ivl"]["seconds"] for r in ex["models"]["3d"]["by_E"] if "ivl" in r]
+    lines += ["**D12: 3D length series (D3).** Run the 1/3/5 mm series after this checkpoint on a subset you choose. "
+              + (f"One 3D IVL run of the Fujino-4 example took {', '.join(f(t, 2) for t in t3)} s." if t3 else
+                 "The 3D nonlinear IVL run of the Fujino-4 example had not finished when this report was built.") , ""]
+    ero = []
+    for lid, lr in nl.items():
+        for r in lr:
+            if "ivl_erosion" in r and "ivl" in r:
+                ero.append(f"{lid} E={f(r['ca_E_MPa'])}: phase field {_onset_str(r['ivl'])}, erosion {_onset_str(r['ivl_erosion'])}")
+    lines += ["**D13: erosion comparator.** It now completes. Fracture onset under IVL: " + "; ".join(ero) +
+              ". Erosion uses the cell-averaged maximum principal strain, the phase field an energy criterion, so "
+              "onset can differ. Keep erosion as the subset comparator?", ""]
+    return "\n".join(lines)
+
 
 
 def build() -> str:
@@ -520,7 +646,7 @@ def build() -> str:
             f"Generated {_dt.date.today().isoformat()} by `python -m dtivl.drivers.report_checkpoint2` from "
             "`results/*.json`, `cohort/cohort.csv` and the parameter files. No number below is typed by hand.",
             "Nothing here is validated against patients; this checkpoint covers verification and a pilot.", ""]
-    text = "\n".join(head + [DECISIONS, sec_cohort(), sec_verification(), sec_transient(lt, nl), nl_text,
+    text = "\n".join(head + [decisions(facts, nl), sec_cohort(), sec_verification(), sec_transient(lt, nl), nl_text,
                              sec_example3d(), sec_findings(facts, nl), sec_consistency(nl), sec_diagnostics()])
     OUT.write_text(text)
     return str(OUT)
