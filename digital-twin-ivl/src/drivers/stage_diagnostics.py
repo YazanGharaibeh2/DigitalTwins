@@ -66,10 +66,10 @@ def _step_record(st, md, plm, p, info, hist) -> dict:
             "stagger_its": info.get("stagger_its"), "stagger_converged": info.get("stagger_converged")}
 
 
-def _run(md, plm, ms, p_steps, *, seed_at=None, gc_factor=None) -> dict:
+def _run(md, plm, ms, p_steps, *, seed_at=None, gc_factor=None, h_ca=None) -> dict:
     from dtivl.solvers.nonlinear import NonlinearState, SolveError
 
-    st = NonlinearState(md, ms, fracture="phasefield", gc_factor=gc_factor, name="diag")
+    st = NonlinearState(md, ms, fracture="phasefield", gc_factor=gc_factor, h_ca=h_ca, name="diag")
     st.set_loads(R_cap=0.5 * P.get("geometry.ivl_balloon_diameter_mm").value)
     steps, hist, seeded = [], [], None
     for p in p_steps:
@@ -143,5 +143,51 @@ def localisation(lesion: str = DIAG_LESION, E_values=None, dp: float = 0.002, co
     return out
 
 
+#: calcium mesh sizes (mm) of the regularisation-length study; ell = fracture.ell_over_h * h_ca
+ELL_STUDY_H = (0.04, 0.02, 0.01)
+
+
+def ell_sensitivity(lesion: str = DIAG_LESION, E_values=None, h_values=ELL_STUDY_H, dp: float = 0.002) -> dict:
+    """Fine pressure ramp (experiment 1 of :func:`localisation`) with the calcium mesh size and
+    the regularisation length refined together (ell / h fixed). Writes ``results/diag_ell.json``.
+
+    Tests whether discrete (non-diffuse) cracks appear once the crack band (about 4 ell wide) is
+    narrower than the calcium sheet is thick.
+    """
+    from dtivl.drivers.common import MESH_DIR, load_mask
+    from dtivl.drivers.stage_pilot import e_sweep
+    from dtivl.geometry.labels import TAG_CALCIUM
+    from dtivl.meshing.mask_to_mesh import load_mesh, mesh_from_labelmap
+
+    base = MaterialSet.baseline().ca_E
+    if E_values is None:
+        E_values = [base, min(e_sweep(), key=lambda e: abs(math.log10(e) - 2.0))]
+    p_end = P.get("loads.ivl_balloon_pressure_atm").value
+    p_steps = np.arange(dp, p_end + 0.5 * dp, dp)
+    plm = load_mask(lesion)
+    h_soft = float(P.raw("discretisation.h_soft_mm"))
+    ell_over_h = P.get("fracture.ell_over_h").value
+    out = {"lesion": lesion, "dp_MPa": dp, "p_end_MPa": p_end, "ell_over_h": ell_over_h, "h_soft_mm": h_soft,
+           "by_h": []}
+    for h in h_values:
+        info = mesh_from_labelmap(plm, MESH_DIR / f"{lesion}_ellstudy_h{h:g}.msh", h_ca=h, h_soft=h_soft)
+        md = load_mesh(info["msh"], gdim=2)
+        rec = {"h_ca_mm": h, "ell_mm": ell_over_h * h, "n_cells": info["n_cells"],
+               "n_cells_calcium": int(md.cell_tags.find(TAG_CALCIUM).size), "by_E": []}
+        for E in E_values:
+            ms = MaterialSet.baseline(ca_E=E)
+            with Timer() as t:
+                r = _run(md, plm, ms, p_steps, h_ca=h)
+            r["seconds"] = t.seconds
+            r["ca_E_MPa"] = E
+            rec["by_E"].append(r)
+            out_rec = [x for x in out["by_h"] if x["h_ca_mm"] != h] + [rec]
+            write_json("diag_ell", {**out, "by_h": out_rec})
+        out["by_h"] = [x for x in out["by_h"] if x["h_ca_mm"] != h] + [rec]
+    write_json("diag_ell", out)
+    return out
+
+
 if __name__ == "__main__":
     localisation()
+    ell_sensitivity()
