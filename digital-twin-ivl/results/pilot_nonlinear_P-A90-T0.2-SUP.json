@@ -1186,8 +1186,7 @@
   },
   {
    "ca_E_MPa": 1100.356701,
-   "T": 0.10934949726443459,
-   "k_floor": 0.0018209852600637123,
+   "T": 0.10934949726466875,
    "physiological": {
     "status": "ok",
     "summary": {
@@ -1467,12 +1466,49 @@
      "ca_measure": 0.33272353790349996
     },
     "seconds": 30.690807354000015
+   },
+   "k_floor": 0.0018209852600637123,
+   "balloon_10atm": {
+    "status": "ok",
+    "summary": {
+     "p_target": 1.01325,
+     "p_reached": 1.01325,
+     "cap_radius": 1.595
+    },
+    "n_steps": 11,
+    "n_steps_unconverged_stagger": 0,
+    "final": {
+     "p": 1.01325,
+     "R_in": null,
+     "R_cap": 1.595,
+     "lumen_area": 7.9930948746352914,
+     "max_d": 0.0,
+     "n_crack_cells": 0,
+     "p_contact_mean": 0.0
+    },
+    "max_lumen_area": 7.9930948746352914,
+    "cracks": {
+     "fracture": false,
+     "n_fractures": 0,
+     "n_partial": 0,
+     "diffuse": false,
+     "n_diffuse": 0,
+     "damaged_fraction": 0.0,
+     "max_depth_frac": 0.0,
+     "pattern": [],
+     "location_frac": [],
+     "onset_load": null,
+     "onset_phase": null,
+     "n_cracked_cells": 0,
+     "cracked_measure": 0.0,
+     "ca_measure": 0.33272353790349996
+    },
+    "seconds": 36.04612052199991
    }
   },
   {
    "ca_E_MPa": 3317.162494,
    "T": 0.15102799878166195,
-   "k_floor": 0.0006040504005931683,
    "physiological": {
     "status": "ok",
     "summary": {
@@ -1585,12 +1621,49 @@
      "ca_measure": 0.33272353790349996
     },
     "seconds": 55.56355867000002
+   },
+   "k_floor": 0.0006040504005931683,
+   "balloon_10atm": {
+    "status": "ok",
+    "summary": {
+     "p_target": 1.01325,
+     "p_reached": 1.01325,
+     "cap_radius": 1.595
+    },
+    "n_steps": 10,
+    "n_steps_unconverged_stagger": 0,
+    "final": {
+     "p": 1.01325,
+     "R_in": null,
+     "R_cap": 1.595,
+     "lumen_area": 7.989072009924045,
+     "max_d": 0.0,
+     "n_crack_cells": 0,
+     "p_contact_mean": 0.0
+    },
+    "max_lumen_area": 7.989072009924045,
+    "cracks": {
+     "fracture": false,
+     "n_fractures": 0,
+     "n_partial": 0,
+     "diffuse": false,
+     "n_diffuse": 0,
+     "damaged_fraction": 0.0,
+     "max_depth_frac": 0.0,
+     "pattern": [],
+     "location_frac": [],
+     "onset_load": null,
+     "onset_phase": null,
+     "n_cracked_cells": 0,
+     "cracked_measure": 0.0,
+     "ca_measure": 0.33272353790349996
+    },
+    "seconds": 20.721423944999515
    }
   },
   {
    "ca_E_MPa": 10000.0,
    "T": 0.14216610533028154,
-   "k_floor": 0.00020037333333333332,
    "physiological": {
     "status": "ok",
     "summary": {
@@ -1703,6 +1776,44 @@
      "ca_measure": 0.33272353790349996
     },
     "seconds": 59.00499726399994
+   },
+   "k_floor": 0.00020037333333333332,
+   "balloon_10atm": {
+    "status": "ok",
+    "summary": {
+     "p_target": 1.01325,
+     "p_reached": 1.01325,
+     "cap_radius": 1.595
+    },
+    "n_steps": 10,
+    "n_steps_unconverged_stagger": 0,
+    "final": {
+     "p": 1.01325,
+     "R_in": null,
+     "R_cap": 1.595,
+     "lumen_area": 7.986565007173296,
+     "max_d": 0.0,
+     "n_crack_cells": 0,
+     "p_contact_mean": 0.0
+    },
+    "max_lumen_area": 7.986565007173296,
+    "cracks": {
+     "fracture": false,
+     "n_fractures": 0,
+     "n_partial": 0,
+     "diffuse": false,
+     "n_diffuse": 0,
+     "damaged_fraction": 0.0,
+     "max_depth_frac": 0.0,
+     "pattern": [],
+     "location_frac": [],
+     "onset_load": null,
+     "onset_phase": null,
+     "n_cracked_cells": 0,
+     "cracked_measure": 0.0,
+     "ca_measure": 0.33272353790349996
+    },
+    "seconds": 18.849569424000038
    }
   }
  ]

@@ -1,0 +1,63 @@
+{
+ "lesion": "X3D-A270-T0.6-L7-SUP",
+ "ell_mm": 0.3,
+ "p_end_MPa": 0.4053,
+ "n_steps": 10,
+ "models": {
+  "2d": {
+   "mesh": {
+    "n_nodes": 1060,
+    "n_cells": 1952,
+    "n_cells_per_tag": {
+     "1": 754,
+     "2": 596,
+     "4": 602
+    }
+   },
+   "by_E": [
+    {
+     "ca_E_MPa": 8.949999999999992,
+     "status": "onset",
+     "onset": {
+      "p": 0.12159,
+      "cracks": {
+       "fracture": false,
+       "n_fractures": 0,
+       "n_partial": 1,
+       "diffuse": false,
+       "damaged_fraction": 0.43971433449878905,
+       "max_depth_frac": 0.9063807489853606,
+       "pattern": [
+        "radial"
+       ]
+      }
+     },
+     "steps": [
+      {
+       "p": 0.04053,
+       "max_d": 0.0,
+       "lumen_area": 2.302055525863707,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.08106,
+       "max_d": 0.0034466530790007296,
+       "lumen_area": 2.398893436437901,
+       "stagger_its": 2,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.12159,
+       "max_d": 0.9461255534207386,
+       "lumen_area": 2.815050617266442,
+       "stagger_its": 8,
+       "stagger_converged": true
+      }
+     ],
+     "seconds": 1.611484046001351
+    }
+   ]
+  }
+ }
+}

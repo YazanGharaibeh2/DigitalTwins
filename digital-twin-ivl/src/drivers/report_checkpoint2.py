@@ -405,6 +405,26 @@ def sec_example3d() -> str:
                          "–" if ivl is None else pct(ivl["cracks"]["damaged_fraction"], 3)])
     s += [table(["Model", "E (MPa)", "cells", "sigma1 P95 (MPa)", "nonlocal peak sigma1 (MPa)",
                  "mean SED (MPa)", "T_equivalent", "IVL: status, onset", "IVL damaged area"], rows), ""]
+    on = _load("pilot_example3d_onset")
+    if on is not None:
+        rows = []
+        for key in ("3d", "2d"):
+            m = on["models"].get(key)
+            if m is None:
+                continue
+            for r in m["by_E"]:
+                o = r["onset"]
+                nu = sum(1 for st in r["steps"] if st.get("stagger_converged") is False)
+                rows.append([key.upper(), f(r["ca_E_MPa"]), r["status"], "–" if o is None else f(o["p"]),
+                             "–" if o is None else pct(o["cracks"]["damaged_fraction"], 3),
+                             "–" if o is None else ", ".join(o["cracks"]["pattern"]) or "–", nu,
+                             f(r["seconds"], 2)])
+        s += [f"Balloon-pressure ramp to fracture onset ({on['n_steps']} increments up to {f(on['p_end_MPa'])} MPa, "
+              "IVL balloon cap), 3D vs the 2D mid-section (`results/pilot_example3d_onset.json`). The full 3D IVL "
+              "protocol at the tissue-level baseline modulus was stopped before completion because its "
+              "damage-propagation steps were too slow, and was replaced by this onset run.", "",
+              table(["Model", "E (MPa)", "status", "onset p (MPa)", "damaged area at onset", "pattern at onset",
+                     "unconverged (u, d) steps", "run time (s)"], rows), ""]
     return "\n".join(s)
 
 
@@ -620,12 +640,17 @@ def decisions(facts: dict, nl: dict) -> str:
               f"Disrupt CAD III had a maximum thickness of {_lit('max_calcium_thickness_DisruptCAD_III_OCT')}. "
               "Options: keep D2 and state the limitation, or add a 0.8 mm level (+16 core lesions).", ""]
     ex = _load("pilot_example3d")
-    t3 = None
+    t3 = []
     if ex is not None and "3d" in ex["models"]:
-        t3 = [r["ivl"]["seconds"] for r in ex["models"]["3d"]["by_E"] if "ivl" in r]
-    lines += ["**D12: 3D length series (D3).** Run the 1/3/5 mm series after this checkpoint on a subset you choose. "
-              + (f"One 3D IVL run of the Fujino-4 example took {', '.join(f(t, 2) for t in t3)} s." if t3 else
-                 "The 3D nonlinear IVL run of the Fujino-4 example had not finished when this report was built.") , ""]
+        t3 = [(r["ca_E_MPa"], r["ivl"]["seconds"]) for r in ex["models"]["3d"]["by_E"] if "ivl" in r]
+    t2 = []
+    if ex is not None and "2d" in ex["models"]:
+        t2 = [(r["ca_E_MPa"], r["ivl"]["seconds"]) for r in ex["models"]["2d"]["by_E"] if "ivl" in r]
+    lines += ["**D12: 3D length series (D3).** I propose running the 1/3/5 mm series after this checkpoint on a "
+              "subset you choose, and only up to fracture onset in 3D. Cost of the full IVL protocol on the "
+              "Fujino-4 example: " + ("; ".join(f"3D, E = {f(E)} MPa: {f(t, 2)} s" for E, t in t3) or "3D not finished")
+              + (" vs " + "; ".join(f"2D section, E = {f(E)} MPa: {f(t, 2)} s" for E, t in t2) if t2 else "")
+              + ". With damage spreading, a 3D step costs far more (Section 5).", ""]
     ero = []
     for lid, lr in nl.items():
         for r in lr:
@@ -639,6 +664,10 @@ def decisions(facts: dict, nl: dict) -> str:
 
 
 def build() -> str:
+    from dtivl.drivers.stage_pilot import merge_example3d
+
+    if (RESULTS_DIR / "pilot_example3d_part2.json").exists() or (RESULTS_DIR / "pilot_example3d_part3.json").exists():
+        merge_example3d()
     lt = read_json("pilot_linear_transient")
     nl = _pilot_rows()
     nl_text, facts = sec_nonlinear(nl, lt)

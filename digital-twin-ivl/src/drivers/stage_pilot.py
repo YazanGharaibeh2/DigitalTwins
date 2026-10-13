@@ -257,7 +257,8 @@ def _expected_protocols(E, stent_e_values, include_erosion) -> set:
     return keys
 
 
-def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_erosion=True, resume=True) -> dict:
+def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_erosion=True, resume=True,
+                  part: str | None = None) -> dict:
     """Nonlinear phase-field pilot over the modulus sweep.
 
     For every lesion and modulus: physiological pressure, IVL balloon only
@@ -269,7 +270,10 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     ``results/pilot_nonlinear_<lesion>.json`` are reused and only missing
     ones are run (the post-IVL stent re-runs IVL if needed), so an
     interrupted or extended run continues; the file is rewritten after
-    every modulus and always holds every row known so far.
+    every modulus and always holds every row known so far. ``part``: write
+    to ``pilot_nonlinear_<lesion>_<part>.json`` instead (reading the main
+    file as well), so moduli of one lesion can run in parallel processes;
+    :func:`merge_nonlinear_parts` folds part files into the main file.
     """
     from dtivl.drivers.common import read_json
     from dtivl.solvers.nonlinear import NonlinearState, run_ivl, run_pressure, run_stent
@@ -289,9 +293,13 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
     R_ivl = 0.5 * P.get("geometry.ivl_balloon_diameter_mm").value
     out = {"K_s": K_s, "p_phys": p_phys, "p_bal": p_bal, "p_poba": p_poba, "R_ivl": R_ivl, "lesions": {}}
     for lid in lesions:
+        out_name = f"pilot_nonlinear_{lid}" + (f"_{part}" if part else "")
         old = {}
-        if resume and (ROOT / "results" / f"pilot_nonlinear_{lid}.json").exists():
-            old = {round(r["ca_E_MPa"], 6): r for r in read_json(f"pilot_nonlinear_{lid}").get("rows", [])}
+        if resume:
+            for name in dict.fromkeys([f"pilot_nonlinear_{lid}", out_name]):
+                if (ROOT / "results" / f"{name}.json").exists():
+                    for r in read_json(name).get("rows", []):
+                        old[round(r["ca_E_MPa"], 6)] = {**old.get(round(r["ca_E_MPa"], 6), {}), **r}
         plm, info, md = mesh2d(lid)
         # T_equivalent = transient peak / static sigma1 of the *quasi-static* model (MaterialSet moduli),
         # i.e. the factor that reproduces the transient peak inside run_ivl (design.md section 5.4).
@@ -302,7 +310,7 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
             # every write holds all rows known so far (resumed rows not yet reached included)
             have = {round(x["ca_E_MPa"], 6) for x in rows}
             allrows = rows + [r for e, r in old.items() if e not in have]
-            write_json(f"pilot_nonlinear_{lid}", {"lesion": lid, "K_s": K_s,
+            write_json(out_name, {"lesion": lid, "K_s": K_s,
                                                  "rows": sorted(allrows, key=lambda x: x["ca_E_MPa"])})
 
         def _timed(row, key, fn):
@@ -353,6 +361,80 @@ def run_nonlinear(lesions=None, e_values=None, stent_e_values=None, include_eros
         out["lesions"][lid] = rows
     if aggregate:
         write_json("pilot_nonlinear", out)
+    return out
+
+
+def merge_nonlinear_parts(lesion_id: str, parts=("part2",)) -> dict:
+    """Fold ``pilot_nonlinear_<lesion>_<part>.json`` rows into the main per-lesion file (union of protocols)."""
+    from dtivl.drivers.common import read_json
+
+    main = read_json(f"pilot_nonlinear_{lesion_id}")
+    rows = {round(r["ca_E_MPa"], 6): r for r in main["rows"]}
+    for part in parts:
+        name = f"pilot_nonlinear_{lesion_id}_{part}"
+        if not (ROOT / "results" / f"{name}.json").exists():
+            continue
+        for r in read_json(name)["rows"]:
+            e = round(r["ca_E_MPa"], 6)
+            rows[e] = {**rows.get(e, {}), **r}
+    main["rows"] = sorted(rows.values(), key=lambda x: x["ca_E_MPa"])
+    write_json(f"pilot_nonlinear_{lesion_id}", main)
+    return main
+
+
+def run_example3d_onset(e_values=None, out_name: str = "pilot_example3d_onset") -> dict:
+    """3D Fujino-4 example: balloon-pressure ramp (cap at the IVL balloon radius) stopped at the first
+    step with fracture onset (max d >= fracture.d_crack), for each modulus; the 2D mid-section model
+    is run the same way. Cheaper than the full 3D IVL protocol, whose damage-propagation steps cost
+    tens of minutes each. Writes ``results/<out_name>.json``.
+    """
+    from dtivl.fracture.cracks import crack_analysis
+    from dtivl.fracture.phasefield import regularisation_length
+    from dtivl.solvers.nonlinear import DEFAULT_STEPS, NonlinearState, SolveError
+
+    lid = example3d_id()
+    e_values = e_values or [MaterialSet.baseline().ca_E]
+    h_ca = float(P.raw("discretisation.example3d")["h_calcium_mm"])
+    ell = regularisation_length(h_ca=h_ca)
+    p_bal = P.get("loads.ivl_balloon_pressure_atm").value
+    R_ivl = 0.5 * P.get("geometry.ivl_balloon_diameter_mm").value
+    d_crack = float(P.raw("fracture.d_crack"))
+    n = DEFAULT_STEPS["pressure"]
+    out = {"lesion": lid, "ell_mm": ell, "p_end_MPa": p_bal, "n_steps": n, "models": {}}
+    for dim, builder in ((2, mesh2d_like3d), (3, mesh3d)):
+        plm, info, md = builder(lid)
+        rec = {"mesh": {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}, "by_E": []}
+        for E in e_values:
+            ms = MaterialSet.baseline(ca_E=E)
+            st = NonlinearState(md, ms, h_ca=h_ca, ell=ell, name=f"onset{dim}d")
+            st.set_loads(R_cap=R_ivl)
+            steps, onset, status = [], None, "no onset up to p_end"
+            with Timer() as t:
+                for k in range(1, n + 1):
+                    p = p_bal * k / n
+                    st.set_loads(p=p)
+                    try:
+                        info_s = st.solve_step()
+                        st.commit()
+                    except SolveError as exc:
+                        status = f"failed: {exc}"
+                        break
+                    obs = st.observables()
+                    steps.append({"p": p, "max_d": obs["max_d"], "lumen_area": obs["lumen_area"],
+                                  "stagger_its": info_s.get("stagger_its"),
+                                  "stagger_converged": info_s.get("stagger_converged")})
+                    if obs["max_d"] >= d_crack:
+                        hist = [{"phase": "balloon", "load": x["p"], "max_d": x["max_d"]} for x in steps]
+                        c = crack_analysis(md, st.d, plm, history=hist)
+                        onset = {"p": p, "cracks": {kk: c.get(kk) for kk in (
+                            "fracture", "n_fractures", "n_partial", "diffuse", "damaged_fraction", "max_depth_frac",
+                            "pattern")}}
+                        status = "onset"
+                        break
+            rec["by_E"].append({"ca_E_MPa": E, "status": status, "onset": onset, "steps": steps,
+                                "seconds": t.seconds})
+            out["models"][f"{dim}d"] = rec
+            write_json(out_name, out)
     return out
 
 
