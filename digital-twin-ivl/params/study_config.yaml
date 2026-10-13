@@ -57,6 +57,11 @@ design:
       morphology: balanced_cycle                            # 6 lesions per morphology
       depth_rule: "if depth + thickness exceeds the local plaque thickness minus 0.05 mm, depth is reduced to fit (logged)"
       plaque_growth: outward                                # D11: if the calcium still does not fit at the lowest depth, the plaque grows outward by the deficit (eccentricity kept; logged)
+  erosion_subset:                 # D13: erosion comparator on a core subset (full factorial of these levels)
+    arc_deg: [180, 360]
+    thickness_mm: [0.2, 0.8]
+    morphology: [superficial_sheet, nodule]
+    basis: "DESIGN: two arcs, the thinnest and thickest levels, a sheet and a nodule (8 core lesions)"
   pilot_2d:                       # Checkpoint 2 pilot (3 lesions)
     - {arc_deg: 90,  thickness_mm: 0.2, morphology: superficial_sheet}
     - {arc_deg: 270, thickness_mm: 0.4, morphology: deep_sheet}

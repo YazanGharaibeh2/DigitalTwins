@@ -24,3 +24,10 @@ def test_tissue_level_modulus_kept_in_sweep():
                                     / (P.lit("calcification_fracture_stretch").value - 1.0))
     assert any(abs(t.value - e) < 1e-6 for e in e_sweep())
     assert P.raw("decisions")["D8"]
+
+
+def test_erosion_subset_is_in_core():
+    from dtivl.drivers.stage_cohort_runs import cohort_ids, erosion_subset
+
+    sub = erosion_subset()
+    assert len(sub) == 8 and set(sub) <= set(cohort_ids(("core",)))
