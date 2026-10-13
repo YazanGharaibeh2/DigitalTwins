@@ -10,7 +10,7 @@ Nothing here is validated against patients; this checkpoint covers verification 
 | Lesion | IVL balloon alone (4 atm) | plain balloon (10 atm) | IVL (balloon + pulse) | no fracture even with IVL |
 |---|---|---|---|---|
 | P-A90-T0.2-SUP | 4.42, 8.95, 13.3, 40.2, 121 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 1100, 3317, 10000 |
-| P-A270-T0.4-DEEP | 4.42, 8.95, 13.3, 40.2 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 3317 |
+| P-A270-T0.4-DEEP | 4.42, 8.95, 13.3, 40.2 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 1100, 3317, 10000 |
 | P-A360-T0.2-NOD | 4.42, 8.95, 13.3, 40.2 | 4.42, 8.95, 13.3, 40.2, 121 | 4.42, 8.95, 13.3, 40.2, 121, 365 | 1100, 3317, 10000 |
 
 * Baseline (E = 8.95 MPa, secant modulus at failure of tissue-level calcification; failure stress 0.179 MPa): the 4-atm balloon alone fractures every pilot lesion (P-A90-T0.2-SUP at 0.122 MPa = 1.20 atm; P-A270-T0.4-DEEP at 0.122 MPa = 1.20 atm; P-A360-T0.2-NOD at 0.122 MPa = 1.20 atm) and the whole deposit is damaged. IVL then adds nothing, and every lesion would have the same outcome, so the Phase 5 ROC analysis would have no events to discriminate.
@@ -35,7 +35,7 @@ Options:
 
 **D12: 3D length series (D3).** I propose running the 1/3/5 mm series after this checkpoint on a subset you choose, and only up to fracture onset in 3D. Cost of the full IVL protocol on the Fujino-4 example: 3D not finished vs 2D section, E = 8.95 MPa: 72 s; 2D section, E = 1100 MPa: 7.3 s. With damage spreading, a 3D step costs far more (Section 5).
 
-**D13: erosion comparator.** It now completes. Fracture onset under IVL: P-A90-T0.2-SUP E=8.95: phase field 0.122 MPa, erosion 0.0811 MPa; P-A90-T0.2-SUP E=1100: phase field none, erosion none; P-A270-T0.4-DEEP E=8.95: phase field 0.122 MPa, erosion 0.0811 MPa; P-A360-T0.2-NOD E=8.95: phase field 0.122 MPa, erosion 0.0811 MPa; P-A360-T0.2-NOD E=1100: phase field none, erosion none. Erosion uses the cell-averaged maximum principal strain, the phase field an energy criterion, so onset can differ. Keep erosion as the subset comparator?
+**D13: erosion comparator.** It now completes. Fracture onset under IVL: P-A90-T0.2-SUP E=8.95: phase field 0.122 MPa, erosion 0.0811 MPa; P-A90-T0.2-SUP E=1100: phase field none, erosion none; P-A270-T0.4-DEEP E=8.95: phase field 0.122 MPa, erosion 0.0811 MPa; P-A270-T0.4-DEEP E=1100: phase field none, erosion none; P-A360-T0.2-NOD E=8.95: phase field 0.122 MPa, erosion 0.0811 MPa; P-A360-T0.2-NOD E=1100: phase field none, erosion none. Erosion uses the cell-averaged maximum principal strain, the phase field an energy criterion, so onset can differ. Keep erosion as the subset comparator?
 
 ## 1. In silico cohort (60 lesions)
 
@@ -156,9 +156,9 @@ B = IVL balloon alone (4 atm), P = plain balloon at 10 atm (same size), I = IVL 
 | 40.2 | B: diffuse; P: diffuse; I: diffuse | B: diffuse; P: diffuse; I: diffuse | B: diffuse; P: diffuse; I: diffuse |
 | 121 | B: diffuse; P: diffuse; I: diffuse | B: –; P: diffuse; I: diffuse | B: –; P: diffuse; I: diffuse |
 | 365 | B: –; P: diffuse; I: diffuse | B: –; P: diffuse; I: diffuse | B: –; P: –; I: diffuse |
-| 1100 | B: –; P: –; I: –; S: – | not run | B: –; P: –; I: –; S: – (failed) |
+| 1100 | B: –; P: –; I: –; S: – | B: –; I: –; S: diffuse | B: –; P: –; I: –; S: – (failed) |
 | 3317 | B: –; P: –; I: – | B: –; P: –; I: – | B: –; P: –; I: – |
-| 10000 | B: –; P: –; I: – | not run | B: –; P: –; I: – |
+| 10000 | B: –; P: –; I: – | B: –; I: – | B: –; P: –; I: – |
 
 Moduli at which IVL fractures the calcium but the balloon alone does not: P-A270-T0.4-DEEP: 121, 365 MPa; P-A360-T0.2-NOD: 121, 365 MPa; P-A90-T0.2-SUP: 365 MPa.
 
@@ -235,10 +235,19 @@ Moduli at which IVL fractures the calcium but the balloon alone does not: P-A270
 | P-A270-T0.4-DEEP | 365 | IVL balloon only (4 atm) | ok | none | 0 (–) | 0 % | 3.06 |  |
 | P-A270-T0.4-DEEP | 365 | Plain balloon, 10 atm | ok | 0.608 MPa | 1 (diffuse) | 100 % | 8.00 |  |
 | P-A270-T0.4-DEEP | 365 | IVL (balloon + pulse) | ok | 0.612 MPa | 1 (diffuse) | 100 % | 8.00 |  |
+| P-A270-T0.4-DEEP | 1100 | Physiological pressure | ok | none | 0 (–) | 0 % | 2.23 |  |
+| P-A270-T0.4-DEEP | 1100 | IVL balloon only (4 atm) | ok | none | 0 (–) | 0 % | 2.94 |  |
+| P-A270-T0.4-DEEP | 1100 | IVL (balloon + pulse) | ok | none | 0 (–) | 0 % | 3.87 |  |
+| P-A270-T0.4-DEEP | 1100 | Stent, no IVL | ok | 1.08 mm | 1 (diffuse) | 62.6 % | 8.08 | 81.8 % / 5.03 % / 0.518 MPa |
+| P-A270-T0.4-DEEP | 1100 | Stent after IVL | ok | 1.08 mm | 1 (diffuse) | 62.6 % | 8.08 | 81.8 % / 5.03 % / 0.518 MPa |
+| P-A270-T0.4-DEEP | 1100 | IVL, erosion comparator | ok | none | 0 (radial, radial, radial, circumferential, radial, radial, circumferential, radial, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, circumferential, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined, undetermined) | 3.85 % | 4.34 |  |
 | P-A270-T0.4-DEEP | 3317 | Physiological pressure | ok | none | 0 (–) | 0 % | 2.23 |  |
 | P-A270-T0.4-DEEP | 3317 | IVL balloon only (4 atm) | ok | none | 0 (–) | 0 % | 2.81 |  |
 | P-A270-T0.4-DEEP | 3317 | Plain balloon, 10 atm | ok | none | 0 (–) | 0 % | 4.64 |  |
 | P-A270-T0.4-DEEP | 3317 | IVL (balloon + pulse) | ok | none | 0 (–) | 0 % | 3.55 |  |
+| P-A270-T0.4-DEEP | 10000 | Physiological pressure | ok | none | 0 (–) | 0 % | 2.23 |  |
+| P-A270-T0.4-DEEP | 10000 | IVL balloon only (4 atm) | ok | none | 0 (–) | 0 % | 2.72 |  |
+| P-A270-T0.4-DEEP | 10000 | IVL (balloon + pulse) | ok | none | 0 (–) | 0 % | 3.18 |  |
 | P-A360-T0.2-NOD | 1.47 | all | skipped | crack filler undefined: calcium shear modulus 0.5638 MPa is not above the fibrous matrix (0.7707 MPa) |  |  |  |  |
 | P-A360-T0.2-NOD | 4.42 | Physiological pressure | ok | none | 0 (–) | 0 % | 2.11 |  |
 | P-A360-T0.2-NOD | 4.42 | IVL balloon only (4 atm) | ok | 0.122 MPa | 1 (diffuse) | 100 % | 6.77 |  |
@@ -291,7 +300,7 @@ Regularisation length in this example: 0.300 mm (coarser 3D mesh).
 
 | Model | E (MPa) | cells | sigma1 P95 (MPa) | nonlocal peak sigma1 (MPa) | mean SED (MPa) | T_equivalent | IVL: status, onset | IVL damaged area |
 |---|---|---|---|---|---|---|---|---|
-| 3D | 8.95 | 64416 | 0.792 | 1.03 | 0.0206 | – | – | – |
+| 3D | 8.95 | 64416 | 0.792 | 1.03 | 0.0206 | 0.0312 | – | – |
 | 3D | 1100 | 64416 | 5.22 | 7.92 | 0.00270 | – | – | – |
 | 2D | 8.95 | 1952 | 0.765 | 0.807 | 0.0187 | 0.0399 | ok, 0.122 MPa | 100 % |
 | 2D | 1100 | 1952 | 4.88 | 6.38 | 0.00222 | 0.0729 | ok, none | 0 % |
@@ -300,19 +309,20 @@ Balloon-pressure ramp to fracture onset (10 increments up to 0.405 MPa, IVL ball
 
 | Model | E (MPa) | status | onset p (MPa) | damaged area at onset | pattern at onset | unconverged (u, d) steps | run time (s) |
 |---|---|---|---|---|---|---|---|
+| 3D | 8.95 | onset | 0.122 | 43.2 % | radial | 0 | 2474 |
 | 2D | 8.95 | onset | 0.122 | 44.0 % | radial | 0 | 1.6 |
 
 ## 6. What the pilot shows
 
 * P-A90-T0.2-SUP, IVL balloon only (4 atm): fracture at E = 4.42, 8.95, 13.3, 40.2, 121 MPa; no fracture at E = 365, 1100, 3317, 10000 MPa.
 * P-A90-T0.2-SUP, IVL (balloon + pulse): fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa; no fracture at E = 1100, 3317, 10000 MPa.
-* P-A270-T0.4-DEEP, IVL balloon only (4 atm): fracture at E = 4.42, 8.95, 13.3, 40.2 MPa; no fracture at E = 121, 365, 3317 MPa.
-* P-A270-T0.4-DEEP, IVL (balloon + pulse): fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa; no fracture at E = 3317 MPa.
+* P-A270-T0.4-DEEP, IVL balloon only (4 atm): fracture at E = 4.42, 8.95, 13.3, 40.2 MPa; no fracture at E = 121, 365, 1100, 3317, 10000 MPa.
+* P-A270-T0.4-DEEP, IVL (balloon + pulse): fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa; no fracture at E = 1100, 3317, 10000 MPa.
 * P-A360-T0.2-NOD, IVL balloon only (4 atm): fracture at E = 4.42, 8.95, 13.3, 40.2 MPa; no fracture at E = 121, 365, 1100, 3317, 10000 MPa.
 * P-A360-T0.2-NOD, IVL (balloon + pulse): fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa; no fracture at E = 1100, 3317, 10000 MPa.
   (IVL balloon pressure 0.405 MPa = 4.00 atm.)
 
-* Baseline calcium modulus (E = 8.95 MPa, secant modulus at failure of tissue-level calcification) gives a failure stress of 0.179 MPa. Fractured outcomes with diffuse whole-deposit damage: 57; with discrete cracks: 0.
+* Baseline calcium modulus (E = 8.95 MPa, secant modulus at failure of tissue-level calcification) gives a failure stress of 0.179 MPa. Fractured outcomes with diffuse whole-deposit damage: 59; with discrete cracks: 0.
 * Moduli skipped because the calcium is not stiffer than the fibrous matrix (E_fibrous = 2.31 MPa): P-A90-T0.2-SUP: 1.47 MPa; P-A270-T0.4-DEEP: 1.47 MPa; P-A360-T0.2-NOD: 1.47 MPa.
 * Protocols that did not finish: P-A360-T0.2-NOD E=1100 stent_no_ivl (failed, phase failed); P-A360-T0.2-NOD E=1100 stent_post_ivl (failed, phase failed).
 * Stent deployment uses the rated pressure 1.62 MPa as the expansion limit.
@@ -323,16 +333,16 @@ These are comparisons with published cohorts, not validation: no patient-specifi
 
 | Observation | Published value [status] | Pilot |
 |---|---|---|
-| No fracture at physiological pressure | expected (no source needed) | 0 of 25 runs fracture |
+| No fracture at physiological pressure | expected (no source needed) | 0 of 27 runs fracture |
 | Fracture after high-pressure dilation (no IVL) predicted by arc > 225 deg and thickness < 0.240 mm (P-A90-T0.2-SUP: arc 89.0 deg, max thickness 0.200 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | stent without IVL: fracture at E = 8.95 of 8.95, 1100 MPa |
-| Fracture after high-pressure dilation (no IVL) predicted by arc > 225 deg and thickness < 0.240 mm (P-A270-T0.4-DEEP: arc 269 deg, max thickness 0.400 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | stent without IVL: fracture at E = 8.95 of 8.95 MPa |
+| Fracture after high-pressure dilation (no IVL) predicted by arc > 225 deg and thickness < 0.240 mm (P-A270-T0.4-DEEP: arc 269 deg, max thickness 0.400 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | stent without IVL: fracture at E = 8.95, 1100 of 8.95, 1100 MPa |
 | Fracture after high-pressure dilation (no IVL) predicted by arc > 225 deg and thickness < 0.240 mm (P-A360-T0.2-NOD: arc 360 deg, max thickness 0.500 mm -> no fracture expected) | 225 deg [VERIFIED]; 0.24 mm [SECONDARY] | stent without IVL: fracture at E = 8.95 of 8.95, 1100 MPa |
 | Plain balloon at 10 atm does not fracture calcium; IVL does (cadaver histology) | 0 (0 of 7 lesions; IVL 62.5 (P=0.01)) % of lesions [VERIFIED] | P-A90-T0.2-SUP: 10-atm balloon fractures at E = 4.42, 8.95, 13.3, 40.2, 121, 365 of 4.42, 8.95, 13.3, 40.2, 121, 365, 1100, 3317, 10000 MPa; P-A270-T0.4-DEEP: 10-atm balloon fractures at E = 4.42, 8.95, 13.3, 40.2, 121, 365 of 4.42, 8.95, 13.3, 40.2, 121, 365, 3317 MPa; P-A360-T0.2-NOD: 10-atm balloon fractures at E = 4.42, 8.95, 13.3, 40.2, 121 of 4.42, 8.95, 13.3, 40.2, 121, 365, 1100, 3317, 10000 MPa (calibration target under D8 option (c)) |
 | Nodular calcium fractures less often after IVL than sheets | 0.24 (95% CI 0.08-0.70) OR [VERIFIED] | P-A90-T0.2-SUP: IVL fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa; P-A270-T0.4-DEEP: IVL fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa; P-A360-T0.2-NOD: IVL fracture at E = 4.42, 8.95, 13.3, 40.2, 121, 365 MPa |
-| Most IVL fractures are full thickness | 72 % of fractures [VERIFIED] | 57 of 57 damaged components through-thickness (57 diffuse) |
+| Most IVL fractures are full thickness | 72 % of fractures [VERIFIED] | 59 of 109 damaged components through-thickness (59 diffuse) |
 | Several fractures per lesion | 3.1 (SD 2.7) count [VERIFIED] | discrete crack count not defined when damage is diffuse (see D10) |
-| Stent expansion at the minimum stent area | 78.4 (SD 25.8) % [VERIFIED] | 81.6-83.4 % over 8 completed stent runs; 2 stent runs failed and are excluded |
-| Lumen gain after IVL alone (before stenting) | 1.77 / 2.59 / 5.22 (SD 0.72 / 1.11 / 1.69) mm^2 [VERIFIED] | P-A90-T0.2-SUP E=8.95: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A90-T0.2-SUP E=1100: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A270-T0.4-DEEP E=8.95: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A360-T0.2-NOD E=8.95: 2.06 vs 2.06 mm² (after IVL vs no IVL); P-A360-T0.2-NOD E=1100: 2.06 vs 2.06 mm² (after IVL vs no IVL). No residual gain: the model is hyperelastic with damage and has no permanent set |
+| Stent expansion at the minimum stent area | 78.4 (SD 25.8) % [VERIFIED] | 81.6-83.4 % over 10 completed stent runs; 2 stent runs failed and are excluded |
+| Lumen gain after IVL alone (before stenting) | 1.77 / 2.59 / 5.22 (SD 0.72 / 1.11 / 1.69) mm^2 [VERIFIED] | P-A90-T0.2-SUP E=8.95: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A90-T0.2-SUP E=1100: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A270-T0.4-DEEP E=8.95: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A270-T0.4-DEEP E=1100: 2.21 vs 2.21 mm² (after IVL vs no IVL); P-A360-T0.2-NOD E=8.95: 2.06 vs 2.06 mm² (after IVL vs no IVL); P-A360-T0.2-NOD E=1100: 2.06 vs 2.06 mm² (after IVL vs no IVL). No residual gain: the model is hyperelastic with damage and has no permanent set |
 
 ## 8. Why the damage is diffuse (diagnostics for D10)
 
@@ -357,3 +367,21 @@ Regularisation length refined with the calcium mesh (ell / h fixed; `results/dia
 | 0.0200 | 0.0400 | 2105 | 121 | 0.302 | 100 % | yes | 1 | diffuse | 0 | 221 |
 | 0.0100 | 0.0200 | 7972 | 8.95 | 0.0840 | 100 % | yes | 1 | diffuse | 8 | 1645 |
 | 0.0100 | 0.0200 | 7972 | 121 | 0.290 | 100 % | yes | 1 | diffuse | 1 | 838 |
+
+## 9. Cost of the full cohort and plan after approval
+
+Pilot wall time per protocol run (2D, one CPU core; all moduli pooled):
+
+| Protocol | runs | median (s) | max (s) |
+|---|---|---|---|
+| Physiological pressure | 27 | 4.7 | 12 |
+| IVL balloon only (4 atm) | 27 | 14 | 245 |
+| Plain balloon, 10 atm | 25 | 36 | 651 |
+| IVL (balloon + pulse) | 27 | 70 | 621 |
+| Stent, no IVL | 6 | 290 | 5290 |
+| Stent after IVL | 6 | 294 | 5753 |
+| IVL, erosion comparator | 6 | 81 | 231 |
+
+One lesion at one modulus with every protocol except erosion: median-based 0.20 h, worst-case 3.5 h of CPU. The 56 core and hold-out lesions at one baseline modulus then need about 11-196 CPU hours, i.e. 2.8-49 h on the 4 cores of this container, before the sensitivity analysis. Stiff-calcium stent runs dominate the worst case.
+
+Plan after your decisions: (1) fix the nodule stent solver failure at stiff calcium (Section 4) and re-run that case; (2) run the core and hold-out sets at the chosen baseline (2D, all protocols); (3) sensitivity analysis (Morris screening, then Sobol on the influential inputs) over calcium modulus, failure strain, pulse scale, regularisation length, crack filler and perivascular support; (4) Phase 5 metrics (ROC/Youden with bootstrap CIs, LOOCV, composite index, comparison with Fujino); (5) 3D length series on the subset you choose. No full-cohort run starts before your approval.

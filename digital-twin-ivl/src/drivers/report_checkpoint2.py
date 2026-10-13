@@ -669,6 +669,40 @@ def decisions(facts: dict, nl: dict) -> str:
 
 
 
+def sec_plan(nl: dict) -> str:
+    """Cost estimate of the full 2D cohort from the pilot run times, and the plan after approval."""
+    import os
+
+    cs = read_json("cohort_summary")
+    n_run = cs["n_per_set"]["core"] + cs["n_per_set"]["holdout"]
+    secs = {}
+    for lr in nl.values():
+        for r in lr:
+            for k in PROTOCOLS:
+                if k in r and "seconds" in r[k]:
+                    secs.setdefault(k, []).append(r[k]["seconds"])
+    rows = [[PROTOCOL_LABEL[k], len(v), f(float(np.median(v)), 2), f(float(np.max(v)), 2)] for k, v in secs.items()]
+    per_lesion_med = sum(float(np.median(v)) for k, v in secs.items() if k != "ivl_erosion")
+    per_lesion_max = sum(float(np.max(v)) for k, v in secs.items() if k != "ivl_erosion")
+    ncpu = os.cpu_count() or 1
+    return "\n".join([
+        "## 9. Cost of the full cohort and plan after approval", "",
+        "Pilot wall time per protocol run (2D, one process per run while 4-5 runs shared the 4 cores; all moduli "
+        "pooled):", "",
+        table(["Protocol", "runs", "median (s)", "max (s)"], rows), "",
+        f"One lesion at one modulus with every protocol except erosion: median-based {f(per_lesion_med / 3600, 2)} h, "
+        f"worst-case {f(per_lesion_max / 3600, 2)} h of CPU. The {n_run} core and hold-out lesions at one baseline modulus "
+        f"then need about {f(n_run * per_lesion_med / 3600, 2)}-{f(n_run * per_lesion_max / 3600, 2)} CPU hours, i.e. "
+        f"{f(n_run * per_lesion_med / 3600 / ncpu, 2)}-{f(n_run * per_lesion_max / 3600 / ncpu, 2)} h on the {ncpu} "
+        "cores of this container, before the sensitivity analysis. Stiff-calcium stent runs dominate the worst case.", "",
+        "Plan after your decisions: (1) fix the nodule stent solver failure at stiff calcium (Section 4) and "
+        "re-run that case; (2) run the core and hold-out sets at the chosen baseline (2D, all protocols); (3) "
+        "sensitivity analysis (Morris screening, then Sobol on the influential inputs) over calcium modulus, "
+        "failure strain, pulse scale, regularisation length, crack filler and perivascular support; (4) "
+        "Phase 5 metrics (ROC/Youden with bootstrap CIs, LOOCV, composite index, comparison with Fujino); "
+        "(5) 3D length series on the subset you choose. No full-cohort run starts before your approval.", ""])
+
+
 def build() -> str:
     from dtivl.drivers.stage_pilot import merge_example3d
 
@@ -682,7 +716,7 @@ def build() -> str:
             "`results/*.json`, `cohort/cohort.csv` and the parameter files. No number below is typed by hand.",
             "Nothing here is validated against patients; this checkpoint covers verification and a pilot.", ""]
     text = "\n".join(head + [decisions(facts, nl), sec_cohort(), sec_verification(), sec_transient(lt, nl), nl_text,
-                             sec_example3d(), sec_findings(facts, nl), sec_consistency(nl), sec_diagnostics()])
+                             sec_example3d(), sec_findings(facts, nl), sec_consistency(nl), sec_diagnostics(), sec_plan(nl)])
     OUT.write_text(text)
     return str(OUT)
 

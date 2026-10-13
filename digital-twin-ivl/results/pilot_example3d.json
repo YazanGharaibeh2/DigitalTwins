@@ -43,7 +43,16 @@
       "foundation_ratio": 5.653263478737273e-05,
       "ndofs": 280968
      },
-     "predictors_seconds": 61.94464534000144
+     "predictors_seconds": 53.75383019600122,
+     "transient": {
+      "T": 0.026141349836919327,
+      "T_equivalent": 0.031167813049758887,
+      "sigma1_peak_transient": 0.40613706657668125,
+      "sigma1_static_equivalent": 13.030656527883117,
+      "t_peak": 2.15,
+      "peak_at_window_end": false
+     },
+     "transient_seconds": 550.9054668040008
     },
     {
      "ca_E_MPa": 1100.356701,
