@@ -28,6 +28,17 @@ vessel axis (the origin in 2D, the z-axis in 3D), ``k_f`` =
 scales the calcium energy cell-wise by a DG0 erosion factor
 (:mod:`dtivl.fracture.erosion`); ``fracture="none"`` keeps the calcium intact.
 
+Damage driving force (``SolverSettings.driving_force``, default from
+``fracture.driving_force``): the displacement problem always minimises
+``Pi`` above; the damage sub-problem replaces ``psi+`` by a driving force
+``psi_d``: ``"energy"`` (default) uses ``psi_d = psi+``, i.e. it minimises
+``Pi`` in ``d`` (forms identical to the code before the option existed);
+``"rankine"`` uses ``psi_d = (E/2) <e1>+^2`` with ``e1`` the maximum principal
+Green-Lagrange strain, a hybrid formulation (isotropic split for the
+elastic problem, principal-strain driving force for damage) available in 2D
+plane strain only (3D: ``NotImplementedError``). See
+:mod:`dtivl.fracture.phasefield`.
+
 Algorithm
 ---------
 Per load increment, alternate minimisation: (i) ``u`` with ``d`` frozen,
@@ -180,6 +191,11 @@ class SolverSettings:
     :mod:`dtivl.fracture.erosion`); ``quadrature_degree`` defaults to
     ``2 * degree``; ``u_petsc_options``/``d_petsc_options`` override
     :data:`U_SNES_OPTIONS` / :data:`dtivl.fracture.phasefield.D_SNES_OPTIONS`.
+    ``driving_force`` selects the damage driving force of the phase-field
+    damage sub-problem (``"energy"``: ``psi+``; ``"rankine"``: ``psi_R =
+    (E/2) <e1>+^2``, 2D only; see :mod:`dtivl.fracture.phasefield`); it
+    defaults to the config entry ``fracture.driving_force`` and has no effect
+    on the displacement problem or on the ``erosion``/``none`` models.
     """
 
     stagger_tol: float = STAGGER_TOL
@@ -191,6 +207,7 @@ class SolverSettings:
     quadrature_degree: int | None = None      # default 2 * degree
     u_petsc_options: dict = field(default_factory=dict)
     d_petsc_options: dict = field(default_factory=dict)
+    driving_force: str = field(default_factory=PF.config_driving_force)   # "energy" | "rankine"
 
 
 @dataclass
@@ -249,7 +266,9 @@ class NonlinearState:
     degree : displacement degree (2).
     bc_factory : optional callable ``V -> list[DirichletBC]`` with extra
         Dirichlet conditions (verification problems).
-    settings : :class:`SolverSettings`.
+    settings : :class:`SolverSettings` (including the damage ``driving_force``;
+        ``"rankine"`` with ``fracture="phasefield"`` in 3D raises
+        ``NotImplementedError``, an unknown name ``ValueError``).
     gc_factor : optional per-cell multiplier of G_c (array over local + ghost
         cells, 1 = baseline), for toughness-heterogeneity diagnostics; the
         local onset energy scales with it. ``None`` (default): homogeneous.
@@ -277,6 +296,10 @@ class NonlinearState:
         if gdim != tdim:
             raise ValueError("expected gdim == tdim (2D plane strain or 3D)")
         self.gdim = gdim
+        # damage driving force: name checked for every model, availability (2D only for "rankine")
+        # only where it is used, i.e. in the phase-field damage sub-problem
+        self.driving_force = PF.check_driving_force(self.settings.driving_force,
+                                                    gdim if fracture == "phasefield" else None)
         fdim = tdim - 1
         msh.topology.create_connectivity(fdim, tdim)
         msh.topology.create_connectivity(tdim, fdim)
@@ -339,10 +362,14 @@ class NonlinearState:
             term = soft_energy(t, F3, self.ms_ufl) * dx(t)
             W_el = term if W_el is None else W_el + term
         self.psi_plus = None
+        #: damage driving force psi_d of the damage sub-problem (phase field only; psi_plus for "energy")
+        self.psi_drive = None
         if self.has_calcium:
             psi_p, psi_m = psi_calcium_split(F3, self.ms_ufl.ca_mu, self.ms_ufl.ca_K)
             self.psi_plus = psi_p
             if fracture == "phasefield":
+                self.psi_drive = PF.driving_force_density(self.driving_force, psi_plus=psi_p, F3=F3,
+                                                          E=self.ms_ufl.ca_E, gdim=gdim)
                 W_ca = degradation(self.d, self._kres) * psi_p + psi_m
             elif fracture == "erosion" and self.settings.erosion_split:
                 W_ca = self.eta * psi_p + psi_m
@@ -388,7 +415,7 @@ class NonlinearState:
                 self.gc_factor = fem.Function(self.Q0, name="gc_factor")
                 self.gc_factor.x.array[:] = np.asarray(gc_factor, dtype=float)
                 Gc_field = self._Gc * self.gc_factor
-            self._dsolver = PF.DamageSolver(self.d, self.d_lb, self.d_ub, self.psi_plus, dx, Gc_field,
+            self._dsolver = PF.DamageSolver(self.d, self.d_lb, self.d_ub, self.psi_drive, dx, Gc_field,
                                             self._ell, self._kres, soft_tags=self.soft_tags,
                                             petsc_options=self.settings.d_petsc_options,
                                             prefix=f"{name}_d_{tag}_")

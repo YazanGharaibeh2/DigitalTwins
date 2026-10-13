@@ -17,6 +17,11 @@ Finite-strain energies (reference configuration):
 I1b = J^(-2/3) tr(C). Plane strain embeds the 2x2 deformation gradient in
 3x3 with F33 = 1.
 
+Kinematic measure for the optional Rankine-type damage driving force
+(:mod:`dtivl.fracture.phasefield`): :func:`max_principal_green_lagrange`
+returns the maximum principal Green-Lagrange strain e1 of C = F^T F in
+closed form (2D plane strain only).
+
 Small-strain limits used by the linear predictor analysis:
   mu_wall = 2 c10, mu_soft = E/3, K_soft = k_over_mu * mu, calcium (E, nu).
 """
@@ -191,6 +196,32 @@ def psi_calcium_split(F3, mu, K):
     psi_p = dev + ufl.conditional(ufl.ge(J, 1.0), vol, 0.0)
     psi_m = ufl.conditional(ufl.lt(J, 1.0), vol, 0.0)
     return psi_p, psi_m
+
+
+def max_principal_green_lagrange(F3, gdim: int):
+    """Maximum principal Green-Lagrange strain ``e1`` (UFL), 2D plane strain only.
+
+    ``F3`` is the 3x3 plane-strain embedding of :func:`deformation_gradient`
+    (``F33 = 1``, no out-of-plane shear). With ``E = (C - I) / 2`` and
+    ``C = F3^T F3``, the in-plane 2x2 block has the closed-form eigenvalues
+    ``(E11 + E22)/2 +/- sqrt(((E11 - E22)/2)^2 + E12^2)``; the third principal
+    strain is the out-of-plane ``E33 = (C33 - 1)/2``, which is zero in plane
+    strain, so ``e1 = max(e1_in-plane, E33) = max(e1_in-plane, 0)``.
+
+    The square root is not differentiable where the in-plane principal
+    strains coincide; the expression is meant for the damage sub-problem,
+    where it is evaluated with ``u`` frozen and never differentiated with
+    respect to ``u``. ``gdim == 3`` raises ``NotImplementedError``.
+    """
+    if gdim != 2:
+        raise NotImplementedError(
+            "max_principal_green_lagrange: closed-form principal strain implemented for 2D plane strain only "
+            f"(gdim={gdim}); the Rankine-type damage driving force is not available in 3D")
+    C = F3.T * F3
+    E = 0.5 * (C - ufl.Identity(3))
+    mean = 0.5 * (E[0, 0] + E[1, 1])
+    radius = ufl.sqrt((0.5 * (E[0, 0] - E[1, 1])) ** 2 + E[0, 1] ** 2)
+    return ufl.max_value(mean + radius, E[2, 2])
 
 
 def degradation(d, k):

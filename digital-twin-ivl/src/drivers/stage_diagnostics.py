@@ -21,10 +21,25 @@ cap active, for each modulus in ``E_values``:
 If the seeded crack and the heterogeneity both end in whole-deposit damage,
 the diffuse outcome is a property of the model at that modulus, not of the
 solution path. Writes ``results/diag_localisation.json``.
+
+:func:`ell_sensitivity` refines the calcium mesh and ``ell`` together
+(``results/diag_ell.json``).
+
+:func:`rankine_test` (decision D10, time-boxed test of option b) runs the IVL
+protocol on every pilot lesion at the baseline calcium modulus
+(``MaterialSet.baseline()``) with the damage driving force ``"energy"``
+(``psi+`` of the volumetric-deviatoric split) and ``"rankine"`` (``psi_R =
+(E/2) <e1>+^2``, maximum principal Green-Lagrange strain; see
+:mod:`dtivl.fracture.phasefield`), with ``T`` = the lesion's
+``T_equivalent`` at that modulus, and records the protocol and crack summary
+of each run and its wall time. It also repeats the homogeneous-plate onset
+check with the Rankine force at that modulus. Writes
+``results/diag_rankine.json``.
 """
 from __future__ import annotations
 
 import math
+import time
 
 import numpy as np
 
@@ -185,6 +200,177 @@ def ell_sensitivity(lesion: str = DIAG_LESION, E_values=None, h_values=ELL_STUDY
             write_json("diag_ell", {**out, "by_h": out_rec})
         out["by_h"] = [x for x in out["by_h"] if x["h_ca_mm"] != h] + [rec]
     write_json("diag_ell", out)
+    return out
+
+
+#: damage driving forces compared by :func:`rankine_test`
+RANKINE_FORCES = ("energy", "rankine")
+#: crack-summary keys copied into the compact per-run table of :func:`rankine_test`
+RANKINE_TABLE_KEYS = ("fracture", "n_fractures", "n_partial", "diffuse", "n_diffuse", "damaged_fraction",
+                      "max_depth_frac", "pattern", "location_frac", "onset_load", "onset_phase")
+
+
+def _lesion_T_equivalent(lid: str, ms: MaterialSet, md, plm) -> tuple[float, str]:
+    """``T_equivalent`` of a lesion at ``ms.ca_E`` from ``results/pilot_linear_transient.json``, else computed
+    with :func:`dtivl.solvers.transient.transfer_factor`. Returns ``(T, source)``."""
+    from dtivl.drivers.common import RESULTS_DIR, read_json
+
+    if (RESULTS_DIR / "pilot_linear_transient.json").exists():
+        rows = read_json("pilot_linear_transient").get("lesions", {}).get(lid, {}).get("by_E", [])
+        for r in rows:
+            if abs(r["ca_E_MPa"] - ms.ca_E) <= 1e-6 * ms.ca_E and "transient" in r:
+                return float(r["transient"]["T_equivalent"]), "results/pilot_linear_transient.json"
+    from dtivl.solvers.transient import transfer_factor
+
+    return float(transfer_factor(md, plm, ms)["T_equivalent"]), "computed (transfer_factor)"
+
+
+#: crack-analysis keys stored per step of the crack evolution (:func:`_track_crack_evolution`)
+EVOLUTION_KEYS = ("fracture", "n_fractures", "n_partial", "diffuse", "n_diffuse", "damaged_fraction",
+                  "max_depth_frac", "pattern")
+#: crack-evolution keys of the first cracked step copied into the table row (prefixed ``first_crack_``)
+FIRST_CRACK_KEYS = ("p", "phase", "n_crack_cells", "damaged_fraction", "n_fractures", "n_partial", "diffuse",
+                    "pattern")
+
+
+def _rankine_row(rec: dict) -> dict:
+    """Compact per-run summary (status, damage onset, crack counts and patterns, wall time, and the
+    crack state at the first step with cracked cells)."""
+    cr = rec.get("cracks", {})
+    evo = rec.get("crack_evolution") or [{}]
+    return {"status": rec["status"], "seconds": rec.get("seconds"), "cpu_seconds": rec.get("cpu_seconds"),
+            "n_steps_unconverged_stagger": rec.get("n_steps_unconverged_stagger"),
+            "first_damage_p": rec.get("first_damage_p"), "max_d": rec.get("summary", {}).get("max_d"),
+            **{k: cr.get(k) for k in RANKINE_TABLE_KEYS},
+            **{f"first_crack_{k}": evo[0].get(k) for k in FIRST_CRACK_KEYS}}
+
+
+def _track_crack_evolution(st, md, plm) -> tuple[list, dict]:
+    """Wrap ``st.record`` so that every accepted step whose cracked-cell count changed is post-processed
+    with :func:`dtivl.fracture.cracks.crack_analysis` (diagnostics only: the solution is not touched).
+    Returns ``(evolution list, timing dict)``; the timing holds the post-processing wall and CPU time,
+    which the caller subtracts from the protocol time."""
+    from dtivl.fracture.cracks import crack_analysis
+
+    evo, timing, last = [], {"seconds": 0.0, "cpu_seconds": 0.0}, [0]
+    record = st.record
+
+    def wrapped(*args, **kwargs):
+        rec = record(*args, **kwargs)
+        n = int(rec.get("n_crack_cells") or 0)
+        if n != last[0]:
+            last[0] = n
+            w0, c0 = time.perf_counter(), time.process_time()
+            ca = crack_analysis(md, st.d, plm, history=st.history)
+            evo.append({"step": rec["step"], "phase": rec["phase"], "p": rec["p"], "max_d": rec["max_d"],
+                        "n_crack_cells": n, **{k: ca.get(k) for k in EVOLUTION_KEYS}})
+            timing["seconds"] += time.perf_counter() - w0
+            timing["cpu_seconds"] += time.process_time() - c0
+        return rec
+
+    st.record = wrapped
+    return evo, timing
+
+
+def _read_rankine_runs(names) -> dict:
+    """Completed runs ``{lesion: {force: record}}`` found in the given result files."""
+    from dtivl.drivers.common import RESULTS_DIR, read_json
+
+    runs: dict = {}
+    for name in names:
+        if not (RESULTS_DIR / f"{name}.json").exists():
+            continue
+        for lid, rec in read_json(name).get("lesions", {}).items():
+            for force, r in rec.get("runs", {}).items():
+                runs.setdefault(lid, {})[force] = {"lesion_meta": {k: v for k, v in rec.items() if k != "runs"},
+                                                   "run": r}
+    return runs
+
+
+def rankine_test(lesions=None, driving_forces=RANKINE_FORCES, *, part: str | None = None,
+                 resume: bool = True) -> dict:
+    """D10 option (b): IVL on the pilot lesions with the energy and the Rankine damage driving force.
+
+    For each lesion (default :func:`dtivl.drivers.stage_pilot.pilot_ids`) and force, a fresh
+    :class:`~dtivl.solvers.nonlinear.NonlinearState` at ``MaterialSet.baseline()`` runs
+    :func:`~dtivl.solvers.nonlinear.run_ivl` with ``T = T_equivalent`` of the lesion at that modulus
+    (:func:`_lesion_T_equivalent`); the record is
+    :func:`dtivl.drivers.stage_pilot._protocol_record` plus the wall and process CPU time of the
+    protocol (``seconds``, ``cpu_seconds``), the first pressure with any damage (``first_damage_p``),
+    the compact step history (``steps``: phase, p, max_d, n_crack_cells, stagger iterations) and the
+    crack evolution (``crack_evolution``: crack analysis at every step whose cracked-cell count
+    changed, :func:`_track_crack_evolution`). ``table`` lists the compact rows
+    (:func:`_rankine_row`). ``verification_rankine_onset`` is
+    :func:`dtivl.fracture.phasefield.onset_check` (2D plate, Rankine force) at the same modulus.
+
+    ``part``: write ``results/diag_rankine_<part>.json`` instead of ``diag_rankine.json`` (lesions
+    can then run in parallel processes). ``resume``: runs already stored in ``diag_rankine.json`` or
+    in any ``diag_rankine_*.json`` part file are reused, so a final call without ``part`` merges the
+    parts into ``diag_rankine.json``.
+    """
+    from dtivl.drivers.common import RESULTS_DIR
+    from dtivl.drivers.stage_pilot import _protocol_record, mesh2d, pilot_ids
+    from dtivl.fracture import phasefield as PF
+    from dtivl.solvers.nonlinear import NonlinearState, SolverSettings, run_ivl
+
+    lesions = list(lesions or pilot_ids())
+    out_name = "diag_rankine" + (f"_{part}" if part else "")
+    old = {}
+    if resume:
+        names = ["diag_rankine"] + sorted(p.stem for p in RESULTS_DIR.glob("diag_rankine_*.json"))
+        old = _read_rankine_runs(dict.fromkeys(names + [out_name]))
+    ms = MaterialSet.baseline()
+    out = {"check": "D10(b): damage driving force 'energy' (psi+) vs 'rankine' (psi_R = E/2 <e1>+^2) under IVL",
+           "ca_E_MPa": ms.ca_E, "material_set": ms.provenance, "driving_forces": list(driving_forces),
+           "protocol": "run_ivl with T = T_equivalent of the lesion at ca_E_MPa (default increments)",
+           "lesions": {}, "table": []}
+    with Timer() as t:
+        v = PF.onset_check(2, ms, driving_force="rankine")
+    out["verification_rankine_onset"] = {k: v.get(k) for k in (
+        "passed", "eps_f", "gl_axial_onset_theory", "gl_axial_bracket", "rel_err_gl_axial", "psi_onset_theory_MPa",
+        "psi_bracket_MPa", "rel_err_psi", "e1_matches_gl_axial")}
+    out["verification_rankine_onset"]["seconds"] = t.seconds
+
+    def _save():
+        write_json(out_name, out)
+
+    for lid in lesions:
+        plm, info, md = mesh2d(lid)
+        T, src = _lesion_T_equivalent(lid, ms, md, plm)
+        rec = {"T_equivalent": T, "T_source": src,
+               "mesh": {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}, "runs": {}}
+        out["lesions"][lid] = rec
+        for force in driving_forces:
+            prev = old.get(lid, {}).get(force)
+            if prev is not None and abs(prev["lesion_meta"].get("T_equivalent", -1.0) - T) <= 1e-12:
+                rec["runs"][force] = prev["run"]
+            else:
+                st = NonlinearState(md, ms, settings=SolverSettings(driving_force=force), name=f"rk_{force}")
+                evo, post = _track_crack_evolution(st, md, plm)
+                cpu0 = time.process_time()
+                with Timer() as t:
+                    res = run_ivl(st, T=T)
+                cpu = time.process_time() - cpu0
+                r = _protocol_record(res, md, plm)
+                # protocol time without the crack-evolution post-processing; CPU time is the process CPU
+                # time (robust to other jobs on a shared machine), wall time is not
+                r["seconds"] = t.seconds - post["seconds"]
+                r["cpu_seconds"] = cpu - post["cpu_seconds"]
+                r["postprocessing_seconds"] = post["seconds"]
+                r["driving_force"] = force
+                r["first_damage_p"] = next((h["p"] for h in st.history if h["max_d"] > 0.0), None)
+                r["steps"] = [{k: h.get(k) for k in ("phase", "p", "max_d", "n_crack_cells", "stagger_its",
+                                                     "stagger_converged")} for h in st.history]
+                r["crack_evolution"] = evo
+                rec["runs"][force] = r
+            out["table"] = [x for x in out["table"] if (x["lesion"], x["driving_force"]) != (lid, force)]
+            out["table"].append({"lesion": lid, "driving_force": force, "T_equivalent": T,
+                                 **_rankine_row(rec["runs"][force])})
+            _save()
+    out["total_seconds"] = sum(r.get("seconds") or 0.0 for x in out["lesions"].values() for r in x["runs"].values())
+    out["total_cpu_seconds"] = sum(r.get("cpu_seconds") or 0.0 for x in out["lesions"].values()
+                                   for r in x["runs"].values())
+    _save()
     return out
 
 
