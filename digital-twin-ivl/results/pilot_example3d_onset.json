@@ -58,6 +58,61 @@
      "seconds": 1.611484046001351
     }
    ]
+  },
+  "3d": {
+   "mesh": {
+    "n_nodes": 12720,
+    "n_cells": 64416,
+    "n_cells_per_tag": {
+     "1": 24882,
+     "2": 26892,
+     "4": 12642
+    }
+   },
+   "by_E": [
+    {
+     "ca_E_MPa": 8.949999999999992,
+     "status": "onset",
+     "onset": {
+      "p": 0.12159,
+      "cracks": {
+       "fracture": false,
+       "n_fractures": 0,
+       "n_partial": 1,
+       "diffuse": false,
+       "damaged_fraction": 0.43221744822107483,
+       "max_depth_frac": 0.9063807489853606,
+       "pattern": [
+        "radial"
+       ]
+      }
+     },
+     "steps": [
+      {
+       "p": 0.04053,
+       "max_d": 0.0,
+       "lumen_area": 2.306495253547255,
+       "stagger_its": 1,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.08106,
+       "max_d": 0.15587483956348253,
+       "lumen_area": 2.4100030460336326,
+       "stagger_its": 5,
+       "stagger_converged": true
+      },
+      {
+       "p": 0.12159,
+       "max_d": 0.9466820287299651,
+       "lumen_area": 2.8138312603026185,
+       "stagger_its": 8,
+       "stagger_converged": true
+      }
+     ],
+     "seconds": 2474.337842637
+    }
+   ]
   }
  }
 }
