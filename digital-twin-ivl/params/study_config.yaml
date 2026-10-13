@@ -19,7 +19,13 @@ decisions:            # Checkpoint 1 answers (PI, 2026-10-11); Checkpoint 2 answ
   D6: "Title: In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting."
   D7: "Network allow-list: not yet available (checked 2026-10-11)."
   D8: "Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis."
-  D9_D15: "Pending (Checkpoint 2): crack filler, outcome definitions, Fujino range, 3D length series, erosion comparator, IVL representation, SECONDARY-status exceptions."
+  D9: "Crack filler approved (degradation floor k = mu_fibrous/mu_calcium); sensitivity with k = k_residual (no filler) where the solver allows (PI, 2026-10-13)."
+  D10: "Primary fracture outcomes: through-thickness damage yes/no and damage-onset pressure; damaged fraction secondary; crack number and pattern only if discrete cracks appear. Time-boxed test of a principal-strain (Rankine-type) damage driving force on the pilot lesions (PI, 2026-10-13)."
+  D11: "Core thickness levels 0.2, 0.4 and 0.8 mm (+16 core lesions). The 0.8 mm level does not fit the reference plaque; plaque grown outward as needed (see geometry.calcium_iel_clearance_mm). Hold-out thickness range extended to 0.8 mm accordingly (PI, 2026-10-13; geometric handling proposed by the analyst)."
+  D12: "3D length series 1/3/5 mm run in 3D only up to damage onset, on a subset chosen by the analyst and stated in the report (PI, 2026-10-13)."
+  D13: "Erosion comparator kept on a subset (PI, 2026-10-13)."
+  D14: "IVL represented by the single-pulse quasi-static peak equivalence; limitation stated (no pulse-count accumulation) (PI, 2026-10-13)."
+  D15: "SECONDARY-status inputs approved as explicit exceptions (tissue densities for the transient IVL factor, physiological pressure), with a calcium-density sensitivity run (PI, 2026-10-13)."
 
 design:
   seed: 20261009
