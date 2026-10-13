@@ -123,7 +123,7 @@ fracture:
   crack_filler: {value: matrix, sens: [none], basis: "ASSUMPTION: a fully damaged calcium band keeps the small-strain shear modulus of the fibrous matrix around it (degradation floor k = mu_fibrous/mu_calcium, never below k_residual) instead of becoming a void; Gc is scaled by (1-k) so the AT1 onset criterion is unchanged. Added because brittle crack bands with k_residual alone left near-zero-shear bands between stiff calcium pieces and the displacement Newton solve failed (E_ca >= 121 MPa). 'none' uses k_residual only.", status: ASSUMPTION}
 
 loads:
-  physiological_pressure: {lit: normal_systolic_blood_pressure_upper}   # 120 mmHg (upper limit of normal systolic), in MPa
+  physiological_pressure: {lit: normal_systolic_blood_pressure_upper, allow_status: [SECONDARY]}   # 120 mmHg (upper limit of normal systolic), in MPa; SECONDARY-status input under an explicit exception (Checkpoint 2, D15)
   ivl_balloon_pressure_atm: {lit: ivl_balloon_inflation_pressure}
   poba_pressure_atm: {lit: poba_pressure_cadaver_IVL_balloon}            # 10 atm plain balloon (no pulses), pilot comparison protocol, in MPa
   ivl_peak_pressure_MPa: {lit: ivl_peak_positive_pressure}
