@@ -5,3 +5,4 @@ __pycache__/
 digital-twin-ivl/cohort/meshes/verification/
 digital-twin-ivl/cohort/meshes/*.msh
 digital-twin-ivl/cohort/meshes/sizing/
+.claude/worktrees/
