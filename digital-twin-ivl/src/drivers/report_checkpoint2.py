@@ -666,7 +666,7 @@ def decisions(facts: dict, nl: dict) -> str:
 def build() -> str:
     from dtivl.drivers.stage_pilot import merge_example3d
 
-    if (RESULTS_DIR / "pilot_example3d_part2.json").exists() or (RESULTS_DIR / "pilot_example3d_part3.json").exists():
+    if any((RESULTS_DIR / f"pilot_example3d_part{i}.json").exists() for i in (2, 3, 4)):
         merge_example3d()
     lt = read_json("pilot_linear_transient")
     nl = _pilot_rows()
