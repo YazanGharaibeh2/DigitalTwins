@@ -9,6 +9,7 @@ import pytest
 from dtivl.fracture import erosion as ER
 from dtivl.fracture import phasefield as PF
 from dtivl.fracture.cracks import crack_analysis
+from dtivl import params as P
 from dtivl.materials.constitutive import MaterialSet
 
 
@@ -112,7 +113,9 @@ def test_erosion_crack_postprocessing_on_sector():
     from dtivl.solvers import nonlinear as NL
 
     md = NL.annulus_meshdata(A, B, H, ca_sector=(R1, R2, ARC), h_ca=H_CA)
-    st = NL.NonlinearState(md, h_ca=H_CA, fracture="erosion")
+    # tissue-level calcium modulus: the test needs erosion within the 0.4 MPa ramp
+    ms_t = MaterialSet.baseline(ca_E=P.get("materials.calcium.E_tissue_level").value)
+    st = NL.NonlinearState(md, ms_t, h_ca=H_CA, fracture="erosion")
     res = NL.run_pressure(st, 0.4, cap_radius=CAP_EROSION, n_steps=4)
     assert res.status == "ok"
     ind = st.damage_field()

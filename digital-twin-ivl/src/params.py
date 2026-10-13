@@ -51,7 +51,7 @@ _STATUS_PATTERNS = [
 ]
 
 #: Statuses allowed as inputs to the main analysis.
-MAIN_ANALYSIS_OK = {"VERIFIED", "PROVISIONAL", "DERIVED", "ASSUMPTION", "NUMERICAL", "DESIGN"}
+MAIN_ANALYSIS_OK = {"VERIFIED", "PROVISIONAL", "DERIVED", "ASSUMPTION", "NUMERICAL", "DESIGN", "CALIBRATED"}
 
 
 @dataclass(frozen=True)

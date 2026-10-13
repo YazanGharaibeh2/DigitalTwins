@@ -10,6 +10,8 @@ the PI are fixed text; the only numbers in fixed text are the decision and
 section labels.
 
 Run: ``python -m dtivl.drivers.report_checkpoint2`` (after the pilot stages).
+The report as sent at Checkpoint 2 is ``CHECKPOINT_2.md`` at commit d2bfb05; after
+D8 the "tissue-level baseline" in its text is ``materials.calcium.E_tissue_level``.
 """
 from __future__ import annotations
 
@@ -566,7 +568,7 @@ def sec_example3d() -> str:
 
 
 def sec_findings(facts: dict, nl: dict) -> str:
-    ms = MaterialSet.baseline()
+    ms = MaterialSet.baseline(ca_E=P.get("materials.calcium.E_tissue_level").value)  # tissue-level (pre-D8) modulus
     u = facts["unconverged"]
     lines = ["## 6. What the pilot shows", ""]
     for lid in nl:
@@ -711,7 +713,7 @@ def sec_diagnostics() -> str:
 def decisions(facts: dict, nl: dict) -> str:
     from dtivl.geometry.fujino import fujino_criteria
 
-    ms = MaterialSet.baseline()
+    ms = MaterialSet.baseline(ca_E=P.get("materials.calcium.E_tissue_level").value)  # tissue-level (pre-D8) modulus
     p_bal = P.get("loads.ivl_balloon_pressure_atm").value
     p_poba = P.get("loads.poba_pressure_atm").value
     bal, poba, ivl = _sets(nl, "balloon_only"), _sets(nl, "balloon_10atm"), _sets(nl, "ivl")

@@ -7,7 +7,8 @@ geometry.nodule_base_arc_deg,60,,,ASSUMPTION: nodule protrusion spans 60 deg at 
 geometry.fragment_pitch_deg,45,,,"ASSUMPTION: one deposit per 45 deg of arc (n = arc/45, min 2)",ASSUMPTION
 geometry.fragment_fill,0.6,,,ASSUMPTION: each deposit fills 60% of its pitch,ASSUMPTION
 geometry.margin_3d_mm,2.0,,,ASSUMPTION: calcium-free segment length at each end of 3D models,ASSUMPTION
-materials.calcium.E,calcification_fracture_stress / (calcification_fracture_stretch - 1),,,DERIVED: secant modulus at failure of the same tissue (Holzapfel 2004),DERIVED
+materials.calcium.E,365.006198,,MPa,"CALIBRATED (D8, Checkpoint 2): point 6 of the 9 log-spaced pilot sweep points over sens_E (equality checked by tests/test_params_decisions.py); the stiffest tested modulus at which no pilot lesion fractures under the IVL balloon alone (4 atm) while IVL fractures them. Calibration to a model-internal surrogate, not to a published observation; at this modulus the 10-atm plain balloon still fractures 2 of 3 pilot lesions (cadaver contrast not met). Implied failure stress E*eps_f = 7.30 MPa vs measured tissue-level strength 0.179 MPa.",CALIBRATED
+materials.calcium.E_tissue_level,calcification_fracture_stress / (calcification_fracture_stretch - 1),,,"DERIVED: secant modulus at failure of the same tissue (Holzapfel 2004); the pre-Checkpoint-2 baseline, kept in the sensitivity sweep",DERIVED
 materials.bulk_to_shear_soft,50,20 | 200,,ASSUMPTION: near-incompressibility penalty K/mu for soft tissues,ASSUMPTION
 fracture.eps_f,calcification_fracture_stretch - 1,,,failure stretch 1.02 -> strain 0.02,DERIVED
 fracture.ell_over_h,2.0,1.5 | 3.0,,ASSUMPTION: regularisation length = 2 calcium element sizes,ASSUMPTION

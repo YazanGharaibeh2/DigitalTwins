@@ -23,10 +23,12 @@ N_E_SWEEP = 9   # log-spaced points over sens_E (was 5 before Checkpoint 2; 9 ke
 
 
 def e_sweep() -> list[float]:
-    """Calcium moduli (MPa): log-spaced over materials.calcium.sens_E, plus the baseline."""
+    """Calcium moduli (MPa): log-spaced over materials.calcium.sens_E, plus the baseline (D8) and the
+    tissue-level secant modulus (materials.calcium.E_tissue_level, the pre-Checkpoint-2 baseline)."""
     lo, hi = (q.value for q in P.get_list("materials.calcium.sens_E"))
     pts = set(np.round(np.logspace(np.log10(lo), np.log10(hi), N_E_SWEEP), 6).tolist())
     pts.add(round(MaterialSet.baseline().ca_E, 6))
+    pts.add(round(P.get("materials.calcium.E_tissue_level").value, 6))
     return sorted(pts)
 
 

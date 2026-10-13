@@ -10,7 +10,7 @@
 #     literature value; the pipeline refuses to run the main analysis while
 #     any entry used by it is PENDING (see dtivl.params.check_ready).
 
-decisions:            # Checkpoint 1 answers (PI, 2026-10-11)
+decisions:            # Checkpoint 1 answers (PI, 2026-10-11); Checkpoint 2 answers (PI, 2026-10-13)
   D1: "Test the 3D code on one 3D example with Fujino score 4 before the cohort run."
   D2: "Calcium thickness levels 0.2 and 0.4 mm."
   D3: "Calcium length levels (3D only) 1, 3, 5 mm."
@@ -18,6 +18,8 @@ decisions:            # Checkpoint 1 answers (PI, 2026-10-11)
   D5: "Calcium failure: primary strain-controlled (eps_f from Holzapfel 2004, sigma_c = E*eps_f); sensitivity stress-controlled (sigma_c = 179 kPa fixed)."
   D6: "Title: In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting."
   D7: "Network allow-list: not yet available (checked 2026-10-11)."
+  D8: "Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis."
+  D9_D15: "Pending (Checkpoint 2): crack filler, outcome definitions, Fujino range, 3D length series, erosion comparator, IVL representation, SECONDARY-status exceptions."
 
 design:
   seed: 20261009
@@ -97,7 +99,8 @@ materials:
     E: {lit: lipid_modulus_AFM}
   calcium:
     model: compressible_neo_hookean
-    E: {expr: "calcification_fracture_stress / (calcification_fracture_stretch - 1)", basis: "DERIVED: secant modulus at failure of the same tissue (Holzapfel 2004)", status: DERIVED}
+    E: {value: 365.006198, unit: MPa, basis: "CALIBRATED (D8, Checkpoint 2): point 6 of the 9 log-spaced pilot sweep points over sens_E (equality checked by tests/test_params_decisions.py); the stiffest tested modulus at which no pilot lesion fractures under the IVL balloon alone (4 atm) while IVL fractures them. Calibration to a model-internal surrogate, not to a published observation; at this modulus the 10-atm plain balloon still fractures 2 of 3 pilot lesions (cadaver contrast not met). Implied failure stress E*eps_f = 7.30 MPa vs measured tissue-level strength 0.179 MPa.", status: CALIBRATED}
+    E_tissue_level: {expr: "calcification_fracture_stress / (calcification_fracture_stretch - 1)", basis: "DERIVED: secant modulus at failure of the same tissue (Holzapfel 2004); the pre-Checkpoint-2 baseline, kept in the sensitivity sweep", status: DERIVED}
     sens_E: [{lit: calcified_tissue_tangential_modulus}, {lit: calcification_modulus_nanoindentation, transform: lower}]
     nu: {lit: calcification_poisson_ratio}
   bulk_to_shear_soft: {value: 50, sens: [20, 200], basis: "ASSUMPTION: near-incompressibility penalty K/mu for soft tissues", status: ASSUMPTION}

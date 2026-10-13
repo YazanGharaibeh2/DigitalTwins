@@ -111,7 +111,9 @@ def test_damage_confined_to_calcium_and_irreversible():
     md = _bimaterial_plate()
     msh = md.mesh
     disp = fem.Constant(msh, 0.0)
-    state = NonlinearState(md, fracture="phasefield", bc_factory=PF._uniaxial_bcs(msh, 2.0, disp))
+    # tissue-level calcium modulus: the test needs damage within the soft-dominated strain ramp
+    ms_t = MaterialSet.baseline(ca_E=P.get("materials.calcium.E_tissue_level").value)
+    state = NonlinearState(md, ms_t, fracture="phasefield", bc_factory=PF._uniaxial_bcs(msh, 2.0, disp))
     ca_dofs = np.unique(state.D.dofmap.list[md.cell_tags.find(TAG_CALCIUM)].ravel())
     soft_only = np.setdiff1d(np.arange(state.d.x.array.size), ca_dofs)
     eps_f = state.ms.eps_f
