@@ -71,9 +71,15 @@ def _pilot_rows() -> dict:
 
     out = {}
     for lid in pilot_ids():
-        part = _load(f"pilot_nonlinear_{lid}")
-        if part is not None:
-            out[lid] = part["rows"]
+        rows = {}
+        names = [f"pilot_nonlinear_{lid}"] + sorted(p.stem for p in RESULTS_DIR.glob(f"pilot_nonlinear_{lid}_*.json"))
+        for name in names:                       # main file first, then part files (union of protocols)
+            part = _load(name)
+            for r in (part or {}).get("rows", []):
+                e = round(r["ca_E_MPa"], 6)
+                rows[e] = {**rows.get(e, {}), **r}
+        if rows:
+            out[lid] = sorted(rows.values(), key=lambda x: x["ca_E_MPa"])
     return out
 
 
