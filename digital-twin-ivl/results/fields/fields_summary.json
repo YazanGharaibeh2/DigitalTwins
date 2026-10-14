@@ -100,5 +100,37 @@
    "onset_matches": true,
    "status_matches": true
   }
+ },
+ "C-A180-T0.2-FRAG": {
+  "ivl": {
+   "status": "ok",
+   "fracture": false,
+   "onset_load": null,
+   "seconds": 38.90693585400001,
+   "file": "results/fields/C-A180-T0.2-FRAG_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "stent_post_ivl": {
+   "status": "ok",
+   "fracture": false,
+   "onset_load": null,
+   "seconds": 231.567659515,
+   "file": "results/fields/C-A180-T0.2-FRAG_stent_post_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "ivl_erosion": {
+   "status": "ok",
+   "fracture": false,
+   "onset_load": null,
+   "seconds": 50.047795552000025,
+   "file": "results/fields/C-A180-T0.2-FRAG_ivl_erosion.npz",
+   "cohort_record": false
+  }
  }
 }
