@@ -636,3 +636,14 @@ def test_erosion_comparator_outcome_uses_its_subset_only(stage_run):
     js = stage_run[0] if isinstance(stage_run, tuple) else stage_run
     ero = js["outcomes"]["ivl_erosion_fracture"]
     assert ero["core"]["n"] <= 12 and "composite" not in ero
+
+
+def test_incremental_exports_per_lesion_predictions(stage_run):
+    js = stage_run[0]
+    inc = js["outcomes"]["ivl_fracture"]["incremental_value"]
+    core = [r for r in inc["lesions"] if r["set"] == "core"]
+    hold = [r for r in inc["lesions"] if r["set"] == "holdout"]
+    assert len(core) == inc["core"]["n"] and len(hold) == inc["holdout"]["n"]
+    y = np.array([r["outcome"] for r in core])
+    auc = R.auc_score(y, np.array([r["p_geometry_loocv"] for r in core]))
+    assert auc == pytest.approx(inc["core"]["loocv"]["auc_b"])

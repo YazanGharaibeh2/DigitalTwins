@@ -758,6 +758,10 @@ def _incremental(col, name, oc, core, hold, cfg, spec_g, spec_gm) -> dict:
                    "geometry_fit": fg.coefficients(), "geometry_mechanics_fit": fgm.coefficients(),
                    "selected_mechanics_full_core": fgm.selected,
                    "loocv_selection_frequency": _selection_frequency(lgm["selected"], len(y))}
+    # per-lesion predictions (figures): out-of-fold on the core set, core-fit models on the hold-out set
+    inc["lesions"] = [{"lesion_id": lid, "set": cfg.derivation_set, "outcome": int(yy), "p_geometry_loocv": float(a),
+                       "p_geometry_mechanics_loocv": float(b)}
+                      for lid, yy, a, b in zip(tc["lesion_id"], y, lg["prob"], lgm["prob"])]
     for lbl, fit, lo in (("geometry", fg, lg), ("geometry+mechanics", fgm, lgm)):
         sc = M.prob_scores(y, lo["prob"])
         col.row(**base, set=cfg.derivation_set, predictor=f"model: {lbl}", **c, direction=1,
@@ -779,6 +783,9 @@ def _incremental(col, name, oc, core, hold, cfg, spec_g, spec_gm) -> dict:
                                cfg.stratified)
     inc["holdout"] = {**ch, "rows_dropped_missing_predictor": int((~mh).sum()),
                       **_paired_scores(yh, pgm, pg, idx3, cfg.level)}
+    inc["lesions"] += [{"lesion_id": lid, "set": cfg.test_set, "outcome": int(yy), "p_geometry_core_fit": float(a),
+                        "p_geometry_mechanics_core_fit": float(b)}
+                       for lid, yy, a, b in zip(th["lesion_id"], yh, pg, pgm)]
     for lbl, prob in (("geometry", pg), ("geometry+mechanics", pgm)):
         sc = M.prob_scores(yh, prob)
         col.row(**base, set=cfg.test_set, predictor=f"model: {lbl}", **ch, direction=1, direction_source="model",
