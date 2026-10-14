@@ -755,9 +755,11 @@ def _release(lock: Path) -> None:
     lock.unlink(missing_ok=True)
 
 
-def _cached_T(run_dir: Path, lid: str, key: str) -> tuple[float | None, str | None]:
+def _cached_T(run_dir: Path, lid: str, key: str, exclude: Path | None = None) -> tuple[float | None, str | None]:
     """T_equivalent of an earlier run of the same lesion with the same transient inputs (or None)."""
     for path in sorted(run_dir.glob("*.json")):
+        if exclude is not None and path == exclude:
+            continue
         rec = _read(path)
         if not rec or rec.get("lesion") != lid:
             continue
@@ -783,8 +785,16 @@ def _do_run(path: Path, lock: Path, head: dict, inputs: ModelInputs, *, resume: 
         try:
             plm, info, md = lesion_mesh(lid)
             rec["mesh"] = {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}
-            T, src = _cached_T(path.parent, lid, transient_key(inputs, md))
-            rec.update(run_model(md, plm, inputs, T=T, T_source=src, n_steps=n_steps, h_ca=h_ca))
+            key = transient_key(inputs, md)
+            own = ((_read(path) or {}).get("transient") or {}) if path.exists() else {}
+            if own.get("source") == "computed" and own.get("key") == key and own.get("T_equivalent") is not None:
+                # retry of this run: keep its own computed transient record (provenance and quality flags)
+                rec.update(run_model(md, plm, inputs, T=float(own["T_equivalent"]), T_source="computed",
+                                     n_steps=n_steps, h_ca=h_ca))
+                rec["transient"] = own
+            else:
+                T, src = _cached_T(path.parent, lid, key, exclude=path)
+                rec.update(run_model(md, plm, inputs, T=T, T_source=src, n_steps=n_steps, h_ca=h_ca))
             errors = [f"{p}: {(rec.get(p) or {}).get('error')}" for p in PROTOCOLS
                       if (rec.get(p) or {}).get("status") == "error"]
             if errors:                        # recorded; resume retries the run

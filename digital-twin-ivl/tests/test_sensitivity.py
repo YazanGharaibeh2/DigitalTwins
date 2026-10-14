@@ -562,6 +562,7 @@ def test_protocol_error_leaves_run_incomplete_and_resume_retries(monkeypatch, an
     assert calls == [None, 0.05]                                           # T_equivalent of the failed run reused
     rec = json.loads(path.read_text())
     assert rec["complete"] and not rec.get("error") and rec["ivl"]["status"] == "ok"
+    assert rec["transient"]["source"] == "computed"                       # own transient record kept
     assert out["n_runs_complete"] == 1 and out["n_runs_error"] == 0
     S.one_at_a_time(["L1"], [S.BASELINE], out_dir=tmp_path)
     assert len(calls) == 2
