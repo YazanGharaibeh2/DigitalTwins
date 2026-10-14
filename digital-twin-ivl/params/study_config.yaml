@@ -213,3 +213,139 @@ metrics:              # Phase 5 predictive metrics (src/stats/, src/drivers/stag
     value: {geometry_model: [ca_arc_total_deg, ca_thickness_max, ca_depth, n_deposits], mechanics_pool: [mechanics]}
     basis: "DESIGN: geometry-only model = penalised logistic regression on the descriptors of the core design factors (arc, thickness, depth, deposit count); geometry + mechanics model = the same descriptors plus the mechanics predictors chosen by the composite rule. Compared by apparent AUC (paired bootstrap with both models refitted in every resample), LOOCV AUC, log-loss and Brier score (paired bootstrap of the out-of-fold predictions) and on the hold-out set (paired bootstrap of the hold-out rows)."
     status: DESIGN
+
+consistency:          # src/drivers/stage_consistency.py: simulated outcomes next to published observations (checks C1-C12). Analyst proposal 2026-10-14, status DESIGN until the PI confirms. Agreement means consistency with a published observation, never a test against patient outcomes.
+  seed_offset: {value: 600, basis: "DESIGN: rng entropy of the consistency stage = design.seed + seed_offset (an offset of its own, distinct from metrics.seed_offset); every bootstrap interval draws from its own stream (dtivl.stats.roc.rng_for, spawn key = CRC32 of 'check|quantity|set'). Bootstrap size, stratification of binary outcomes and interval level are those of the metrics stage (metrics.bootstrap_n, metrics.bootstrap_stratified, metrics.ci_level)", status: DESIGN}
+  sets: {value: [core, holdout], basis: "DESIGN: every lesion-level check is computed on the core set (the designed factorial) and, in a separate row, on the hold-out set (Latin hypercube); the sets are never pooled. Youden cuts are derived on the core set only (as metrics.sets). The cohort geometry check (C12) is one cohort-level row", status: DESIGN}
+  ok_status: {value: {default: [ok], stent_no_ivl: [ok, limited], stent_post_ivl: [ok, limited]}, basis: "DESIGN: protocol runs a check uses, as metrics.outcomes: fracture outcomes from runs with status ok; stent outcomes also from pressure-limited runs (status limited); failed and missing runs are excluded and counted in the row note", status: DESIGN}
+  allow_status: {value: [SECONDARY], basis: "DESIGN: a comparison-only literature row of status SECONDARY (value quoted in later reviews, not seen in the primary source) may be shown next to the model, with its status in the row (C2 thickness cutoff); UNVERIFIED rows are never read", status: DESIGN}
+  min_n: {value: 5, basis: "DESIGN: minimum number of lesions with the model quantity for a check of one set (proportion, distribution or correlation); with fewer the check is not computed and the reason is given (as metrics.min_rows_continuous)", status: DESIGN}
+  min_per_group: {value: 2, basis: "DESIGN: odds ratio (C3) and Youden cut (C1, C2) need at least this many lesions in each morphology group or outcome class (as metrics.min_per_class)", status: DESIGN}
+  direction_rule: {value: {require_ci: true}, basis: "DESIGN: a direction check (Spearman rho against 0, odds ratio against 1) agrees when the point estimate lies on the expected side of the null value and its interval (metrics.ci_level) excludes the null value; partial when only the point estimate does; disagrees otherwise (including a point estimate equal to the null value). A check over several protocols agrees if every computed protocol agrees, disagrees if every one disagrees, and is partial otherwise", status: DESIGN}
+  odds_ratio: {value: {correction: 0.5}, basis: "DESIGN: Haldane-Anscombe correction, 0.5 added to every cell of the 2x2 table whether or not a cell is empty (one estimator in every data state), Woolf (log) interval at metrics.ci_level", status: DESIGN}
+  checks:
+    C1:
+      value:
+        kind: published_observation
+        observation: "larger calcium arc, more calcium fracture (plain balloon angioplasty, OCT; published arc cutoff)"
+        column: ca_arc_total_deg
+        expected_sign: 1
+        protocols: [balloon_10atm, ivl]
+        youden_protocol: balloon_10atm
+        published: [fracture_angle_cutoff_balloon]
+      basis: "DESIGN: direction of the published plain-balloon predictor: Spearman rho of the total calcium arc (cohort descriptor) and the through-thickness fracture indicator under the plain balloon (protocol balloon_10atm, load loads.poba_pressure_atm) and under IVL, per consistency.direction_rule. The core Youden cut of the arc for plain-balloon fracture (dtivl.stats.roc, direction +1) is shown next to the published cutoff, descriptively; it is not part of the agreement (the core arc takes a few design levels)"
+      status: DESIGN
+    C2:
+      value:
+        kind: published_observation
+        observation: "thinner calcium, more calcium fracture (plain balloon angioplasty, OCT; published thickness cutoff)"
+        column: ca_thickness_max
+        expected_sign: -1
+        protocols: [balloon_10atm, ivl]
+        youden_protocol: balloon_10atm
+        published: [fracture_thickness_cutoff_balloon]
+      basis: "DESIGN: as C1 for the maximum calcium thickness (cohort descriptor ca_thickness_max; the descriptor behind the published cutoff is not stated in the parameter row), expected sign -1; the core Youden cut (direction -1) is descriptive"
+      status: DESIGN
+    C3:
+      value:
+        kind: published_observation
+        observation: "calcified nodules fracture less often than sheet calcium under IVL (OCT)"
+        protocol: ivl
+        exposed: [nodule]
+        reference: [superficial_sheet, deep_sheet]
+        expected_sign: -1
+        published: [nodular_calcium_odds_ratio_for_fracture, fracture_rate_calcified_nodule_sites_IVL]
+      basis: "DESIGN: odds ratio of IVL fracture, nodule lesions vs sheet lesions (superficial + deep; fragmented lesions are in neither group), consistency.odds_ratio; agrees per consistency.direction_rule with an odds ratio below 1. The nodule fracture proportion (Wilson interval) is shown next to the published nodule-site rate, descriptively"
+      status: DESIGN
+    C4:
+      value:
+        kind: published_observation
+        observation: "lesion-level calcium fracture rate after IVL (OCT, Disrupt CAD trials)"
+        protocol: ivl
+        rule: band_or_ci_overlap
+        published: [fracture_rate_DisruptCAD_III_OCT, fracture_rate_DisruptCAD_II_OCT]
+        caveat: "Neither set is a clinical case mix: the core set is a designed factorial of arc, thickness and morphology and the hold-out set a Latin hypercube over the same ranges, so the model fracture proportion follows from the design. OCT misses part of the calcium fractures (context row: an ex vivo study of laser, not electrohydraulic, IVL), whereas the model registers every through-thickness damage band of its cross-section."
+        context_rows: [{row: laser_IVL_OCT_modification_rate, cell: range}]
+      basis: "DESIGN: model IVL fracture proportion with a Wilson interval; agrees if the proportion lies within the range spanned by the published rates or its interval overlaps that range, disagrees otherwise (the row note says which condition held). The caveat and its context literature row (verbatim cell, not compared) are copied into the row note"
+      status: DESIGN
+    C5:
+      value:
+        kind: published_observation
+        observation: "a plain balloon (IVL catheter balloon inflated without lithotripsy pulses) does not fracture calcium (human cadaver coronary lesions, histology)"
+        protocol: balloon_10atm
+        rule: zero
+        decision: D8
+        published: [calcium_fracture_rate_POBA_10atm_cadaver_histology]
+      basis: "DESIGN: agrees only if no lesion fractures under the plain balloon (load loads.poba_pressure_atm, the inflation pressure of the same cadaver study), the published proportion being zero, disagrees otherwise; disagreement is expected at the calibrated calcium modulus (decision D8, materials.calcium.E)"
+      status: DESIGN
+    C6:
+      value:
+        kind: model_internal
+        observation: "the IVL balloon inflated alone (no pulses) does not fracture calcium; model-internal surrogate of decision D8, calibrated on the pilot lesions only, not a published observation"
+        protocol: balloon_only
+        rule: zero
+        decision: D8
+        published: []
+      basis: "DESIGN: the D8 calibration surrogate applied to the cohort lesions, which were not used for the calibration; agrees only if no lesion fractures under the IVL balloon alone"
+      status: DESIGN
+    C7:
+      value:
+        kind: published_observation
+        observation: "stent expansion after IVL (OCT, Disrupt CAD III)"
+        protocol: stent_post_ivl
+        column: stent_expansion_pct
+        rule: mean_within_sd
+        published: [stent_expansion_maxCa_site_DisruptCAD_III, stent_expansion_MSA_site_DisruptCAD_III]
+        site: "Model expansion (dtivl.metrics.outcomes.stent_metrics, run by dtivl.solvers.nonlinear.run_stent): stent area after recoil of the single modelled cross-section, msa = pi R_final^2 of the rigid cylinder (the in-stent minimum lumen area of that section), divided by one reference lumen area pi (D_ref/2)^2 with D_ref = geometry.reference_diameter_mm (cohort mean reference lumen diameter, not lesion-specific proximal and distal reference segments). The modelled section is the calcium site by construction (maximum-calcium-site definition) and, being the only section, also the minimum-stent-area section of the modelled segment (MSA-site definition), so both published definitions are shown."
+      basis: "DESIGN: agrees if the model mean lies within published mean +/- 1 SD for every published site definition, partial if for some, disagrees if for none; the row note states the model definition and the expansion cap set by the deployment target (geometry.stent_target_diameter_mm vs geometry.reference_diameter_mm)"
+      status: DESIGN
+    C8:
+      value:
+        kind: calibration_target
+        observation: "acute stent recoil (clinical QCA, cobalt-chromium everolimus-eluting stent)"
+        protocols: [stent_no_ivl, stent_post_ivl]
+        column: acute_recoil_pct
+        rule: mean_within_sd
+        published: [acute_recoil_EES_CoCr_clinical]
+      basis: "DESIGN: calibration target, not an independent check: the stent radial stiffness (results/calibration_stent.json) was identified so that a calcium-free lesion shows the published recoil; the cohort recoil is reported per stent protocol against published mean +/- 1 SD (agrees if every protocol mean lies inside, partial if some, disagrees if none)"
+      status: DESIGN
+    C9:
+      value:
+        kind: model_vs_model
+        observation: "calcium stress magnitude under post-dilation balloon loading in an earlier FE study (in silico)"
+        columns: [pred_sigma1_p99, pred_sigma1_peak_nl]
+        load_column: pred_p_lumen_MPa
+        target_load: loads.poba_pressure_atm
+        factor: 3
+        published: [insilico_postdilation_calcium_stress]
+      basis: "DESIGN: the pre-treatment linear-elastic predictor stresses scaled from their load (pred_p_lumen_MPa) to the study's plain-balloon load (loads.poba_pressure_atm, the load of the published value, converted to MPa by dtivl.params); exact for the linear model. Agrees if the cohort median of every scaled stress lies within a factor 'factor' of the published value, partial if some, disagrees if none; not computed while the published row has no plain-number value"
+      status: DESIGN
+    C10:
+      value:
+        kind: published_observation
+        observation: "number of fractures per lesion and fraction of full-thickness fractures after IVL (pooled OCT analysis)"
+        protocol: ivl
+        count: {published: fractures_per_lesion_pooled_IVL_OCT, rule: mean_within_sd}
+        fraction: {published: full_thickness_fracture_fraction_pooled_IVL_OCT, rule: published_in_ci}
+        published: [fractures_per_lesion_pooled_IVL_OCT, full_thickness_fracture_fraction_pooled_IVL_OCT]
+      basis: "DESIGN: count = ivl_n_fractures over the lesions with IVL fracture (agrees if the mean lies within published mean +/- 1 SD); full-thickness fraction = sum n_fractures / sum (n_fractures + n_partial) over the IVL lesions with any crack component, percentile interval from a lesion-level bootstrap (fractures are nested in lesions; agrees if the published fraction lies inside). Both agree: agrees; one: partial; none: disagrees. Diffuse damage (ivl_diffuse) counts as one through-thickness fracture, as in dtivl.fracture.cracks"
+      status: DESIGN
+    C11:
+      value:
+        kind: published_observation
+        observation: "higher OCT calcium (Fujino) score, lower stent expansion"
+        column: fujino_score
+        protocol: stent_no_ivl
+        outcome: stent_expansion_pct
+        expected_sign: -1
+        published: [fujino_score4_stent_expansion]
+      basis: "DESIGN: direction only: Spearman rho of the cross-sectional Fujino score and stent expansion without IVL, expected sign -1, per consistency.direction_rule; the published top-score group needs the calcium length criterion and does not exist in 2D"
+      status: DESIGN
+    C12:
+      value:
+        kind: geometry_plausibility
+        observation: "implied plaque burden of the constructed lesions vs CTA plaque burden of calcified plaques and calcified nodules"
+        source: cohort_summary
+        published: [plaque_burden_calcified_plaque_CTA, plaque_burden_calcified_nodule_CTA]
+      basis: "DESIGN: values copied from results/cohort_summary.json (plaque_burden_check, plaque_growth), not recomputed: agrees if the reference geometry lies within the CTA range and no grown lesion (D11) exceeds the nodule value, partial if the reference lies within the range but some grown lesions exceed it, disagrees if the reference lies outside; not computed if the CTA values stored there differ from the literature table. One cohort-level row; n lesions = the consistency.sets entries of n_per_set"
+      status: DESIGN

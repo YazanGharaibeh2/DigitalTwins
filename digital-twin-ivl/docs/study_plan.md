@@ -32,6 +32,7 @@ Working title (D6): *In Silico Digital Twins of Calcified Coronary Lesions under
   - lesion-level fracture rates of 67–79% [1,2], noting that OCT under-detects fractures [11,12];
   - expansion ranges [1];
   - calcium stress magnitudes reported for balloon loading [38].
+  - Implementation (Phase 5, `src/drivers/stage_consistency.py`, config section `consistency`, status DESIGN): checks C1–C12, one row per check and set in `results/consistency.csv` and `results/consistency.json`. Besides the items above: no fracture under the plain balloon of the cadaver study (expected disagreement, D8), the D8 balloon-alone criterion (labelled model-internal), acute recoil (labelled a calibration target), fractures per lesion and the full-thickness fraction, the direction of the Fujino-score effect on stent expansion, and the implied plaque burden against CTA (copied from `results/cohort_summary.json`). Each row states the published value as read from the literature table, the criterion, the agreement label (agrees, disagrees, partial, not computed) and the number of lesions; literature cells that are not a plain number are not parsed by hand, so their check is reported as not computed.
 
 **Metrics and statistics (Phase 5).**
 - Candidate predictors: peak and P95 max-principal stress, mean and peak SED, area fraction above thresholds, edge stress-concentration factor, and minimum thickness under high stress.
