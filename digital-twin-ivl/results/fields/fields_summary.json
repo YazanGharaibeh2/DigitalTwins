@@ -33,5 +33,37 @@
    "onset_matches": true,
    "status_matches": true
   }
+ },
+ "C-A180-T0.2-DEEP": {
+  "ivl": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.5260265110995104,
+   "seconds": 309.740869167,
+   "file": "results/fields/C-A180-T0.2-DEEP_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "stent_post_ivl": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.5260265110995104,
+   "seconds": 24.891651456000034,
+   "file": "results/fields/C-A180-T0.2-DEEP_stent_post_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "ivl_erosion": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.44554217036650345,
+   "seconds": 326.892467086,
+   "file": "results/fields/C-A180-T0.2-DEEP_ivl_erosion.npz",
+   "cohort_record": false
+  }
  }
 }
