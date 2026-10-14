@@ -2,8 +2,9 @@
 
 Only the last test runs the outcome model (transient + IVL + balloon alone on a small annulus with a
 calcium sector, reduced increments); everything else checks scenario construction from the config,
-the Morris design, the input mapping, censoring, transient reuse, claims, resume and the analysis on
-synthetic outputs.
+the Morris design, the input mapping and its forwarding to the solvers (recorders in place of the
+solvers), censoring and onset load steps, transient reuse, claims, resume (protocol errors) and the
+analysis on synthetic outputs.
 """
 import ast
 import json
@@ -13,6 +14,7 @@ import re
 import subprocess
 import sys
 from dataclasses import fields
+from types import SimpleNamespace
 
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
@@ -74,8 +76,11 @@ def test_alt_value_parsed_from_range_column():
         P.lit(DENSITY_ROW, "alt")
     q = P.get("materials.density.calcium")
     assert q.value == row.value and q.sens == (row.alt,)
-    for s in ("SD 0.5", "2-5", "IQR 0.1-0.2", "n=47", "47/180", "approx. 50 atm", ""):
-        assert P._parse_alt(s, 1.0) is None
+    for s in ("SD 0.5", "2-5", "IQR 0.1-0.2", "n=47", "47/180", "approx. 50 atm", "",
+              "1450", "96 (score 0-3)", "155 (patients)", "3 (other balloon)", "SD 6 (other FE input)"):
+        assert P._parse_alt(s, 1.0) is None, s                # only a remark marking an alternative value
+    for s, v in (("1450 (other FE input)", 1450), (" 2.5 (alternative value) ", 2.5), ("7 (alt. input)", 7)):
+        assert P._parse_alt(s, 1.0) == v and P._parse_alt(s, 2.0) == 2 * v
     with pytest.raises(ValueError):
         P.lit("calcification_fracture_stress", "alt")       # no single-number range column
 
@@ -268,12 +273,24 @@ def test_censored_onset_and_fracture_flags():
     c = S.censored_onset(_prec(onset=0.2, phase="ivl_unload"))
     assert c == {"value": 0.6, "censored": False, "after_peak": True}
     assert S.censored_onset(_prec()) == {"value": 0.6, "censored": True, "after_peak": False}
-    # failure before the peak without onset: unknown; after the peak: censored at p_top
-    assert S.censored_onset(_prec("failed", failed_phase="ivl_pulse"))["value"] is None
-    assert S.censored_onset(_prec("failed", failed_phase="ivl_unload"))["censored"] is True
-    assert S.censored_onset(_prec("failed"))["censored"] is True            # release step failed
+    # censored only if the protocol ran to its end: a failure before or after the peak without onset is
+    # unknown (the onset could come in the phases that never ran)
+    unknown = {"value": None, "censored": None, "after_peak": None}
+    assert S.censored_onset(_prec("failed", failed_phase="ivl_pulse")) == unknown
+    assert S.censored_onset(_prec("failed", failed_phase="ivl_unload")) == unknown
+    assert S.censored_onset(_prec("failed")) == unknown                     # release step failed
     assert S.censored_onset(_prec("failed", onset=0.45, phase="ivl_pulse", failed_phase="ivl_pulse"))["value"] == 0.45
-    assert S.censored_onset({"status": "error", "error": "x"})["value"] is None
+    assert S.censored_onset(_prec("failed", onset=0.45, phase="ivl_pulse", failed_phase="ivl_unload")) == {
+        "value": 0.45, "censored": False, "after_peak": False}
+    assert S.censored_onset(_prec("failed", onset=0.2, phase="ivl_unload", failed_phase="ivl_unload")) == {
+        "value": 0.6, "censored": False, "after_peak": True}
+    assert S.censored_onset({"status": "error", "error": "x"}) == unknown
+    # failed after the peak: while unloading or at the release step, not in a loading phase
+    assert S.ivl_failed_after_peak(_prec("failed", failed_phase="ivl_unload"))
+    assert S.ivl_failed_after_peak(_prec("failed"))
+    for prec in (_prec(), _prec("failed", failed_phase="ivl_pulse"), _prec("failed", failed_phase="ivl_inflate"),
+                 {"status": "error", "error": "x"}):
+        assert not S.ivl_failed_after_peak(prec)
     # fracture: True once found, False only when decided
     assert S.fracture_flag(_prec("failed", fracture=True, failed_phase="ivl_pulse"), False) is True
     assert S.fracture_flag(_prec(), True) is False
@@ -284,9 +301,51 @@ def test_censored_onset_and_fracture_flags():
            "balloon_only": _prec("failed", p_top=None)}
     o = S.outputs(rec)
     assert o["ivl_fracture"] is True and o["ivl_onset_load"] == 0.5 and o["ivl_onset_censored"] is False
+    assert o["ivl_onset_load_uncensored"] == 0.5 and o["ivl_failed_after_peak"] is False
     assert o["balloon_fracture"] is None and o["balloon_status"] == "failed"
     assert o["T_equivalent"] == 0.05 and o["ivl_p_top"] == 0.6
     assert set(S.MORRIS_OUTPUTS) <= set(o)
+    # IVL failed after the peak: fracture and onset decided only if found by then
+    o = S.outputs({"ivl": _prec("failed", failed_phase="ivl_unload"), "balloon_only": _prec()})
+    assert o["ivl_fracture"] is None and o["ivl_onset_load"] is None and o["ivl_onset_censored"] is None
+    assert o["ivl_onset_load_uncensored"] is None and o["ivl_failed_after_peak"] is True
+    assert o["balloon_fracture"] is False
+    o = S.outputs({"ivl": _prec("failed", onset=0.5, phase="ivl_pulse", fracture=True, failed_phase="ivl_unload")})
+    assert o["ivl_fracture"] is True and o["ivl_onset_load"] == 0.5 and o["ivl_failed_after_peak"] is True
+    o = S.outputs({"ivl": _prec("failed", onset=0.5, phase="ivl_pulse", failed_phase="ivl_unload")})
+    assert o["ivl_fracture"] is None and o["ivl_onset_load"] == 0.5
+    # censored and after-peak values sit at p_top: missing in the uncensored output
+    for prec in (_prec(), _prec(onset=0.2, phase="ivl_unload")):
+        o = S.outputs({"ivl": prec})
+        assert o["ivl_onset_load"] == 0.6 and o["ivl_onset_load_uncensored"] is None
+        assert o["ivl_onset_load_lower"] is None and o["ivl_onset_step"] is None
+
+
+def test_onset_bracket_and_load_step():
+    """Load of the step before the onset and the step size, from the protocol history (same rule as
+    cracks.onset_load); kept in the outputs only for an onset during inflation or pulse."""
+    dc = float(P.raw("fracture.d_crack"))
+    hist = [{"phase": "ivl_inflate", "load": 0.2, "increment": 0.2, "max_d": 0},
+            {"phase": "ivl_inflate", "load": 0.4, "increment": 0.2, "max_d": dc / 2},
+            {"phase": "ivl_pulse", "load": 0.45, "increment": 0.05, "max_d": dc},
+            {"phase": "ivl_pulse", "load": 0.5, "increment": 0.05, "max_d": 1}]
+    br = S.onset_bracket(hist)
+    assert br["load"] == 0.45 and br["phase"] == "ivl_pulse"
+    assert br["lower"] == 0.4 and br["step"] == pytest.approx(0.05)
+    br0 = S.onset_bracket([{**hist[0], "max_d": dc}] + hist[1:])        # onset at the first step: ramp start
+    assert br0["load"] == 0.2 and br0["lower"] == pytest.approx(0.0) and br0["step"] == pytest.approx(0.2)
+    assert S.onset_bracket(hist[:2]) == {"load": None, "phase": None, "lower": None, "step": None}
+    assert S.onset_bracket([]) == {"load": None, "phase": None, "lower": None, "step": None}
+    assert S.onset_bracket(hist, d_crack=dc / 4)["load"] == 0.4
+    ivl = {**_prec(onset=0.45, phase="ivl_pulse"), "onset_bracket": br}
+    o = S.outputs({"ivl": ivl})
+    assert o["ivl_onset_load"] == 0.45 == o["ivl_onset_load_uncensored"]
+    assert o["ivl_onset_load_lower"] == 0.4 and o["ivl_onset_step"] == pytest.approx(0.05)
+    # a bracket of another onset (or none) is not used
+    o = S.outputs({"ivl": {**_prec(onset=0.5, phase="ivl_pulse"), "onset_bracket": br}})
+    assert o["ivl_onset_load_lower"] is None and o["ivl_onset_step"] is None
+    o = S.outputs({"ivl": _prec(onset=0.45, phase="ivl_pulse")})
+    assert o["ivl_onset_step"] is None and o["ivl_onset_load"] == 0.45
 
 
 # ---------------------------------------------------------------------------
@@ -333,6 +392,97 @@ def test_claim_and_stale_locks(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# run_model forwards every input to the solvers (recorders in place of the FE solves)
+# ---------------------------------------------------------------------------
+def test_run_model_forwards_inputs_to_solvers(monkeypatch, annulus):
+    from dtivl.drivers import stage_pilot
+    from dtivl.solvers import nonlinear as NL
+    from dtivl.solvers import transient as TR
+
+    plm, _, md = annulus
+    dc = float(P.raw("fracture.d_crack"))
+    base = S.ModelInputs.baseline()
+    ref, forces = S._sens_values("fracture.driving_force")
+    other_force = next(v for v in forces if v != ref)
+    rho_alt = P.get("materials.density.calcium").sens[0]
+    inputs = base.set(ca_E=2 * base.ms.ca_E, rho_calcium=rho_alt, k_found=10 * base.k_found,
+                      ell_over_h=2 * base.ell_over_h, driving_force=other_force, pulse_scale=base.pulse_scale / 2)
+    for name in ("rho_calcium", "k_found", "ell_over_h", "driving_force", "pulse_scale"):
+        assert getattr(inputs, name) != getattr(base, name), name
+    assert inputs.ms.ca_E != base.ms.ca_E and inputs.densities() != base.densities()
+    calls = {"tf": [], "state": [], "ivl": [], "pressure": []}
+    T_eq = 0.07
+
+    def fake_tf(md_, plm_, ms, densities=None, sound_speeds=None, **kw):
+        calls["tf"].append({"md": md_, "plm": plm_, "ms": ms, "densities": densities, **kw})
+        return {k: T_eq for k in S.TRANSIENT_KEYS}
+
+    class FakeState:
+        def __init__(self, md_, ms=None, **kw):
+            calls["state"].append({"md": md_, "ms": ms, **kw})
+            self.kw = kw
+            self.history = []
+
+    def fake_ivl(state, *, T, pulse_scale=None, n_steps=None, **kw):
+        calls["ivl"].append({"state": state, "T": T, "pulse_scale": pulse_scale, "n_steps": n_steps, **kw})
+        state.history = [{"phase": "ivl_inflate", "load": 0.3, "increment": 0.3, "max_d": 0},
+                         {"phase": "ivl_pulse", "load": 0.5, "increment": 0.2, "max_d": dc}]
+        return SimpleNamespace(state=state, history=state.history, status="ok", summary={"p_top": 0.6})
+
+    def fake_pressure(state, p_target, *, cap_radius=None, n_steps=None, phase="pressure"):
+        calls["pressure"].append({"state": state, "p_target": p_target, "cap_radius": cap_radius,
+                                  "n_steps": n_steps, "phase": phase})
+        return SimpleNamespace(state=state, history=state.history, status="ok", summary={})
+
+    def fake_record(res, md_, plm_, **kw):
+        on = next((h for h in res.state.history if h["max_d"] >= dc), None)
+        return {"status": res.status, "summary": res.summary, "n_steps_unconverged_stagger": 0,
+                "cracks": {"fracture": False, "onset_load": on and on["load"], "onset_phase": on and on["phase"],
+                           "damaged_fraction": 0.0}}
+
+    monkeypatch.setattr(TR, "transfer_factor", fake_tf)
+    monkeypatch.setattr(NL, "NonlinearState", FakeState)
+    monkeypatch.setattr(NL, "run_ivl", fake_ivl)
+    monkeypatch.setattr(NL, "run_pressure", fake_pressure)
+    monkeypatch.setattr(stage_pilot, "_protocol_record", fake_record)
+    rec = S.run_model(md, plm, inputs, n_steps=FAST_STEPS, h_ca=H_CA)
+    # transient: material set, densities (calcium density replaced) and foundation of these inputs
+    (tf,) = calls["tf"]
+    assert tf["md"] is md and tf["plm"] is plm and tf["ms"] is inputs.ms
+    assert tf["densities"] == inputs.densities()
+    assert tf["densities"][TAG_CALCIUM] == rho_alt * TR.KG_PER_M3_TO_N_US2_PER_MM4
+    assert tf["k_found"] == inputs.k_found
+    assert rec["transient"]["source"] == "computed" and rec["transient"]["T_equivalent"] == T_eq
+    assert rec["transient"]["key"] == S.transient_key(inputs, md)
+    # nonlinear states: material set, ell, foundation and driving force of these inputs, one per protocol
+    assert [c["name"] for c in calls["state"]] == ["sens_ivl", "sens_bal"]
+    for c in calls["state"]:
+        assert c["md"] is md and c["ms"] is inputs.ms
+        assert c["ell"] == pytest.approx(inputs.ell_over_h * H_CA) and c["ell"] == inputs.ell(H_CA)
+        assert c["k_found"] == inputs.k_found and c["settings"].driving_force == other_force
+    # IVL: T = T_equivalent, pulse scale and increments; balloon alone: IVL balloon pressure and cap
+    (ivl,) = calls["ivl"]
+    assert ivl["state"].kw["name"] == "sens_ivl" and ivl["T"] == T_eq
+    assert ivl["pulse_scale"] == inputs.pulse_scale and ivl["n_steps"] == FAST_STEPS["ivl"]
+    (bal,) = calls["pressure"]
+    assert bal["state"].kw["name"] == "sens_bal" and bal["phase"] == "balloon_only"
+    assert bal["p_target"] == P.get("loads.ivl_balloon_pressure_atm").value
+    assert bal["cap_radius"] == P.get("geometry.ivl_balloon_diameter_mm").value / 2
+    assert bal["n_steps"] == FAST_STEPS["pressure"]
+    # record: inputs, onset bracket from the IVL history, outputs
+    assert rec["inputs"] == inputs.describe(H_CA)
+    assert rec["ivl"]["onset_bracket"] == {"load": 0.5, "phase": "ivl_pulse", "lower": 0.3,
+                                           "step": pytest.approx(0.2)}
+    o = rec["outputs"]
+    assert o["ivl_onset_load"] == 0.5 and o["ivl_onset_load_lower"] == 0.3 and o["ivl_onset_step"] == pytest.approx(0.2)
+    assert o["ivl_status"] == o["balloon_status"] == "ok" and o["T_equivalent"] == T_eq
+    # a given T: no transient computation, the IVL protocol gets that T
+    rec2 = S.run_model(md, plm, inputs, T=T_eq / 2, T_source="reused from x", n_steps=FAST_STEPS, h_ca=H_CA)
+    assert len(calls["tf"]) == 1 and calls["ivl"][-1]["T"] == T_eq / 2
+    assert rec2["transient"] == {"T_equivalent": T_eq / 2, "source": "reused from x", "key": S.transient_key(inputs, md)}
+
+
+# ---------------------------------------------------------------------------
 # drivers with a stub outcome model (resume, files, analysis)
 # ---------------------------------------------------------------------------
 @pytest.fixture
@@ -374,6 +524,80 @@ def test_one_at_a_time_files_resume_and_reuse(stub_model, tmp_path):
     assert len(stub_model) == 3
     with pytest.raises(KeyError):
         S.one_at_a_time(["L1"], ["no-such-scenario"], out_dir=tmp_path)
+
+
+def test_protocol_error_leaves_run_incomplete_and_resume_retries(monkeypatch, annulus, tmp_path):
+    """A protocol exception is recorded (status 'error') but the run is not complete, so resume runs it
+    again; the transient result of the failed run is reused."""
+    from dtivl.drivers import stage_pilot
+
+    def boom():
+        raise RuntimeError("boom")
+
+    rec = S._run_protocol(boom, None, None)
+    assert rec["status"] == "error" and rec["error"] == "RuntimeError: boom" and rec["seconds"] >= 0
+    res = SimpleNamespace(state=SimpleNamespace(history=[]), history=[], status="ok", summary={})
+    monkeypatch.setattr(stage_pilot, "_protocol_record", lambda r, md, plm: {"status": r.status})
+    assert S._run_protocol(lambda: res, None, None)["onset_bracket"]["load"] is None
+    calls = []
+
+    def fake_run_model(md, plm, inputs, *, T=None, T_source=None, n_steps=None, **kw):
+        calls.append(T)
+        tr = ({"T_equivalent": 0.05, "source": "computed", "key": S.transient_key(inputs, md)} if T is None
+              else {"T_equivalent": T, "source": T_source, "key": S.transient_key(inputs, md)})
+        ivl = {"status": "error", "error": "RuntimeError: boom"} if len(calls) == 1 else _prec()
+        rec = {"inputs": inputs.describe(), "transient": tr, "ivl": ivl, "balloon_only": _prec(p_top=None)}
+        rec["outputs"] = S.outputs(rec)
+        return rec
+
+    monkeypatch.setattr(S, "run_model", fake_run_model)
+    monkeypatch.setattr(S, "lesion_mesh", lambda lid: annulus)
+    out = S.one_at_a_time(["L1"], [S.BASELINE], out_dir=tmp_path)
+    path = tmp_path / S.OAT_RUNS / f"L1__{S.BASELINE}.json"
+    rec = json.loads(path.read_text())
+    assert not rec.get("complete") and rec["ivl"]["status"] == "error"
+    assert "ivl" in rec["error"] and "boom" in rec["error"] and "balloon_only" not in rec["error"]
+    assert out["n_runs_complete"] == 0 and out["n_runs_error"] == 1
+    out = S.one_at_a_time(["L1"], [S.BASELINE], out_dir=tmp_path)          # resume retries it
+    assert calls == [None, 0.05]                                           # T_equivalent of the failed run reused
+    rec = json.loads(path.read_text())
+    assert rec["complete"] and not rec.get("error") and rec["ivl"]["status"] == "ok"
+    assert out["n_runs_complete"] == 1 and out["n_runs_error"] == 0
+    S.one_at_a_time(["L1"], [S.BASELINE], out_dir=tmp_path)
+    assert len(calls) == 2
+
+
+def test_collect_oat_onset_difference_only_for_observed_onsets(tmp_path):
+    """ivl_onset_load_minus_baseline only where both onsets are observed during inflation or pulse; a
+    censored or after-peak value (p_top) is flagged instead."""
+    sc = [s.name for s in S.oat_scenarios()]
+    run_dir = tmp_path / S.OAT_RUNS
+    run_dir.mkdir()
+    ivl = {"observed": _prec(onset=0.4, phase="ivl_pulse"), "observed2": _prec(onset=0.5, phase="ivl_inflate"),
+           "censored": _prec(p_top=0.7), "after_peak": _prec(onset=0.2, phase="ivl_unload", p_top=0.7),
+           "unknown": _prec("failed", failed_phase="ivl_unload")}
+    plan = {"L1": {sc[0]: "observed", sc[1]: "observed2", sc[2]: "censored", sc[3]: "after_peak", sc[4]: "unknown"},
+            "L2": {sc[0]: "censored", sc[1]: "observed", sc[2]: "censored"}}
+    for lid, by in plan.items():
+        for name, kind in by.items():
+            rec = {"lesion": lid, "scenario": name, "complete": True, "transient": {"T_equivalent": 0.05},
+                   "ivl": ivl[kind], "balloon_only": _prec()}
+            rec["outputs"] = S.outputs(rec)
+            (run_dir / f"{S._oat_stem(lid, name)}.json").write_text(json.dumps(rec))
+    runs = S.collect_oat(tmp_path)["runs"]
+    r = runs["L1"]
+    assert r[sc[1]]["ivl_onset_load_minus_baseline"] == pytest.approx(0.1)
+    assert r[sc[1]]["ivl_onset_load_censored_vs_baseline"] is False
+    for name in (sc[2], sc[3]):
+        assert "ivl_onset_load_minus_baseline" not in r[name] and r[name]["ivl_onset_load_censored_vs_baseline"]
+        assert r[name]["ivl_onset_load"] == 0.7                          # the value itself is kept (p_top)
+    assert "ivl_onset_load_minus_baseline" not in r[sc[4]] and "ivl_onset_load_censored_vs_baseline" not in r[sc[4]]
+    assert r[sc[4]]["ivl_fracture"] is None and "ivl_fracture_changed_vs_baseline" not in r[sc[4]]
+    assert r[sc[4]]["ivl_failed_after_peak"] is True
+    assert r[sc[3]]["T_equivalent_minus_baseline"] == 0.0               # other differences unchanged
+    for name in (sc[1], sc[2]):                                         # censored baseline
+        assert "ivl_onset_load_minus_baseline" not in runs["L2"][name]
+        assert runs["L2"][name]["ivl_onset_load_censored_vs_baseline"] is True
 
 
 def test_morris_driver_resume_reuse_and_design_check(stub_model, annulus, tmp_path):
@@ -443,6 +667,122 @@ def test_analyze_on_synthetic_outputs(tmp_path):
     assert res["n_runs_complete"] == len(X) * len(design["lesions"]) - 1
 
 
+def _ee_flag_counts(X, F, k, names, trajectories):
+    """Reference count: elementary effects per factor with a flagged endpoint, trajectories all flagged."""
+    per, n_all = dict.fromkeys(names, 0), 0
+    for t in trajectories:
+        T, Ft = X[t * (k + 1):(t + 1) * (k + 1)], F[t * (k + 1):(t + 1) * (k + 1)]
+        for s in range(k):
+            (c,) = np.nonzero(T[s + 1] != T[s])[0]
+            per[names[c]] += bool(Ft[s] or Ft[s + 1])
+        n_all += bool(Ft.all())
+    return per, n_all
+
+
+def test_analyze_censoring_counts_uncensored_and_load_step(tmp_path):
+    """Censored onsets sit at p_top, which moves with the pulse scale: a lesion without any onset gets a
+    nonzero mu_star for it; analyze counts the flagged elementary effects per input, the uncensored
+    output drops trajectories with a censored or after-peak point, the median load step is reported and
+    failed-after-peak / errored runs are counted."""
+    design = S.morris_design()
+    run_dir = tmp_path / S.MORRIS_RUNS
+    run_dir.mkdir()
+    (run_dir / S.MORRIS_DESIGN).write_text(json.dumps(design))
+    X = np.asarray(design["X"])
+    lo = np.array([b[0] for b in design["problem"]["bounds"]])
+    hi = np.array([b[1] for b in design["problem"]["bounds"]])
+    U = (X - lo) / (hi - lo)
+    k, r = X.shape[1], design["r"]
+    names = design["problem"]["names"]
+    c_pulse = names.index("ivl_pulse_scale")
+    observed, none, mixed, failing = design["lesions"]
+    step = 0.02
+    assert r >= 5
+    # mixed lesion, per trajectory: 0, 1 censored where u0 > 0.5; 2 censored throughout; 3 one onset only
+    # while unloading; the others observed throughout
+    traj = np.arange(len(X)) // (k + 1)
+    censored_rows = ((traj <= 1) & (U[:, 0] > 0.5)) | (traj == 2)
+    after_peak_rows = np.zeros(len(X), bool)
+    after_peak_rows[3 * (k + 1)] = True
+    for lid in design["lesions"]:
+        for i, u in enumerate(U):
+            p_top = 1 + 0.5 * u[c_pulse]
+            out = {"ivl_onset_load": 0.3 + 0.2 * u[0], "ivl_onset_censored": False, "ivl_onset_after_peak": False,
+                   "ivl_onset_step": step, "ivl_fracture": False, "balloon_fracture": False,
+                   "ivl_failed_after_peak": False, "ivl_status": "ok", "balloon_status": "ok"}
+            if lid == none or (lid == mixed and censored_rows[i]):
+                out.update(ivl_onset_load=p_top, ivl_onset_censored=True, ivl_onset_step=None)
+            elif lid == mixed and after_peak_rows[i]:
+                out.update(ivl_onset_load=p_top, ivl_onset_after_peak=True, ivl_onset_step=None)
+            out["ivl_onset_load_uncensored"] = (out["ivl_onset_load"] if not (out["ivl_onset_censored"]
+                                                or out["ivl_onset_after_peak"]) else None)
+            rec = {"lesion": lid, "index": i, "complete": True, "outputs": out}
+            if lid == failing and i == 0:                                # IVL failed after the peak, undecided
+                out.update(ivl_onset_load=None, ivl_onset_load_uncensored=None, ivl_onset_censored=None,
+                           ivl_onset_after_peak=None, ivl_onset_step=None, ivl_fracture=None,
+                           ivl_failed_after_peak=True, ivl_status="failed")
+            if lid == failing and i == k + 1:                            # protocol error: not complete
+                rec = {"lesion": lid, "index": i, "error": "protocol error: ivl: RuntimeError: boom",
+                       "outputs": out}
+            (run_dir / f"{S._morris_stem(lid, i)}.json").write_text(json.dumps(rec))
+    res = S.analyze(tmp_path)
+    assert res["outputs"] == S.MORRIS_OUTPUTS and "ivl_onset_load_uncensored" in res["outputs"]
+    assert res["n_runs_error"] == 1 and res["n_runs_complete"] == len(X) * len(design["lesions"]) - 1
+    note = res["note"]
+    assert "conditional" in note and f"r = {r}" in note and "unstable" in note and "p_top" in note
+    LR = res["lesion_results"]
+    zero = dict.fromkeys(names, 0)
+    # every onset observed: the uncensored output is the onset load; no flagged elementary effects
+    a = LR[observed]["outputs"]
+    assert a["ivl_onset_load_uncensored"]["indices"] == a["ivl_onset_load"]["indices"]
+    assert a["ivl_onset_load"]["median_ivl_onset_step"] == pytest.approx(step)
+    assert a["ivl_onset_load"]["n_ivl_onset_step"] == len(X)
+    for f in S.CENSORING_FLAGS["ivl_onset_load"] + (S.AT_P_TOP,):
+        c = a["ivl_onset_load"]["censoring"][f]
+        assert c["n_points"] == 0 and c["n_ee_with_flagged_endpoint"] == zero
+        assert c["n_trajectories_all_points_flagged"] == 0
+    # no onset at all: censored values at p_top give the pulse scale a mu_star although nothing happens
+    b = LR[none]["outputs"]
+    assert LR[none]["n_ivl_onset_censored"] == len(X)
+    assert b["ivl_onset_load"]["indices"]["ivl_pulse_scale"]["mu_star"] == pytest.approx(0.5)
+    c = b["ivl_onset_load"]["censoring"]["ivl_onset_censored"]
+    assert c["n_points"] == len(X) and c["n_trajectories_all_points_flagged"] == r
+    assert c["n_ee_with_flagged_endpoint"] == dict.fromkeys(names, r)
+    assert b["ivl_onset_load_uncensored"]["indices"] is None and b["ivl_onset_load_uncensored"]["n_trajectories"] == 0
+    assert b["ivl_onset_load"]["median_ivl_onset_step"] is None
+    # mixed: counts per flag and either flag; uncensored drops every trajectory with a flagged point
+    m = LR[mixed]["outputs"]
+    assert 0 < censored_rows.sum() < len(X)
+    any_rows = censored_rows | after_peak_rows
+    for f, F in (("ivl_onset_censored", censored_rows), ("ivl_onset_after_peak", after_peak_rows),
+                 (S.AT_P_TOP, any_rows)):
+        c = m["ivl_onset_load"]["censoring"][f]
+        per, n_all = _ee_flag_counts(X, F, k, names, range(r))
+        assert c["n_points"] == F.sum() and c["n_ee_with_flagged_endpoint"] == per
+        assert c["n_trajectories_all_points_flagged"] == n_all
+    assert m["ivl_onset_load"]["censoring"]["ivl_onset_censored"]["n_trajectories_all_points_flagged"] == 1
+    flagged_t = [t for t in range(r) if any_rows[t * (k + 1):(t + 1) * (k + 1)].any()]
+    assert flagged_t == [0, 1, 2, 3]
+    u = m["ivl_onset_load_uncensored"]
+    assert u["excluded_trajectories"] == flagged_t and u["n_trajectories"] == r - len(flagged_t)
+    assert u["indices"][names[0]]["mu_star"] == pytest.approx(0.2)
+    assert u["indices"]["ivl_pulse_scale"]["mu_star"] == pytest.approx(0.0, abs=1e-12)
+    assert m["ivl_onset_load"]["excluded_trajectories"] == []
+    assert m["ivl_onset_load"]["median_ivl_onset_step"] == pytest.approx(step)
+    assert m["ivl_onset_load"]["n_ivl_onset_step"] == (~any_rows).sum()
+    # failed after the peak (undecided) and errored runs: missing values, counted
+    d = LR[failing]
+    assert d["n_ivl_failed_after_peak"] == 1 and d["n_complete"] == len(X) - 1
+    for name in ("ivl_onset_load", "ivl_fracture"):
+        assert d["outputs"][name]["excluded_trajectories"] == [0, 1]
+    assert d["outputs"]["balloon_fracture"]["excluded_trajectories"] == [1]
+    # pooled: the same counts summed over lesions
+    pc = res["pooled"]["ivl_onset_load"]["censoring"][S.AT_P_TOP]
+    assert pc["n_points"] == sum(LR[lid]["outputs"]["ivl_onset_load"]["censoring"][S.AT_P_TOP]["n_points"]
+                                 for lid in design["lesions"])
+    assert res["pooled"]["ivl_onset_load"]["median_ivl_onset_step"] == pytest.approx(step)
+
+
 # ---------------------------------------------------------------------------
 # one small end-to-end run of the real outcome model
 # ---------------------------------------------------------------------------
@@ -469,6 +809,13 @@ def test_end_to_end_tiny_annulus(monkeypatch, annulus, tmp_path):
     for p in ("ivl", "balloon_only"):
         assert rec[p]["seconds"] > 0 and "n_steps_unconverged_stagger" in rec[p]
         assert 0.0 <= rec[p]["cracks"]["damaged_fraction"] <= 1.0
+        br = rec[p]["onset_bracket"]                                    # same history and rule as onset_load
+        assert br["load"] == rec[p]["cracks"]["onset_load"] and br["phase"] == rec[p]["cracks"]["onset_phase"]
+        if br["load"] is not None:
+            assert br["step"] == pytest.approx(br["load"] - br["lower"])
+    if o["ivl_onset_censored"] is False and not o["ivl_onset_after_peak"]:
+        assert o["ivl_onset_step"] > 0 and o["ivl_onset_load_lower"] < o["ivl_onset_load"]
+    assert o["ivl_failed_after_peak"] is S.ivl_failed_after_peak(rec["ivl"])
     assert rec["inputs"]["ms"]["ca_E"] == base.ms.ca_E and rec["inputs"]["changed"] == []
     assert rec["inputs"]["ell_mm"] == pytest.approx(base.ell(H_CA))
     assert out["runs"]["TINY"][S.BASELINE]["ivl_fracture"] == o["ivl_fracture"]

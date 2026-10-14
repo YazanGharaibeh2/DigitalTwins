@@ -41,6 +41,9 @@ _UNIT_FACTOR = {
 }
 
 _NUM = r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
+#: remark of a single-number range column marking the number as an alternative value of the same
+#: quantity (:func:`_parse_alt`): "alternative", "alt." or "other ... input" (e.g. "other FE input")
+_ALT_REMARK = re.compile(r"\balternative\b|\balt\.|\bother\b.*\binput\b", re.IGNORECASE)
 
 # Status precedence parsed from the notes column of the literature table.
 _STATUS_PATTERNS = [
@@ -69,7 +72,7 @@ class LitParam:
     sd: float | None = None
     lower: float | None = None   # bounds if the value or range is "a-b"
     upper: float | None = None
-    alt: float | None = None     # alternative value if the range column is a single number, e.g. "1450 (other FE input)"
+    alt: float | None = None     # alternative value (_parse_alt), e.g. range column "1450 (other FE input)"
 
 
 @dataclass(frozen=True)
@@ -110,10 +113,14 @@ def _parse_numbers(value_str: str, range_str: str, factor: float):
 
 
 def _parse_alt(range_str: str, factor: float) -> float | None:
-    """Alternative value: a range column holding one number with an optional parenthesised remark
-    (e.g. ``"1450 (other FE input)"``); ``None`` otherwise (SD, bounds, counts, free text)."""
-    m = re.fullmatch(rf"\s*({_NUM})\s*(?:\([^()]*\))?\s*", range_str)
-    return float(m.group(1)) * factor if m else None
+    """Alternative value: a range column holding one number with a parenthesised remark that marks
+    it as an alternative value of the same quantity (:data:`_ALT_REMARK`, e.g. ``"1450 (other FE
+    input)"``); ``None`` otherwise (SD, bounds, counts, free text, a bare number, or a remark naming
+    a subgroup or another quantity such as ``"96 (score 0-3)"``)."""
+    m = re.fullmatch(rf"\s*({_NUM})\s*\(([^()]*)\)\s*", range_str)
+    if not m or not _ALT_REMARK.search(m.group(2)):
+        return None
+    return float(m.group(1)) * factor
 
 
 @functools.lru_cache(maxsize=None)

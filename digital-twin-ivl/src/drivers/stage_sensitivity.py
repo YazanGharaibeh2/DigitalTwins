@@ -11,10 +11,17 @@ balloon-alone protocol (:func:`dtivl.solvers.nonlinear.run_pressure` to
 (:meth:`ModelInputs.baseline`) the run is the ``ivl`` and ``balloon_only``
 protocols of the cohort runs. Recorded per run: through-thickness damage
 yes/no under IVL and under the balloon alone, damage-onset load
-(``cracks.onset_load``), damaged fraction, ``T_equivalent``,
+(``cracks.onset_load``) with the load of the step before onset and the step
+size (:func:`onset_bracket`), damaged fraction, ``T_equivalent``,
 ``n_steps_unconverged_stagger``, protocol status and wall time
 (:func:`outputs`). ``T_equivalent`` is an input of the outcome model and is
-recorded as such; no predictor is computed here.
+recorded as such; no predictor is computed here. An outcome is decided only
+by a protocol that ran to its end (status ``ok``): if the IVL protocol fails
+after its peak load without fracture (or without onset), the IVL fracture
+flag (or the onset load) is unknown (``None``, flag
+``ivl_failed_after_peak``), since it could first appear in the phases that
+never ran. A run is complete only if no protocol raised (status
+``error``); otherwise the record keeps the error and resume retries it.
 
 Inputs (:class:`ModelInputs`)
 -----------------------------
@@ -45,7 +52,9 @@ one input at a time; ``sens`` values equal to the baseline are skipped. The
 baseline itself is the first scenario. Lesions: the pilot lesions
 (:func:`dtivl.drivers.stage_pilot.pilot_ids`). One file per (lesion,
 scenario) in ``results/sensitivity_oat_runs/``; ``results/sensitivity_oat.json``
-collects them (:func:`collect_oat`). With the configuration at the time of
+collects them (:func:`collect_oat`; the IVL onset-load change relative to the
+baseline only where both onsets are observed, flag
+``ivl_onset_load_censored_vs_baseline``). With the configuration at the time of
 writing: 13 scenarios x 3 pilot lesions = 39 runs (:func:`n_oat_runs`).
 
 Morris screening (:func:`morris`, :func:`analyze`)
@@ -63,9 +72,17 @@ literature range of ``calcification_fracture_stretch`` minus 1; IVL pulse
 scale; ``ell_over_h``; log10 perivascular foundation; calcium density (D15);
 soft-tissue ``K/mu``; fibrous modulus. Outputs (:data:`MORRIS_OUTPUTS`): IVL
 damage-onset load, censored at the IVL peak load ``p_top`` without onset
-(the censoring flag is recorded, :func:`censored_onset`), IVL
-through-thickness damage (0/1) and balloon-alone through-thickness damage
-(0/1). Number of model runs = ``r (k + 1) x lesions``; with the
+(the censoring flag is recorded, :func:`censored_onset`), the same load with
+censored and after-peak runs as missing values (``ivl_onset_load_uncensored``:
+only trajectories without such a point), IVL through-thickness damage (0/1)
+and balloon-alone through-thickness damage (0/1). A censored value ``p_top =
+p_bal + T_equivalent x p_peak x pulse_scale`` moves with the pulse scale and
+every input of ``T_equivalent`` although no onset occurs, so
+:func:`analyze` counts per input the elementary effects with a censored (or
+after-peak) endpoint and the trajectories with every point censored. Onset
+loads are quantised to the load increments of the IVL ramps; the median step
+(``ivl_onset_step``) is reported next to the indices. Number of model runs =
+``r (k + 1) x lesions``; with the
 configuration at the time of writing (r = 6, k = 8 inputs, 4 lesions):
 6 x 9 x 4 = 216 runs (:func:`n_morris_runs`), each one transient (unless
 reused) + one IVL + one balloon-alone protocol. One file per sample in
@@ -78,7 +95,11 @@ lesions). SALib computes the elementary effects with the inputs scaled to
 [0, 1], so ``mu_star`` is in output units per normalised input range and
 ranks the inputs over their stated ranges. A trajectory with a missing value
 (protocol error, or a protocol that stopped before the outcome was decided)
-is excluded for that output; the exclusions are listed.
+is excluded for that output; the exclusions are listed. The pooled indices
+concatenate the same ``r`` trajectories once per lesion and SALib's bootstrap
+treats the pooled elementary effects as independent: the pooled
+``mu_star_conf`` is conditional on the ``r`` trajectories, and with the small
+``r`` of the design ``mu_star_conf`` is unstable (stated in the output note).
 
 Workers and resume
 ------------------
@@ -138,10 +159,22 @@ FAILURE_MODE_DECISION = "D5"
 MORRIS_OUTPUTS = {
     "ivl_onset_load": "IVL damage-onset load (MPa, first load with max d >= fracture.d_crack); without onset "
                       "censored at the IVL peak load p_top (flag ivl_onset_censored)",
+    "ivl_onset_load_uncensored": "IVL damage-onset load (MPa) of the runs with an onset during inflation or pulse; "
+                                 "a censored or after-peak run (value p_top) is a missing value, so only "
+                                 "trajectories without such a point enter",
     "ivl_fracture": "IVL through-thickness damage (1 yes, 0 no)",
     "balloon_fracture": "balloon-alone (loads.ivl_balloon_pressure_atm, IVL balloon cap) through-thickness damage "
                         "(1 yes, 0 no)",
 }
+#: Morris output -> per-run flags (keys of :func:`outputs`) whose elementary effects :func:`analyze` counts
+#: per input (the flagged value sits at p_top, which moves with pulse_scale and T_equivalent); the counts
+#: of either flag are reported as :data:`AT_P_TOP`
+CENSORING_FLAGS = {"ivl_onset_load": ("ivl_onset_censored", "ivl_onset_after_peak")}
+AT_P_TOP = "at_p_top"
+#: Morris output -> per-run load-step size at onset (key of :func:`outputs`); median reported by :func:`analyze`
+ONSET_STEPS = {"ivl_onset_load": "ivl_onset_step", "ivl_onset_load_uncensored": "ivl_onset_step"}
+#: protocols of one outcome-model run (keys of the run record)
+PROTOCOLS = ("ivl", "balloon_only")
 #: transient outputs kept in the run records (as in stage_cohort_runs)
 TRANSIENT_KEYS = ("T", "T_equivalent", "sigma1_peak_transient", "sigma1_static", "sigma1_static_equivalent",
                   "t_peak", "peak_at_window_end")
@@ -511,12 +544,15 @@ def lesion_mesh(lid: str):
 
 
 def _run_protocol(fn, md, plm) -> dict:
-    """Run one protocol (``fn`` returns a ProtocolResult); an exception is recorded as status 'error'."""
+    """Run one protocol (``fn`` returns a ProtocolResult); an exception is recorded as status 'error'.
+    The record adds the load steps around the damage onset (``onset_bracket``, :func:`onset_bracket`)."""
     from dtivl.drivers.stage_pilot import _protocol_record
 
     with Timer() as t:
         try:
-            rec = _protocol_record(fn(), md, plm)
+            res = fn()
+            rec = _protocol_record(res, md, plm)
+            rec["onset_bracket"] = onset_bracket(res.state.history)    # same history as cracks.onset_load
         except Exception as exc:              # recorded; the other protocol still runs
             log.exception("protocol failed: %s", exc)
             rec = {"status": "error", "error": f"{type(exc).__name__}: {exc}"}
@@ -576,9 +612,15 @@ def ivl_reached_peak(prec: dict) -> bool:
     return status == "failed" and (prec.get("summary") or {}).get("failed_phase") not in IVL_LOADING_PHASES
 
 
+def ivl_failed_after_peak(prec: dict) -> bool:
+    """True if the IVL protocol failed after reaching p_top (while unloading or at the release step):
+    a fracture or onset not found by then could still appear in the phases that never ran."""
+    return prec.get("status") == "failed" and ivl_reached_peak(prec)
+
+
 def fracture_flag(prec: dict, decided: bool) -> bool | None:
     """Through-thickness damage of a protocol: True once found (damage is irreversible), False only if
-    the protocol ``decided`` it (reached its peak load), else None (unknown)."""
+    the protocol ``decided`` it (ran to its end, status ok), else None (unknown)."""
     f = (prec.get("cracks") or {}).get("fracture")
     if f:
         return True
@@ -587,13 +629,31 @@ def fracture_flag(prec: dict, decided: bool) -> bool | None:
     return None
 
 
+def onset_bracket(history: list, d_crack: float | None = None) -> dict:
+    """Load steps around the damage onset of a protocol history (rule of ``cracks.onset_load``: first
+    step record with ``max_d >= fracture.d_crack``).
+
+    ``load`` and ``phase`` of the onset step, ``lower`` = load of the last step before onset (for the
+    first step of the history: its load minus its increment, the start of the ramp) and ``step`` =
+    ``load - lower`` (the onset load is known to this resolution); all None without onset.
+    """
+    d_crack = float(P.raw("fracture.d_crack")) if d_crack is None else float(d_crack)
+    i = next((j for j, h in enumerate(history) if h.get("max_d", 0) >= d_crack), None)
+    if i is None:
+        return {"load": None, "phase": None, "lower": None, "step": None}
+    on = float(history[i]["load"])
+    lower = float(history[i - 1]["load"]) if i > 0 else on - float(history[i].get("increment") or 0)
+    return {"load": on, "phase": history[i].get("phase"), "lower": lower, "step": on - lower}
+
+
 def censored_onset(prec: dict) -> dict:
     """IVL damage-onset load censored at the IVL peak load ``p_top``.
 
     * onset (``cracks.onset_load``) during inflation or pulse: ``value`` = onset load, ``censored`` False;
     * onset reached only while unloading: ``value`` = ``p_top``, ``censored`` False, ``after_peak`` True;
-    * no onset and the peak reached: ``value`` = ``p_top``, ``censored`` True;
-    * otherwise (error, or failure before the peak without onset): ``value`` None (unknown).
+    * no onset and the protocol ran to its end (status ok): ``value`` = ``p_top``, ``censored`` True;
+    * otherwise (error, or a failure before or after the peak without onset: the onset could still come
+      in the phases that never ran): ``value`` None (unknown).
     """
     c = prec.get("cracks") or {}
     p_top = (prec.get("summary") or {}).get("p_top")
@@ -602,20 +662,35 @@ def censored_onset(prec: dict) -> dict:
         return {"value": float(onset), "censored": False, "after_peak": False}
     if onset is not None and p_top is not None:
         return {"value": float(p_top), "censored": False, "after_peak": True}
-    if p_top is not None and ivl_reached_peak(prec):
+    if p_top is not None and prec.get("status") == "ok":
         return {"value": float(p_top), "censored": True, "after_peak": False}
     return {"value": None, "censored": None, "after_peak": None}
 
 
 def outputs(rec: dict) -> dict:
-    """Per-run outputs of the outcome model (flat dict)."""
+    """Per-run outputs of the outcome model (flat dict).
+
+    ``ivl_onset_load_uncensored``: ``ivl_onset_load`` where the onset is observed during inflation or
+    pulse (neither censored nor after the peak), else None. ``ivl_onset_load_lower`` /
+    ``ivl_onset_step``: load of the step before that onset and the step size (:func:`onset_bracket`),
+    None otherwise. ``ivl_failed_after_peak``: the IVL protocol failed after its peak load
+    (:func:`ivl_failed_after_peak`); a fracture or onset not found by then is None.
+    """
     ivl, bal = rec.get("ivl") or {}, rec.get("balloon_only") or {}
     ci, cb = ivl.get("cracks") or {}, bal.get("cracks") or {}
     on = censored_onset(ivl)
+    observed = on["censored"] is False and on["after_peak"] is False
+    br = ivl.get("onset_bracket") or {}
+    if br.get("load") is None or br.get("load") != ci.get("onset_load"):
+        br = {}
     return {
-        "ivl_fracture": fracture_flag(ivl, ivl_reached_peak(ivl)),
+        "ivl_fracture": fracture_flag(ivl, ivl.get("status") == "ok"),
         "balloon_fracture": fracture_flag(bal, bal.get("status") == "ok"),
         "ivl_onset_load": on["value"], "ivl_onset_censored": on["censored"], "ivl_onset_after_peak": on["after_peak"],
+        "ivl_onset_load_uncensored": on["value"] if observed else None,
+        "ivl_onset_load_lower": br.get("lower") if observed else None,
+        "ivl_onset_step": br.get("step") if observed else None,
+        "ivl_failed_after_peak": ivl_failed_after_peak(ivl),
         "ivl_onset_load_raw": ci.get("onset_load"), "ivl_onset_phase": ci.get("onset_phase"),
         "balloon_onset_load": cb.get("onset_load"),
         "ivl_damaged_fraction": ci.get("damaged_fraction"), "balloon_damaged_fraction": cb.get("damaged_fraction"),
@@ -694,7 +769,8 @@ def _cached_T(run_dir: Path, lid: str, key: str) -> tuple[float | None, str | No
 
 def _do_run(path: Path, lock: Path, head: dict, inputs: ModelInputs, *, resume: bool, n_steps=None,
             h_ca: float | None = None) -> bool:
-    """Claim, run, save one (lesion, scenario/sample); returns True if run here."""
+    """Claim, run, save one (lesion, scenario/sample); returns True if run here. The record is complete
+    only if no protocol raised (status 'error'); otherwise it keeps the error and resume retries it."""
     if resume and _complete(path):
         return False
     if not _claim(lock):
@@ -709,7 +785,12 @@ def _do_run(path: Path, lock: Path, head: dict, inputs: ModelInputs, *, resume: 
             rec["mesh"] = {k: info[k] for k in ("n_nodes", "n_cells", "n_cells_per_tag")}
             T, src = _cached_T(path.parent, lid, transient_key(inputs, md))
             rec.update(run_model(md, plm, inputs, T=T, T_source=src, n_steps=n_steps, h_ca=h_ca))
-            rec["complete"] = True
+            errors = [f"{p}: {(rec.get(p) or {}).get('error')}" for p in PROTOCOLS
+                      if (rec.get(p) or {}).get("status") == "error"]
+            if errors:                        # recorded; resume retries the run
+                rec["error"] = "protocol error: " + "; ".join(errors)
+            else:
+                rec["complete"] = True
         except Exception as exc:              # recorded; resume retries the run
             log.exception("%s failed: %s", path.stem, exc)
             rec["error"] = f"{type(exc).__name__}: {exc}"
@@ -766,11 +847,19 @@ def _oat_row(rec: dict) -> dict:
             "T_source": tr.get("source"), **o}
 
 
+def _onset_observed(row: dict) -> bool:
+    """IVL onset observed during inflation or pulse (neither censored nor after the peak)."""
+    return row.get("ivl_onset_censored") is False and row.get("ivl_onset_after_peak") is False
+
+
 def collect_oat(out_dir: str | Path | None = None) -> dict:
     """Collect the one-at-a-time run files into ``<out_dir>/sensitivity_oat.json``.
 
     Per lesion and scenario the outputs of :func:`outputs`, and the change relative to the
-    lesion's baseline run (fracture flags changed, onset-load difference) where both exist.
+    lesion's baseline run (fracture flags changed, onset-load difference) where both exist. The IVL
+    onset-load difference needs an observed onset in both runs: if either is censored or after the
+    peak (value p_top, which moves with the pulse scale and ``T_equivalent``), no difference is
+    computed and ``ivl_onset_load_censored_vs_baseline`` is True.
     """
     from dtivl.drivers.stage_pilot import pilot_ids
 
@@ -786,8 +875,13 @@ def collect_oat(out_dir: str | Path | None = None) -> dict:
         for k in ("ivl_fracture", "balloon_fracture"):
             if r.get(k) is not None and b.get(k) is not None:
                 r[f"{k}_changed_vs_baseline"] = bool(r[k]) != bool(b[k])
+        observed = _onset_observed(r) and _onset_observed(b)
+        if r.get("ivl_onset_load") is not None and b.get("ivl_onset_load") is not None:
+            r["ivl_onset_load_censored_vs_baseline"] = not observed
         for k in ("ivl_onset_load", "balloon_onset_load", "ivl_damaged_fraction", "balloon_damaged_fraction",
                   "T_equivalent"):
+            if k == "ivl_onset_load" and not observed:
+                continue
             if r.get(k) is not None and b.get(k) is not None:
                 r[f"{k}_minus_baseline"] = r[k] - b[k]
     order = {s.name: i for i, s in enumerate(scen)}
@@ -798,7 +892,10 @@ def collect_oat(out_dir: str | Path | None = None) -> dict:
                        "inputs are unchanged), run_ivl with T = T_equivalent, and the balloon alone "
                        "(run_pressure to loads.ivl_balloon_pressure_atm with the IVL balloon cap), fresh states",
            "outputs": "fracture = through-thickness damage (cracks.fracture); onset = cracks.onset_load (MPa); "
-                      "ivl_onset_load censored at p_top without onset (ivl_onset_censored)",
+                      "ivl_onset_load censored at p_top without onset (ivl_onset_censored); "
+                      "ivl_onset_load_minus_baseline only where both onsets are observed (otherwise "
+                      "ivl_onset_load_censored_vs_baseline True); IVL fracture and onset unknown (null) if the "
+                      "IVL protocol failed after the peak without them (ivl_failed_after_peak)",
            "lesions": lesions,
            "scenarios": [{"name": s.name, "key": s.key, "input": s.input, "value": s.value, "basis": s.basis}
                          for s in scen],
@@ -882,6 +979,10 @@ def _y(rec: dict | None, name: str) -> float:
     return float("nan") if v is None else float(v)
 
 
+def _flag(rec: dict | None, name: str) -> bool:
+    return bool(rec and rec.get("complete") and (rec.get("outputs") or {}).get(name))
+
+
 def _salib(problem: dict, X: np.ndarray, Y: np.ndarray, cfg: dict) -> dict:
     from SALib.analyze import morris as SA
 
@@ -891,24 +992,91 @@ def _salib(problem: dict, X: np.ndarray, Y: np.ndarray, cfg: dict) -> dict:
             for n, name in enumerate(problem["names"])}
 
 
-def _analyze_set(problem, X, Y, k, cfg) -> dict:
-    """Morris indices from the trajectories of (X, Y) without missing values."""
+def _flag_counts(names: list, X: np.ndarray, F: np.ndarray, ok: list, k: int) -> dict:
+    """Over the trajectories ``ok``: flagged points (``F``: per-row bool), elementary effects with a flagged
+    endpoint per factor (the factor changed by that step of the trajectory) and trajectories with every
+    point flagged."""
+    per, n_points, n_all = dict.fromkeys(names, 0), 0, 0
+    for t in ok:
+        rows = slice(t * (k + 1), (t + 1) * (k + 1))
+        Ft = F[rows]
+        moved = np.argmax(np.diff(X[rows], axis=0) != 0, axis=1)
+        for s, c in enumerate(moved):
+            per[names[c]] += int(Ft[s] or Ft[s + 1])
+        n_points += int(Ft.sum())
+        n_all += int(np.all(Ft))
+    return {"n_points": n_points, "n_ee_with_flagged_endpoint": per, "n_trajectories_all_points_flagged": n_all}
+
+
+def _analyze_set(problem, X, Y, k, cfg, flags: dict | None = None, step: np.ndarray | None = None,
+                 step_name: str | None = None) -> dict:
+    """Morris indices from the trajectories of (X, Y) without missing values.
+
+    ``flags`` (flag name -> per-row bool array): :func:`_flag_counts` of each over these trajectories
+    (``censoring``); ``step`` (per-row load step at onset, NaN without): its median over these
+    trajectories (``median_<step_name>``, next to the indices).
+    """
     n_t = len(Y) // (k + 1)
     ok = [t for t in range(n_t) if np.all(np.isfinite(Y[t * (k + 1):(t + 1) * (k + 1)]))]
+    rows = np.concatenate([np.arange(t * (k + 1), (t + 1) * (k + 1)) for t in ok]) if ok else np.zeros(0, int)
     out = {"n_trajectories": len(ok), "excluded_trajectories": [t for t in range(n_t) if t not in ok]}
     if len(ok) < 2:
         out["indices"] = None
         out["note"] = "fewer than 2 complete trajectories"
-        return out
-    rows = np.concatenate([np.arange(t * (k + 1), (t + 1) * (k + 1)) for t in ok])
-    out["indices"] = _salib(problem, X[rows], Y[rows], cfg)
+    else:
+        out["indices"] = _salib(problem, X[rows], Y[rows], cfg)
+    if step is not None:
+        st = step[rows]
+        st = st[np.isfinite(st)]
+        out[f"median_{step_name}"] = float(np.median(st)) if st.size else None
+        out[f"n_{step_name}"] = int(st.size)
+    if flags:
+        out["censoring"] = {f: _flag_counts(problem["names"], X, F, ok, k) for f, F in flags.items()}
     return out
+
+
+def _series(rs: list, name: str) -> dict:
+    """Keyword arguments of :func:`_analyze_set` for output ``name`` over the sample records ``rs``: ``Y``,
+    the per-row censoring flags (:data:`CENSORING_FLAGS`, and :data:`AT_P_TOP` = any of them) and load
+    step at onset (:data:`ONSET_STEPS`)."""
+    kw = {"Y": np.array([_y(r, name) for r in rs])}
+    if name in CENSORING_FLAGS:
+        kw["flags"] = {f: np.array([_flag(r, f) for r in rs], dtype=bool) for f in CENSORING_FLAGS[name]}
+        kw["flags"][AT_P_TOP] = np.any(list(kw["flags"].values()), axis=0)
+    if name in ONSET_STEPS:
+        kw["step"] = np.array([_y(r, ONSET_STEPS[name]) for r in rs])
+        kw["step_name"] = ONSET_STEPS[name]
+    return kw
+
+
+def _morris_note(r: int, n_lesions: int) -> str:
+    return ("elementary effects with inputs scaled to [0, 1] (SALib): mu_star in output units per normalised input "
+            "range; trajectories with a missing output value are excluded for that output (excluded_trajectories). "
+            "Missing: a run that is not complete (a protocol error; resume retries it) or an outcome its protocol "
+            "did not decide: ivl_fracture without fracture and ivl_onset_load without onset if the IVL protocol "
+            "failed, before the peak or after it (n_ivl_failed_after_peak counts the failures after the peak), "
+            "since they could first appear in the phases that never ran. ivl_onset_load: a run without onset "
+            "enters censored at p_top = p_bal + T_equivalent x p_peak x pulse_scale, which moves with "
+            "ivl_pulse_scale and with every input of T_equivalent, so these inputs can get a nonzero mu_star on a "
+            "lesion that never reaches onset; 'censoring' gives per flag (ivl_onset_censored; "
+            "ivl_onset_after_peak = onset only while unloading, value p_top; at_p_top = either) the number of "
+            "flagged points, per input the number of elementary effects with a flagged endpoint and the number of "
+            "trajectories with every point flagged; ivl_onset_load_uncensored sets censored and after-peak runs "
+            "to missing, so only trajectories without such a point enter. Onset loads are known to the load step "
+            "of the IVL ramps (ivl_onset_step = onset load minus ivl_onset_load_lower, the load of the step "
+            "before; it scales with pulse_scale and T_equivalent): median_ivl_onset_step is given next to the "
+            f"indices. Pooled indices concatenate the same {r} trajectories (one sample matrix X shared by the "
+            f"{n_lesions} lesions) once per lesion; SALib's bootstrap treats the pooled elementary effects as "
+            f"independent, so the pooled mu_star_conf is conditional on these {r} trajectories, not a confidence "
+            f"interval over designs; per-lesion mu_star_conf rests on at most {r} elementary effects per input, "
+            f"and with r = {r} mu_star_conf is unstable.")
 
 
 def analyze(out_dir: str | Path | None = None) -> dict:
     """Morris indices (``mu``, ``mu_star``, ``sigma``, ``mu_star_conf``) per input, output and lesion,
     and pooled over lesions (trajectories of all lesions concatenated), from the sample files;
-    writes ``<out_dir>/sensitivity_morris.json``. Uses whatever samples are complete."""
+    writes ``<out_dir>/sensitivity_morris.json``. Uses whatever samples are complete. For the onset
+    loads also the censoring counts per input and the median load step (:func:`_analyze_set`)."""
     out_dir = Path(out_dir) if out_dir is not None else RESULTS_DIR
     run_dir = out_dir / MORRIS_RUNS
     design = _read(run_dir / MORRIS_DESIGN)
@@ -922,10 +1090,11 @@ def analyze(out_dir: str | Path | None = None) -> dict:
     recs = {lid: [_read(run_dir / f"{_morris_stem(lid, i)}.json") for i in range(len(X))] for lid in lesions}
     out = {k_: design[k_] for k_ in ("method", "problem", "inputs", "outputs", "lesions", "r", "pool", "levels",
                                      "seed", "n_runs", "basis")}
+    out["outputs"] = MORRIS_OUTPUTS               # the outputs analysed here (design.json keeps its first run's)
     out["conf_resamples"], out["conf_level"] = cfg["conf_resamples"], cfg["conf_level"]
-    out["note"] = ("elementary effects with inputs scaled to [0, 1] (SALib): mu_star in output units per normalised "
-                   "input range; trajectories with a missing output value are excluded for that output")
+    out["note"] = _morris_note(len(X) // (k + 1), len(lesions))
     out["n_runs_complete"] = sum(bool(r and r.get("complete")) for rs in recs.values() for r in rs)
+    out["n_runs_error"] = sum(bool(r and not r.get("complete") and r.get("error")) for rs in recs.values() for r in rs)
     out["lesion_results"], out["pooled"] = {}, {}
     for lid, rs in recs.items():
         done = [r for r in rs if r and r.get("complete")]
@@ -933,19 +1102,19 @@ def analyze(out_dir: str | Path | None = None) -> dict:
         lres = {"n_complete": len(done),
                 "n_ivl_onset_censored": sum(bool(o.get("ivl_onset_censored")) for o in outs),
                 "n_ivl_onset_after_peak": sum(bool(o.get("ivl_onset_after_peak")) for o in outs),
+                "n_ivl_failed_after_peak": sum(bool(o.get("ivl_failed_after_peak")) for o in outs),
                 "n_status_not_ok": sum(1 for o in outs if o.get("ivl_status") != "ok" or o.get("balloon_status") != "ok"),
                 "n_unconverged_runs": sum(1 for o in outs if (o.get("ivl_unconverged_steps") or 0)
                                           + (o.get("balloon_unconverged_steps") or 0) > 0),
                 "n_cells": sorted({(r.get("mesh") or {}).get("n_cells") for r in done} - {None}),
                 "outputs": {}}
         for name in MORRIS_OUTPUTS:
-            Y = np.array([_y(r, name) for r in rs])
-            lres["outputs"][name] = _analyze_set(problem, X, Y, k, cfg)
+            lres["outputs"][name] = _analyze_set(problem, X, k=k, cfg=cfg, **_series(rs, name))
         out["lesion_results"][lid] = lres
+    Xp = np.concatenate([X for _ in lesions])
+    rs_p = [r for lid in lesions for r in recs[lid]]
     for name in MORRIS_OUTPUTS:
-        Xp = np.concatenate([X for _ in lesions])
-        Yp = np.concatenate([np.array([_y(r, name) for r in recs[lid]]) for lid in lesions])
-        out["pooled"][name] = _analyze_set(problem, Xp, Yp, k, cfg)
+        out["pooled"][name] = _analyze_set(problem, Xp, k=k, cfg=cfg, **_series(rs_p, name))
     _write_atomic(out_dir / MORRIS_JSON, out)
     return out
 

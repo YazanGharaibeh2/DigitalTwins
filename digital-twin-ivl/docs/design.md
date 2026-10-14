@@ -322,3 +322,19 @@ lesions at the baseline modulus with the `"energy"` and `"rankine"` damage
 driving forces, T = the lesion's `T_equivalent`; protocol record, crack
 summary and wall time per run).
 `src/drivers/report_checkpoint2.py` builds `CHECKPOINT_2.md` from the result files.
+
+Sensitivity stage (`src/drivers/stage_sensitivity.py`; Checkpoint 2: D5, D9,
+D10, D15). One-at-a-time: `results/sensitivity_oat_runs/<lesion>__<scenario>.json`
+(one run record per pilot lesion and scenario) and `results/sensitivity_oat.json`
+(`collect_oat`: outputs per run and the change relative to the lesion's
+baseline run; the IVL onset-load difference only where both onsets are
+observed, otherwise `ivl_onset_load_censored_vs_baseline`). Morris:
+`results/sensitivity_morris_runs/<lesion>_<i>.json` (`i` = row of the sample
+matrix, zero-padded), `results/sensitivity_morris_runs/design.json` (problem,
+factors, seed and sample matrix, checked on every resume) and
+`results/sensitivity_morris.json` (`analyze`: `mu`, `mu_star`, `sigma`,
+`mu_star_conf` per input, output and lesion and pooled over lesions, excluded
+trajectories, censoring counts per input, median onset load step, note).
+Worker lock files are in `locks/` under each run directory. A run record is
+`complete` only if no protocol raised (status `error`); resume runs the
+others again.
