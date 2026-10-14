@@ -1,0 +1,203 @@
+{
+ "design": {
+  "cross_sections": [
+   "C-A180-T0.4-SUP"
+  ],
+  "lengths_mm": [
+   1.0,
+   3.0,
+   5.0
+  ],
+  "h_ca": 0.15,
+  "h_soft": 0.4,
+  "h_axial": 0.5,
+  "h_axial_margin": 1.0
+ },
+ "ca_E_MPa": 365.006198,
+ "ell_mm": 0.3,
+ "runs": {
+  "C-A180-T0.4-SUP|2d": {
+   "status": "onset",
+   "onset": {
+    "p": 0.6503241582732351,
+    "phase": "ivl_pulse",
+    "p_previous": 0.6196961384890807,
+    "cracks": {
+     "fracture": true,
+     "n_fractures": 1,
+     "n_partial": 0,
+     "diffuse": true,
+     "damaged_fraction": 1.0,
+     "max_depth_frac": 1.0,
+     "pattern": [
+      "diffuse"
+     ]
+    }
+   },
+   "steps": [
+    {
+     "phase": "ivl_inflate",
+     "load": 0.04053,
+     "max_d": 0.0,
+     "lumen_area": 2.29815040869245,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.08106,
+     "max_d": 0.0,
+     "lumen_area": 2.391468104059288,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.12159,
+     "max_d": 0.0,
+     "lumen_area": 2.493677753327226,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.16212,
+     "max_d": 0.0,
+     "lumen_area": 2.6063364499388793,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.20265,
+     "max_d": 0.0,
+     "lumen_area": 2.7313742506746896,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.24318,
+     "max_d": 0.0,
+     "lumen_area": 2.8712101465494118,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.28371,
+     "max_d": 0.0,
+     "lumen_area": 3.028899443735514,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.32424,
+     "max_d": 0.0,
+     "lumen_area": 3.208304325589378,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.36477,
+     "max_d": 0.0,
+     "lumen_area": 3.414249295850334,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_inflate",
+     "load": 0.4053,
+     "max_d": 0.0,
+     "lumen_area": 3.652554609360925,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.4359280197841544,
+     "max_d": 0.0,
+     "lumen_area": 3.8580554255054422,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.46655603956830877,
+     "max_d": 0.00012664510976734936,
+     "lumen_area": 4.088481824057469,
+     "stagger_its": 1,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.4971840593524632,
+     "max_d": 0.005304382211308464,
+     "lumen_area": 4.346271021715838,
+     "stagger_its": 2,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.5278120791366175,
+     "max_d": 0.011954925711862185,
+     "lumen_area": 4.632819990763184,
+     "stagger_its": 2,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.558440098920772,
+     "max_d": 0.032734290774325846,
+     "lumen_area": 4.9493833771560345,
+     "stagger_its": 3,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.5890681187049264,
+     "max_d": 0.06571131992143393,
+     "lumen_area": 5.297158061521876,
+     "stagger_its": 4,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.6196961384890807,
+     "max_d": 0.13363075378452505,
+     "lumen_area": 5.678638330464307,
+     "stagger_its": 8,
+     "stagger_converged": true
+    },
+    {
+     "phase": "ivl_pulse",
+     "load": 0.6503241582732351,
+     "max_d": 0.9990646690086794,
+     "lumen_area": 7.9966566423459495,
+     "stagger_its": 37,
+     "stagger_converged": true
+    }
+   ],
+   "n_steps_unconverged_stagger": 0,
+   "seconds": 41.745680032999985,
+   "lesion": "C-A180-T0.4-SUP",
+   "model": "2d",
+   "length_mm": null,
+   "p_top": 0.7115801978415439,
+   "fujino_score": 0,
+   "mesh": {
+    "n_nodes": 812,
+    "n_cells": 1456,
+    "n_cells_per_tag": {
+     "1": 522,
+     "2": 653,
+     "4": 281
+    }
+   },
+   "n_layers": null
+  }
+ },
+ "summary": {}
+}
