@@ -31,6 +31,12 @@ PROTOCOLS = ("physiological", "balloon_only", "balloon_10atm", "ivl", "stent_pos
 
 
 # =========================================================================== synthetic cohort
+def _p_top(T):
+    """Peak IVL load of a run with load factor ``T`` (as dtivl.solvers.nonlinear.run_ivl)."""
+    return (P.get("loads.ivl_balloon_pressure_atm").value
+            + np.asarray(T) * P.get("loads.ivl_peak_pressure_MPa").value * P.get("loads.ivl_pulse_scale").value)
+
+
 def synthetic_cohort(n_hold: int = 24, seed: int = SEED, leak_T: bool = True) -> pd.DataFrame:
     """Per-lesion table shaped like cohort_outcomes.csv: 48 core lesions (factorial) + ``n_hold`` hold-out lesions.
 
@@ -83,10 +89,12 @@ def synthetic_cohort(n_hold: int = 24, seed: int = SEED, leak_T: bool = True) ->
     if leak_T:
         T = np.where(frac, 0.2 + T, T)
     df["ivl_load_T"], df["ivl_load_T_equivalent"] = 0.9 * T, T
+    df["ivl_p_top"] = _p_top(T)                              # as stored by the IVL run (summary.p_top)
     for p in PROTOCOLS:
         df[f"{p}_status"] = "ok"
     df["ivl_fracture"] = frac
     df["ivl_onset"] = np.where(frac, 0.45 + 0.2 * np.exp(-latent), np.nan)
+    df["ivl_onset_phase"] = np.where(frac, "ivl_pulse", None)
     df["physiological_fracture"] = False
     df["balloon_only_fracture"] = False                      # single class (as for the calibrated modulus)
     df["balloon_10atm_fracture"] = latent > np.quantile(latent, 0.4)
@@ -133,6 +141,10 @@ def test_youden_separable_and_midpoint():
     assert (yd["sens"], yd["spec"], yd["j"]) == (1.0, 1.0, 1.0)
     r = R.roc_analysis(y, -x, -1, n_boot=50, rng=R.rng_for(SEED, "t"), level=0.95)
     assert r["threshold"] == pytest.approx(-4.0) and r["auc"] == 1.0
+    assert r["auc_ci_lo"] == r["auc_ci_hi"] == 1.0 and r["auc_ci_degenerate"]   # perfect separation: flagged
+    xo = np.array([1.0, 4.0, 3.0, 2.0, 8.0])
+    assert not R.roc_analysis(y, xo, 1, n_boot=50, rng=R.rng_for(SEED, "t"), level=0.95)["auc_ci_degenerate"]
+    assert R.ci_degenerate([0.7, 0.7, np.nan], 0.7) and not R.ci_degenerate([np.nan], 1.0)
     assert R.classify(-x, r["threshold"], -1).tolist() == [0, 0, 0, 1, 1]
     assert math.isnan(R.youden(y, np.ones(5))["cut"])       # constant predictor: no threshold
 
@@ -211,14 +223,37 @@ def test_selection_rule_skips_redundant_constant_and_missing():
     assert strict == ["x1"]                                  # below the minimum discrimination: not taken
 
 
+def test_selection_ranks_by_the_oriented_auc():
+    X, y = _toy()                                            # x3 = -y + noise: AUC < 0.5
+    kw = {"max_predictors": 3, "max_abs_spearman": 0.8, "min_discrimination": 0.6}
+    assert "x3" in M.select_predictors(X, y, ["x1", "x3"], **kw)                         # "core": sign from the data
+    assert "x3" in M.select_predictors(X, y, ["x1", "x3"], directions={"x3": -1}, **kw)
+    assert M.select_predictors(X, y, ["x1", "x3"], directions={"x1": 1, "x3": 1}, **kw) == ["x1"]   # sign-reversed
+    assert M.select_predictors(X, y, ["x1"], directions={"x1": -1}, **kw) == []
+    with pytest.raises(ValueError, match="directions"):
+        M.select_predictors(X, y, ["x1"], directions={"x1": 2}, **kw)
+    spec = M.ModelSpec("t", pool=("x1", "x3"), max_predictors=2, max_abs_spearman=0.8, min_discrimination=0.6,
+                       directions=(("x1", 1), ("x3", 1)))
+    assert M.fit_spec(spec, X, y).selected == ["x1"]
+    assert all(s == ["x1"] for s in M.loocv_predict(spec, X, y)["selected"])
+
+
 def test_fit_and_loocv_do_not_use_the_left_out_outcome():
     X, y = _toy()
     spec = M.ModelSpec("t", pool=tuple(X.columns), max_predictors=2, max_abs_spearman=0.8, C=1.0)
     lo = M.loocv_predict(spec, X, y)
-    y2 = y.copy()
-    y2[0] = 1 - y2[0]
-    lo2 = M.loocv_predict(spec, X, y2)
-    assert lo2["prob"][0] == pytest.approx(lo["prob"][0])    # row 0's prediction ignores y[0]
+    for i in (0, 7, 23):                     # (c) flip y[i]: fold i's prediction, cut and class unchanged
+        y2 = y.copy()
+        y2[i] = 1 - y2[i]
+        lo2 = M.loocv_predict(spec, X, y2)
+        assert lo2["prob"][i] == pytest.approx(lo["prob"][i])
+        assert lo2["threshold"][i] == lo["threshold"][i] and lo2["classified"][i] == lo["classified"][i]
+        assert not np.allclose(np.delete(lo2["threshold"], i), np.delete(lo["threshold"], i))
+    # the fold cut is the Youden cut of the fold model's fitted probabilities on its training rows
+    m = np.arange(len(y)) != 3
+    fold = M.fit_spec(spec, X[m], y[m])
+    assert lo["threshold"][3] == pytest.approx(R.youden(y[m], fold.predict_proba(X[m]))["cut"])
+    assert lo["classified"][3] == int(lo["prob"][3] >= lo["threshold"][3])
     fit = M.fit_spec(spec, X, y)
     co = fit.coefficients()
     z = sum(co["coef_per_sd"][k] * (X[k] - co["mean"][k]) / co["sd"][k] for k in fit.predictors) + co["intercept"]
@@ -259,7 +294,7 @@ def test_metrics_config_entries_are_design():
 
 
 @pytest.mark.parametrize("bad", ["ivl_load_T_equivalent", "ivl_load_T", "ivl_fracture", "stent_no_ivl_msa",
-                                 "pred_p_lumen_MPa"])
+                                 "pred_p_lumen_MPa", "ivl_p_top"])
 def test_forbidden_predictors_are_refused(bad):
     c = S.load_config()
     groups = {**c.groups, "geometry": c.groups["geometry"] + [bad]}
@@ -267,17 +302,96 @@ def test_forbidden_predictors_are_refused(bad):
         S.check_predictors(dataclasses.replace(c, groups=groups), synthetic_cohort(n_hold=0))
 
 
+def test_aggregate_row_exports_the_stored_peak_load():
+    from dtivl.drivers.stage_cohort_runs import _flat
+
+    T = 0.05
+    ivl = {"status": "ok", "summary": {"T": T, "p_top": float(_p_top(T))},
+           "cracks": {"fracture": False, "onset_load": None, "onset_phase": None}}
+    row = _flat({"lesion": "C-X", "ca_E_MPa": 1.0, "transient": {"T_equivalent": T},
+                 "protocols": {"ivl": ivl, "balloon_only": {"status": "ok", "summary": {"p_target": 0.4}}}})
+    assert row["ivl_p_top"] == ivl["summary"]["p_top"] and "balloon_only_p_top" not in row
+    assert row["ivl_onset"] is None and row["ivl_onset_phase"] is None
+
+
+def _onset_oc():
+    return next(o for o in S.load_config().outcomes if o["kind"] == "censored")
+
+
 def test_censoring_value_is_peak_ivl_pressure():
     df = synthetic_cohort(n_hold=0)
-    oc = next(o for o in S.load_config().outcomes if o["kind"] == "censored")
-    t, excl = S._outcome_table(df, oc, S.load_config())
+    oc, cfg = _onset_oc(), S.load_config()
+    assert oc["event"] == S.EVENT_ONSET_RECORDED
+    df.loc[0, "ivl_p_top"] += 1e-12                          # stored value used (within the check tolerance)
+    t, excl = S._outcome_table(df, oc, cfg)
     cens = t[t["_event"] == 0]
-    expect = (P.get("loads.ivl_balloon_pressure_atm").value + cens["ivl_load_T_equivalent"]
-              * P.get("loads.ivl_peak_pressure_MPa").value * P.get("loads.ivl_pulse_scale").value)
-    assert np.allclose(cens["_value"], expect)
+    assert np.array_equal(cens["_value"], cens["ivl_p_top"])
+    assert np.allclose(cens["_value"], _p_top(cens["ivl_load_T_equivalent"]))
+    assert (cens["_censor_source"] == "ivl_p_top").all()
     ev = t[t["_event"] == 1]
     assert np.allclose(ev["_value"], ev["ivl_onset"])
     assert excl["status_not_ok"] == {"failed": 1}
+    # a stored peak load that disagrees with the configured loads is refused
+    bad = df.copy()
+    bad.loc[1, "ivl_p_top"] += 1e-3
+    with pytest.raises(ValueError, match="ivl_p_top differs"):
+        S._outcome_table(bad, oc, cfg)
+    # without ivl_p_top (older tables) the configured load is used and the summary says so
+    old = df.drop(columns="ivl_p_top")
+    t2, _ = S._outcome_table(old, oc, cfg)
+    c2 = t2[t2["_event"] == 0]
+    assert np.allclose(c2["_value"], _p_top(c2["ivl_load_T_equivalent"]))
+    assert (c2["_censor_source"] == "configured load (ivl_p_top absent)").all()
+    assert "ivl_p_top absent" in S._censor_summary(t2)["note"] and "note" not in S._censor_summary(t)
+
+
+def test_onset_event_is_the_recorded_onset():
+    """(a) partial crack: onset without through-thickness damage is an event at its onset load, counted."""
+    df = synthetic_cohort(n_hold=0)
+    oc, cfg = _onset_oc(), S.load_config(n_boot=20)
+    no_frac = df.index[(df["ivl_status"] == "ok") & ~df["ivl_fracture"]]
+    i, j, k = no_frac[:3]
+    df.loc[i, "ivl_onset"] = 0.5 * (P.get("loads.ivl_balloon_pressure_atm").value + df.loc[i, "ivl_p_top"])
+    df.loc[i, "ivl_onset_phase"] = "ivl_pulse"               # partial crack: local onset, no through-thickness damage
+    df.loc[j, "ivl_onset"] = 0.9 * df.loc[j, "ivl_p_top"]
+    df.loc[j, "ivl_onset_phase"] = "ivl_unload"              # onset after the peak: event at the peak load
+    frac = df.index[df["ivl_fracture"] & (df["ivl_status"] == "ok")][0]
+    df.loc[frac, ["ivl_onset", "ivl_onset_phase"]] = [np.nan, None]   # inconsistent record: excluded
+    t, excl = S._outcome_table(df, oc, cfg)
+    assert t.loc[i, "_event"] == 1 and t.loc[i, "_value"] == df.loc[i, "ivl_onset"] < df.loc[i, "ivl_p_top"]
+    assert t.loc[j, "_event"] == 1 and t.loc[j, "_value"] == df.loc[j, "ivl_p_top"] and t.loc[j, "_after_peak"]
+    assert t.loc[k, "_event"] == 0 and t.loc[k, "_value"] == df.loc[k, "ivl_p_top"]
+    assert frac not in t.index and excl["through_thickness_without_onset"] == 1
+    assert excl["missing_outcome"] == 1
+    col = S._Collector()
+    res = S.analyse_ranked(col, oc["name"], oc, df, cfg, None)
+    assert res["core"]["onset_without_through_thickness"] == 2  # i and j: kept as events, counted
+    assert res["core"]["onset_after_peak"] == 1
+    assert res["core"]["n_events"] == int(df.loc[df["ivl_status"] == "ok", "ivl_onset"].notna().sum())
+    rk = res["ranking"]
+    assert [r["c_index"] for r in rk] == sorted((r["c_index"] for r in rk), reverse=True)
+    core_dir = {p for p, _ in cfg.candidates if cfg.direction(p) == "core"}
+    assert {r["predictor"] for r in rk if r["direction_set_on_core"]} == core_dir & {r["predictor"] for r in rk}
+
+
+def test_continuous_outcome_has_no_a_priori_direction():
+    """Stent expansion: C of the raw predictor, observed sign, max(C, 1 - C) ranking, Spearman on the raw x."""
+    df = synthetic_cohort(n_hold=12)                         # expansion falls with the calcium thickness
+    cfg = S.load_config(n_boot=20)
+    oc = next(o for o in cfg.outcomes if o["name"] == "stent_no_ivl_expansion")
+    col = S._Collector()
+    res = S.analyse_ranked(col, oc["name"], oc, df, cfg, None)
+    assert "exploratory" in res and "higher predictor has the higher outcome" in res["convention"]
+    th = res["predictors"]["ca_thickness_max"]
+    assert th["c_index"] < 0.5 and th["observed_sign"] == -1 and th["spearman"] < 0
+    assert th["discrimination"] == pytest.approx(1 - th["c_index"]) and th["direction_source"] == "none"
+    assert res["ranking"][0]["predictor"] in ("ca_thickness_max", "pred_min_thickness_high_stress")
+    disc = [r["discrimination"] for r in res["ranking"]]
+    assert disc == sorted(disc, reverse=True) and min(disc) >= 0.5
+    rows = pd.DataFrame(col.rows)
+    h = rows[(rows.set == "holdout") & (rows.predictor == "ca_thickness_max")].iloc[0]
+    assert h["discrimination"] == pytest.approx(1 - h["c_index"])   # oriented by the core sign
+    assert rows[rows.set == "core"]["direction"].isna().all()
 
 
 # =========================================================================== stage end to end
@@ -319,6 +433,17 @@ def test_stage_outputs(stage_run):
     assert js["outcomes"]["stent_post_ivl_expansion"]["excluded"]["status_not_ok"] == {"not run": 1}
     on = roc[(roc.outcome == "ivl_onset") & (roc.set == "core") & roc.c_index.notna()]
     assert ((on.c_index >= 0) & (on.c_index <= 1)).all() and comp["name"] in set(on.predictor)
+    # constant predictor: AUC computed (all scores tied), never typed
+    const = roc[(roc.outcome == "ivl_fracture") & (roc.set == "core") & (roc.predictor == "pred_frac_eps_gt_epsf")]
+    assert const.auc.iloc[0] == R.auc_score([0, 1], [0.0, 0.0]) and "constant" in const.note.iloc[0]
+    # composite: oriented selection, sign conflicts reported, LOOCV interval labelled
+    cfg = S.load_config()
+    assert comp["selection_directions"] == {c: cfg.direction(c) for c in comp["pool"]}
+    coef = comp["model"]["coef_per_sd"]
+    conflict = {c["predictor"] for c in comp["coefficient_sign_opposes_direction"]}
+    assert conflict == {p for p in comp["selected"] if coef[p] * cfg.direction(p) < 0}
+    assert comp["core"]["loocv_auc_ci_method"] == S.OOF_CI_METHOD
+    assert isinstance(comp["core"]["loocv_auc_ci_degenerate"], bool)
     # wording rule
     for f in ("metrics_roc.csv", "metrics_summary.json"):
         assert "validat" not in (out / f).read_text().lower()
@@ -350,11 +475,104 @@ def test_holdout_outcomes_do_not_change_core_results(stage_run, tmp_path):
     assert ja["selected"] == jb["selected"] and ja["model"] == jb["model"]
 
 
+def test_composite_loocv_threshold_is_derived_in_fold(stage_run):
+    """(c) LOOCV classification of the composite: cut re-derived in each fold; flipping y[i] leaves fold i unchanged."""
+    summary, _ = stage_run
+    comp = summary["outcomes"]["ivl_fracture"]["composite"]
+    les = [r for r in comp["lesions"] if r["set"] == "core"]
+    y = np.array([r["outcome"] for r in les])
+    assert all(r["loocv_class"] == int(r["p_loocv"] >= r["loocv_threshold_p"]) for r in les)
+    perf = R.threshold_performance(y, np.array([r["loocv_class"] for r in les]), 0.95)
+    assert (comp["core"]["loocv_sens"], comp["core"]["loocv_spec"]) == (perf["sens"], perf["spec"])
+    cfg = S.load_config(n_boot=N_BOOT)
+    t, _ = S._outcome_table(synthetic_cohort(), cfg.outcomes[0], cfg)
+    core = t[t["set"] == "core"]
+    spec = S._specs(cfg, t.columns)["composite"]
+    X, yy = S._model_matrix(core, spec.pool), core["_y"].to_numpy(int)
+    lo = M.loocv_predict(spec, X, yy)
+    assert np.allclose(lo["threshold"], [r["loocv_threshold_p"] for r in les])
+    for i in (0, 11, 30):
+        y2 = yy.copy()
+        y2[i] = 1 - y2[i]
+        lo2 = M.loocv_predict(spec, X, y2)
+        assert (lo2["prob"][i], lo2["threshold"][i], lo2["classified"][i]) == \
+            (lo["prob"][i], lo["threshold"][i], lo["classified"][i])
+
+
+def test_holdout_covariates_do_not_change_core_results(stage_run, tmp_path):
+    """(b) perturbing every hold-out predictor value changes hold-out rows only."""
+    _, out = stage_run
+    df = synthetic_cohort()
+    h = (df["set"] == "holdout").to_numpy()
+    rng = np.random.default_rng(SEED + 1)
+    for c, _ in S.load_config().candidates:
+        df[c] = df[c].astype(float)
+        df.loc[h, c] = df.loc[h, c] * rng.uniform(0.5, 1.5, h.sum()) + rng.normal(0, 1, h.sum())
+    p = tmp_path / "perturbed.csv"
+    df.to_csv(p, index=False)
+    S.run(p, tmp_path, n_boot=N_BOOT)
+    a, b = pd.read_csv(out / "metrics_roc.csv"), pd.read_csv(tmp_path / "metrics_roc.csv")
+    pd.testing.assert_frame_equal(a[a.set == "core"].reset_index(drop=True), b[b.set == "core"].reset_index(drop=True))
+    assert not a[a.set == "holdout"].reset_index(drop=True).equals(b[b.set == "holdout"].reset_index(drop=True))
+    pd.testing.assert_frame_equal(pd.read_csv(out / "metrics_roc_curves.csv"),
+                                  pd.read_csv(tmp_path / "metrics_roc_curves.csv"))
+    ja = json.loads((out / "metrics_summary.json").read_text())["outcomes"]["ivl_fracture"]
+    jb = json.loads((tmp_path / "metrics_summary.json").read_text())["outcomes"]["ivl_fracture"]
+    for k in ("selected", "model", "core", "coefficient_sign_opposes_direction"):
+        assert ja["composite"][k] == jb["composite"][k], k
+    assert ja["incremental_value"]["core"] == jb["incremental_value"]["core"]
+    assert ja["univariable_ranking"] == jb["univariable_ranking"]
+
+
+def _names_used(js: dict) -> set:
+    """Every predictor name the summary ranks, selects or fits (composite / model labels excluded)."""
+    names = set()
+    for o in js["outcomes"].values():
+        names |= set(o.get("univariable", {})) | set(o.get("predictors", {}))
+        names |= {r["predictor"] for r in o.get("univariable_ranking", []) + o.get("ranking", [])}
+        comp = o.get("composite")
+        if comp:
+            names |= set(comp["pool"]) | set(comp["selected"]) | set(comp["model"]["coef_per_sd"])
+            names |= set(comp["core"]["loocv_selection_frequency"])
+        inc = o.get("incremental_value", {}).get("core", {})
+        if "geometry_mechanics_fit" in inc:
+            names |= set(inc["geometry_mechanics_fit"]["coef_per_sd"]) | set(inc["loocv_selection_frequency"])
+            names |= set(inc["apparent_refit_bootstrap"]["selection_frequency_a"])
+        best = o.get("fujino_comparison", {}).get("best_single_mechanics")
+        names |= {best} if best else set()
+    return names
+
+
+def test_only_candidates_are_used_as_predictors(stage_run):
+    """(d) no numeric column outside metrics.candidates is ranked, selected or fitted (traps: T_equivalent, p_top)."""
+    _, out = stage_run
+    cfg = S.load_config()
+    cand = {c for c, _ in cfg.candidates}
+    df = synthetic_cohort()
+    others = {c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])} - cand
+    assert {"ivl_load_T_equivalent", "ivl_p_top", "ca_arc_deg", "ca_thickness", "pred_seconds"} <= others
+    roc = pd.read_csv(out / "metrics_roc.csv")
+    used = {p for p in roc.predictor.dropna() if p not in ("(all)", cfg.index_name) and not p.startswith("model: ")}
+    curves = set(pd.read_csv(out / "metrics_roc_curves.csv").predictor)
+    js = json.loads((out / "metrics_summary.json").read_text())
+    for names in (used, curves, _names_used(js) - {cfg.index_name}):
+        assert names <= cand and not names & others
+    comp = js["outcomes"]["ivl_fracture"]["composite"]
+    assert set(comp["selected"]) <= set(cfg.groups["mechanics"])
+
+
 def test_stage_without_holdout_rows(tmp_path):
     p = tmp_path / "core_only.csv"
-    synthetic_cohort(n_hold=0).to_csv(p, index=False)
+    df = synthetic_cohort(n_hold=0)
+    df.loc[0, "ca_E_MPa"] = np.nan                           # modulus not recorded
+    df.loc[1, "ca_E_MPa"] = 2 * P.get("materials.calcium.E").value
+    df.to_csv(p, index=False)
     js = S.run(p, tmp_path, n_boot=20)
+    assert js["input"]["n_rows_excluded"] == {"calcium modulus not recorded": 1,
+                                              "not at the baseline calcium modulus": 1}
+    assert js["input"]["n_rows_used"] == len(df) - 2
     nc = js["not_computed"]
+    assert any(e["analysis"] == "input rows" and "calcium modulus not recorded" in e["reason"] for e in nc)
     assert any(e.get("set") == "holdout" and e["analysis"] == "hold-out evaluation" for e in nc)
     assert any(e["analysis"] == "incremental value" and e.get("set") == "holdout" for e in nc)
     prim = js["outcomes"]["ivl_fracture"]

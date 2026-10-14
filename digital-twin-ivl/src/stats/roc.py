@@ -22,7 +22,10 @@ Conventions
   class (stratified) so every resample keeps both classes. Random streams come
   from :func:`rng_for` (a ``numpy`` ``SeedSequence`` with the study seed as
   entropy and a CRC32 of an analysis key as spawn key), so an analysis gives
-  the same numbers whichever other analyses run before it.
+  the same numbers whichever other analyses run before it. An interval is
+  flagged degenerate (:func:`ci_degenerate`) when every finite resample gives
+  the same value or the point estimate is at a bound (AUC or C of 0 or 1,
+  perfect separation): its zero width says nothing about precision.
 * Proportions (sensitivity, specificity, accuracy): Wilson score intervals.
 * Concordance (censored or continuous outcomes): Harrell's C with ties in the
   risk score counted 1/2; a pair is comparable when the lesion with the lower
@@ -39,7 +42,8 @@ from scipy import stats as _st
 
 __all__ = [
     "rng_for", "auc_score", "auc_rows", "roc_points", "youden", "classify", "wilson_ci",
-    "percentile_ci", "bootstrap_indices", "resolve_direction", "roc_analysis", "threshold_performance",
+    "percentile_ci", "ci_degenerate", "bootstrap_indices", "resolve_direction", "roc_analysis",
+    "threshold_performance",
     "loocv_threshold", "harrell_c", "spearman",
 ]
 
@@ -71,6 +75,21 @@ def percentile_ci(values, level: float) -> tuple[float, float]:
     a = 100.0 * (1.0 - level) / 2.0
     lo, hi = np.percentile(v, [a, 100.0 - a])
     return float(lo), float(hi)
+
+
+def ci_degenerate(values, point: float = math.nan, bounds=(0.0, 1.0)) -> bool:
+    """True when the percentile interval of ``values`` is degenerate.
+
+    Degenerate: every finite resample value is equal, or ``point`` is one of
+    ``bounds`` (an AUC or C of 0 or 1, i.e. perfect separation, where every
+    resample that keeps both classes repeats it). ``False`` without finite
+    resample values (the interval is then ``nan``, not degenerate).
+    """
+    v = np.asarray(values, dtype=float)
+    v = v[np.isfinite(v)]
+    if v.size == 0:
+        return False
+    return bool(np.ptp(v) == 0 or any(point == b for b in bounds))
 
 
 # --------------------------------------------------------------------------- AUC and ROC
@@ -206,8 +225,9 @@ def roc_analysis(y, x, direction: int, *, n_boot: int, rng: np.random.Generator,
 
     The direction is kept fixed in the resamples. Returns ``auc``,
     ``auc_ci_lo/hi``, ``threshold`` (in ``x`` units), ``threshold_ci_lo/hi``,
-    ``sens``, ``spec``, ``youden_j``, ``n_levels``, ``n_boot`` and the number
-    of resamples with a defined AUC / threshold.
+    ``sens``, ``spec``, ``youden_j``, ``n_levels``, ``n_boot``, the number
+    of resamples with a defined AUC / threshold and ``auc_ci_degenerate``
+    (:func:`ci_degenerate`).
     """
     y = _check_binary(y)
     x = np.asarray(x, dtype=float)
@@ -220,6 +240,7 @@ def roc_analysis(y, x, direction: int, *, n_boot: int, rng: np.random.Generator,
     aucs = auc_rows(yb, zb)
     thr = np.array([direction * _youden(yb[b], zb[b])["cut"] for b in range(idx.shape[0])])
     out["auc_ci_lo"], out["auc_ci_hi"] = percentile_ci(aucs, level)
+    out["auc_ci_degenerate"] = ci_degenerate(aucs, out["auc"])
     out["threshold_ci_lo"], out["threshold_ci_hi"] = sorted(percentile_ci(thr, level))
     out["n_boot_valid_auc"] = int(np.isfinite(aucs).sum())
     out["n_boot_valid_threshold"] = int(np.isfinite(thr).sum())

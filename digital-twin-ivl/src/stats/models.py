@@ -10,12 +10,17 @@ resample, and data outside the training rows (the hold-out set) are never used
 for a choice.
 
 Selection rule (:func:`select_predictors`): candidates with a missing value or
-a constant value on the training rows, or with a univariable discrimination
-``max(AUC, 1 - AUC)`` below ``min_discrimination``, are dropped; the rest are
-ranked by that discrimination (ties: pool order) and taken in that order,
-skipping any whose |Spearman rho| with an already selected predictor exceeds
+a constant value on the training rows are dropped; each remaining candidate
+gets its oriented univariable AUC on the training rows, ``AUC`` for an a
+priori direction ``+1``, ``1 - AUC`` for ``-1`` and ``max(AUC, 1 - AUC)`` for
+``"core"`` (no sign stated a priori: the sign is set on the training rows, so
+it is re-derived in every fold or resample). Candidates with an oriented AUC
+below ``min_discrimination`` are dropped (so a predictor whose association
+has the opposite of its a priori sign cannot enter); the rest are ranked by
+the oriented AUC (ties: pool order) and taken in that order, skipping any
+whose |Spearman rho| with an already selected predictor exceeds
 ``max_abs_spearman``, until ``max_predictors`` are chosen (fewer if the
-candidates run out).
+candidates run out). Pool columns without a stated direction are ``"core"``.
 
 Model: predictors z-scored with the training mean and population standard
 deviation (as ``sklearn.preprocessing.StandardScaler``) and an L2-penalised
@@ -38,7 +43,7 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss, log_loss
 
-from .roc import auc_rows, auc_score, percentile_ci
+from .roc import auc_rows, auc_score, ci_degenerate, percentile_ci, youden
 
 #: NUMERICAL: iteration limit of the lbfgs solver (z-scored inputs with an L2 penalty converge well within it).
 LOGISTIC_MAX_ITER = 1000
@@ -60,11 +65,17 @@ class ModelSpec:
     max_abs_spearman: float = 1.0
     C: float = 1.0
     min_discrimination: float = 0.5
+    #: ``(column, direction)`` pairs of pool columns (+1, -1 or ``"core"``); unlisted columns are ``"core"``
+    directions: tuple[tuple[str, object], ...] = ()
 
     @property
     def columns(self) -> list[str]:
         """Every column the procedure may read."""
         return list(dict.fromkeys(self.fixed + self.pool))
+
+    def direction(self, col: str):
+        """A priori direction of pool column ``col`` (+1, -1 or ``"core"``)."""
+        return dict(self.directions).get(col, "core")
 
 
 @dataclass
@@ -107,10 +118,13 @@ class IndexModel:
 
 # --------------------------------------------------------------------------- array core
 def _select_idx(A: np.ndarray, y: np.ndarray, pool: list[int], max_predictors: int,
-                max_abs_spearman: float, min_discrimination: float = 0.5) -> list[int]:
-    """Selection rule on column indices ``pool`` of the training matrix ``A``."""
+                max_abs_spearman: float, min_discrimination: float = 0.5, directions=None) -> list[int]:
+    """Selection rule on column indices ``pool`` of the training matrix ``A`` (``directions``: one per pool column)."""
     if not pool or max_predictors <= 0:
         return []
+    dirs = ["core"] * len(pool) if directions is None else list(directions)
+    if len(dirs) != len(pool) or any(d not in (1, -1, "core") for d in dirs):
+        raise ValueError(f"directions must give +1, -1 or 'core' for every pool column, got {dirs!r}")
     n1 = int(y.sum())
     n0 = y.size - n1
     if n1 == 0 or n0 == 0:
@@ -122,8 +136,9 @@ def _select_idx(A: np.ndarray, y: np.ndarray, pool: list[int], max_predictors: i
         return []
     r = _st.rankdata(filled, axis=0)
     auc = (r[y == 1].sum(axis=0) - n1 * (n1 + 1) / 2.0) / (n1 * n0)
-    disc = np.maximum(auc, 1.0 - auc)
-    order = [j for j in np.argsort(-disc, kind="stable") if ok[j] and disc[j] >= min_discrimination]
+    oriented = np.array([np.maximum(a, 1.0 - a) if d == "core" else (a if d == 1 else 1.0 - a)
+                         for a, d in zip(auc, dirs)])
+    order = [j for j in np.argsort(-oriented, kind="stable") if ok[j] and oriented[j] >= min_discrimination]
     rc = r - r.mean(axis=0)
     norm = np.sqrt((rc ** 2).sum(axis=0))
     chosen: list[int] = []
@@ -153,7 +168,8 @@ def _fit_idx(A: np.ndarray, y: np.ndarray, names: list[str], cols: list[int], C:
 def _fit_spec_idx(spec: ModelSpec, A: np.ndarray, y: np.ndarray, names: list[str]) -> IndexModel:
     pos = {n: i for i, n in enumerate(names)}
     pool = [pos[c] for c in spec.pool if c in pos]
-    sel = _select_idx(A, y, pool, spec.max_predictors, spec.max_abs_spearman, spec.min_discrimination)
+    sel = _select_idx(A, y, pool, spec.max_predictors, spec.max_abs_spearman, spec.min_discrimination,
+                      [spec.direction(names[c]) for c in pool])
     cols = list(dict.fromkeys([pos[c] for c in spec.fixed if c in pos] + sel))
     m = _fit_idx(A, y, names, cols, spec.C)
     m.selected = [names[c] for c in sel]
@@ -174,12 +190,15 @@ def _prob(m: IndexModel, A: np.ndarray, names: list[str]) -> np.ndarray:
 
 # --------------------------------------------------------------------------- public API
 def select_predictors(X: pd.DataFrame, y, pool, *, max_predictors: int, max_abs_spearman: float,
-                      min_discrimination: float = 0.5) -> list[str]:
-    """Pre-specified selection rule (module docstring) applied to the training rows ``X``, ``y``."""
+                      min_discrimination: float = 0.5, directions: dict | None = None) -> list[str]:
+    """Pre-specified selection rule (module docstring) applied to the training rows ``X``, ``y``.
+
+    ``directions`` maps pool columns to +1, -1 or ``"core"`` (unlisted: ``"core"``).
+    """
     pool = [c for c in pool if c in X.columns]
     A = X[pool].to_numpy(float) if pool else np.empty((len(X), 0))
     sel = _select_idx(A, np.asarray(y).astype(int), list(range(len(pool))), max_predictors, max_abs_spearman,
-                      min_discrimination)
+                      min_discrimination, [(directions or {}).get(c, "core") for c in pool])
     return [pool[i] for i in sel]
 
 
@@ -190,16 +209,21 @@ def fit_spec(spec: ModelSpec, X: pd.DataFrame, y) -> IndexModel:
 
 
 def loocv_predict(spec: ModelSpec, X: pd.DataFrame, y) -> dict:
-    """Leave-one-out predictions of ``spec`` (selection and fit repeated in each fold).
+    """Leave-one-out predictions of ``spec`` (selection, fit and threshold repeated in each fold).
 
     Returns ``prob`` and ``index`` (out-of-fold probability and log-odds per
-    row) and ``selected`` (pool predictors chosen in each fold).
+    row), ``selected`` (pool predictors chosen in each fold), ``threshold``
+    (the Youden cut of the fold model's fitted probabilities on its training
+    rows; ``nan`` when the fold has none, e.g. a constant model) and
+    ``classified`` (1 when ``prob >= threshold``, 0 below it, -1 where the
+    fold has no threshold). Nothing in a fold uses the left-out outcome.
     """
     y = np.asarray(y).astype(int)
     A, names = _matrix(spec, X)
     pos = {nm: i for i, nm in enumerate(names)}
     n = y.size
     prob, idx, sel = np.full(n, math.nan), np.full(n, math.nan), []
+    thr, cls = np.full(n, math.nan), np.full(n, -1)
     for i in range(n):
         m = np.arange(n) != i
         fit = _fit_spec_idx(spec, A[m], y[m], names)
@@ -207,7 +231,10 @@ def loocv_predict(spec: ModelSpec, X: pd.DataFrame, y) -> dict:
         idx[i] = fit._logit(row)[0]
         prob[i] = fit.prevalence if fit.lr is None else 1.0 / (1.0 + math.exp(-idx[i]))
         sel.append(fit.selected)
-    return {"prob": prob, "index": idx, "selected": sel}
+        thr[i] = youden(y[m], _prob(fit, A[m], names))["cut"]
+        if math.isfinite(thr[i]):
+            cls[i] = int(prob[i] >= thr[i])
+    return {"prob": prob, "index": idx, "selected": sel, "threshold": thr, "classified": cls}
 
 
 def prob_scores(y, p) -> dict:
@@ -224,6 +251,7 @@ def _boot_summary(auc_a: float, auc_b: float, d: np.ndarray, level: float) -> di
     lo, hi = percentile_ci(d, level)
     fin = np.isfinite(d)
     return {"auc_a": auc_a, "auc_b": auc_b, "delta_auc": auc_a - auc_b, "delta_ci_lo": lo, "delta_ci_hi": hi,
+            "delta_ci_degenerate": ci_degenerate(d, bounds=()),
             "boot_frac_delta_le_0": float(np.mean(d[fin] <= 0.0)) if fin.any() else math.nan,
             "n_boot_valid": int(fin.sum())}
 
@@ -232,7 +260,8 @@ def paired_bootstrap_fixed(y, score_a, score_b, idx: np.ndarray, level: float) -
     """Paired bootstrap of AUC(a) - AUC(b) for fixed scores (rows resampled with the ``(B, n)`` matrix ``idx``).
 
     ``boot_frac_delta_le_0`` is the fraction of resamples with a difference
-    <= 0 (a descriptive bootstrap fraction, not a test).
+    <= 0 (a descriptive bootstrap fraction, not a test); ``delta_ci_degenerate``
+    flags an interval whose resamples all give the same difference.
     """
     y = np.asarray(y).astype(int)
     a, b = np.asarray(score_a, float), np.asarray(score_b, float)

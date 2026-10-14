@@ -200,6 +200,8 @@ def _flat(rec: dict) -> dict:
         row[f"{p}_unconverged_steps"] = r.get("n_steps_unconverged_stagger")
         row[f"{p}_seconds"] = r.get("seconds")
         row[f"{p}_max_lumen_area"] = r.get("max_lumen_area")
+        if "p_top" in (r.get("summary") or {}):    # IVL protocols: peak load applied (censoring value of the onset)
+            row[f"{p}_p_top"] = r["summary"]["p_top"]
         for k, v in (r.get("summary", {}).get("metrics") or {}).items():
             if isinstance(v, (int, float, bool)) or v is None:
                 row[f"{p}_{k}"] = v
