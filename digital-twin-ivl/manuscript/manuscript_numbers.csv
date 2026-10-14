@@ -1,0 +1,3 @@
+id,label,value,scale,printed,source,key
+0,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
+1,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout

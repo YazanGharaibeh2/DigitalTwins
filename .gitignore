@@ -12,3 +12,6 @@ digital-twin-ivl/results/sensitivity_*_runs/locks/
 digital-twin-ivl/results/sensitivity_*.tmp
 digital-twin-ivl/results/sensitivity_*_runs/*.tmp
 digital-twin-ivl/cohort/meshes/sensitivity/
+
+# manuscript build cache
+digital-twin-ivl/manuscript/__pycache__/
