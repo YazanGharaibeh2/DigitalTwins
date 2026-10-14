@@ -15,6 +15,7 @@ TITLE = "In Silico Digital Twins of Calcified Coronary Lesions under Intravascul
 PARTS = ("s0_front",          # title, authors, abstract, keywords
          "s1_introduction",
          "s2_methods",
+         "s2_statistics",     # 2.10 Statistical Analysis
          "s3_results",
          "s4_discussion",
          "s5_conclusions",

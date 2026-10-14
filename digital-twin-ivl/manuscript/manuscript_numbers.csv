@@ -1,1 +1,14 @@
 id,label,value,scale,printed,source,key
+0,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+1,metrics.bootstrap_n,2000.0,1.0,2000,params/study_config.yaml,metrics.bootstrap_n
+2,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
+3,len(metrics.candidates.geometry),8,1.0,8,params/study_config.yaml,len(metrics.candidates.geometry)
+4,metrics.min_per_class,2.0,1.0,2,params/study_config.yaml,metrics.min_per_class
+5,metrics.composite.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.max_predictors
+6,metrics.composite.min_discrimination,0.6,1.0,0.60,params/study_config.yaml,metrics.composite.min_discrimination
+7,metrics.composite.max_abs_spearman,0.8,1.0,0.80,params/study_config.yaml,metrics.composite.max_abs_spearman
+8,metrics.logistic_C,1.0,1.0,1.0,params/study_config.yaml,metrics.logistic_C
+9,len(metrics.incremental.geometry_model),4,1.0,4,params/study_config.yaml,len(metrics.incremental.geometry_model)
+10,metrics.min_rows_continuous,5.0,1.0,5,params/study_config.yaml,metrics.min_rows_continuous
+11,design.seed,20261009,1.0,20261009,params/study_config.yaml,design.seed
+12,metrics.seed_offset,500,1.0,500,params/study_config.yaml,metrics.seed_offset

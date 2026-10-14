@@ -50,3 +50,11 @@ def test_reference_format():
          "volume": "76", "pages": "2635--2646", "doi": "10.1/abc"}
     s = B.format_reference(e)
     assert s.startswith("Hill, J. M.; et al. A Title.") and "**2020**" in s and "https://doi.org/10.1/abc" in s
+
+
+def test_validation_wording_rule():
+    import re
+    pat = re.compile(r"(?<!cross-)\bvalidat\w*", re.I)
+    assert pat.search("The model was validated against patients.")
+    assert pat.search("Validation of the model")
+    assert not pat.search("leave-one-out cross-validation (LOOCV)")

@@ -9,7 +9,8 @@ per printed number: label, value, printed text, source file, key).
 A lint pass then fails the build if any digit in the prose did not come from
 the ledger. Allowed exceptions: citation numbers, Figure/Table/Section numbers,
 "2D"/"3D", decision labels (D1-D15), lesion identifiers, model names (AT1,
-P1/P2) and inline math between ``$...$``.
+P1/P2, L1/L2) and inline math between ``$...$``. The build also fails on any
+form of "validate"/"validation" except the method name "cross-validation".
 
 Usage: ``python manuscript/build_manuscript.py [--no-docx] [--draft]``
 """
@@ -235,7 +236,7 @@ _ALLOWED = [
     r"Tables? \d+(?:\s*(?:and|,|–)\s*\d+)*",
     r"Sections? \d+(?:\.\d+)*",
     r"\[\d+(?:[,–]\d+)*\]",
-    r"\b[23]D\b", r"\bD\d{1,2}\b", r"\bAT1\b", r"\bP[12]\b", r"\bC\d\b",
+    r"\b[23]D\b", r"\bD\d{1,2}\b", r"\bAT1\b", r"\bP[12]\b", r"\bL[12]\b", r"\bC\d\b",
     r"\b[CHPX](?:3D)?-A\d+(?:\.\d+)?-T\d+(?:\.\d+)?(?:-L\d+)?-[A-Z]+\b",
     r"\$[^$]*\$",
 ]
@@ -376,7 +377,7 @@ def build(docx: bool = True, draft: bool = False) -> dict:
     missing = [n for n in ctx.figures if not (ROOT / "figures" / f"{n}.png").exists()]
     if missing and not draft:
         raise BuildError(f"figure files missing: {missing}")
-    banned = re.search(r"\bvalidat\w*", strip_marks(md), re.I)
+    banned = re.search(r"(?<!cross-)\bvalidat\w*", strip_marks(md), re.I)   # 'cross-validation' is a method name
     if banned:
         raise BuildError(f"rule 3: the word {banned.group(0)!r} appears in the manuscript")
     OUT_MD.write_text(strip_marks(md))
