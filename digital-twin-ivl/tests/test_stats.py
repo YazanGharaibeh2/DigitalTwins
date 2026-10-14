@@ -603,3 +603,26 @@ def test_stage_on_existing_cohort_outcomes(tmp_path):
         pytest.skip("results/cohort_outcomes.csv not present")
     js = S.run(path, tmp_path, n_boot=20)
     assert js["input"]["n_rows"] == len(pd.read_csv(path))
+
+
+def test_onset_with_missing_phase_counts_after_the_peak():
+    """An onset without a recorded phase is valued at the peak load, as in stage_sensitivity.censored_onset."""
+    from dtivl.drivers import stage_sensitivity as SS
+
+    assert S.IVL_LOADING_PHASES == SS.IVL_LOADING_PHASES
+    df = synthetic_cohort(n_hold=0)
+    oc, cfg = _onset_oc(), S.load_config(n_boot=20)
+    i = df.index[(df["ivl_status"] == "ok") & df["ivl_onset"].notna()][0]
+    df.loc[i, "ivl_onset_phase"] = None
+    t, excl = S._outcome_table(df, oc, cfg)
+    assert t.loc[i, "_event"] == 1 and t.loc[i, "_after_peak"] and t.loc[i, "_value"] == df.loc[i, "ivl_p_top"]
+    assert excl["onset_phase_missing"] == 1
+
+
+def test_ranked_outcome_with_missing_column_is_not_computed():
+    df = synthetic_cohort(n_hold=0).drop(columns="stent_no_ivl_stent_expansion_pct")
+    cfg = S.load_config(n_boot=20)
+    oc = next(o for o in cfg.outcomes if o["column"] == "stent_no_ivl_stent_expansion_pct")
+    col = S._Collector()
+    res = S.analyse_ranked(col, oc["name"], oc, df, cfg, None)
+    assert "not in the table" in res["note"]

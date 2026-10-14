@@ -113,8 +113,9 @@ CENSORED_CONVENTION = (
     "(a priori direction x value; 'core' directions set on the core set, flagged) has the earlier onset. "
     "Event = local damage onset recorded (first load with max d >= fracture.d_crack; a partial crack without "
     "through-thickness damage is an event), value = the onset load (the peak load ivl_p_top for an onset after the "
-    "peak, as in stage_sensitivity); no onset = right-censored at the lesion's own ivl_p_top. observed_sign: +1 "
-    "when the higher predictor went with the earlier onset (C > 0.5), -1 the other way")
+    "peak, as in stage_sensitivity); no onset = right-censored at the lesion's own ivl_p_top. observed_sign = "
+    "direction x sign(C - 0.5): +1 when a higher raw predictor value went with the earlier onset, -1 when a lower "
+    "one did")
 CONTINUOUS_CONVENTION = (
     "Exploratory (direction not pre-specified): Harrell's C of the raw predictor, the probability that, of two "
     "lesions, the one with the higher predictor has the higher outcome; observed_sign = sign(C - 0.5); "
@@ -326,7 +327,9 @@ def _outcome_table(df: pd.DataFrame, oc: dict, cfg: MetricsConfig) -> tuple[pd.D
         tt = _as_binary(t[fc]) if fc and fc in t else np.full(len(t), math.nan)
         ph_col = f"{oc['column']}_phase"
         ph = t[ph_col] if ph_col in t else pd.Series([None] * len(t), index=t.index)
-        after = (ev == 1) & ph.notna().to_numpy() & ~ph.isin(IVL_LOADING_PHASES).to_numpy()
+        # an onset whose phase is missing counts as after the peak (value = peak load), as in stage_sensitivity
+        after = (ev == 1) & ~ph.isin(IVL_LOADING_PHASES).to_numpy()
+        excl["onset_phase_missing"] = int(((ev == 1) & ph.isna().to_numpy()).sum())
         cens, src = _censor_value(t, oc)
         need_peak = (ev == 0) | after                  # rows whose value is the peak load
         value = np.where(need_peak, cens, onset)
@@ -906,8 +909,13 @@ def analyse_ranked(col: _Collector, name: str, oc: dict, df: pd.DataFrame, cfg: 
                    index: dict | None) -> dict:
     """Censored (onset load) or continuous (stent expansion) outcome: Harrell's C (and Spearman) per candidate."""
     t, excl = _outcome_table(df, oc, cfg)
-    core, hold = t[t["set"] == cfg.derivation_set], t[t["set"] == cfg.test_set]
     cont = oc["kind"] == "continuous"
+    if "_value" not in t:                              # outcome column missing from the table
+        reason = f"outcome column {oc['column']!r} not in the table"
+        col.nc(name, "all analyses", reason, cfg.derivation_set)
+        return {"role": oc["role"], "kind": oc["kind"], "column": oc["column"], "protocol": oc["protocol"],
+                "excluded": excl, "note": reason}
+    core, hold = t[t["set"] == cfg.derivation_set], t[t["set"] == cfg.test_set]
 
     def cnt(tt):
         e = tt["_event"].to_numpy(float)
