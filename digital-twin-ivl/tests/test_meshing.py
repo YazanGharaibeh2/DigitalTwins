@@ -316,6 +316,20 @@ def test_extrusion_3d(tmp_path):
     assert np.hypot(xl[:, 0], xl[:, 1]).max() < np.hypot(xo[:, 0], xo[:, 1]).min()
 
 
+def test_extrusion_3d_margin_axial_size(tmp_path):
+    """Coarser axial layers in the calcium-free end blocks; volumes unchanged."""
+    L, m = 1.0, 1.0
+    res = mesh3d_from_labelmap(make_case("ring"), L, tmp_path / "a3.msh", margin=m, h_axial=0.25,
+                               h_axial_margin=0.5, h_ca=0.1, h_soft=0.3)
+    assert res["n_layers"] == [2, 4, 2]
+    assert res["h_axial_margin"] == 0.5
+    assert res["volumes"][TAG_CALCIUM] == pytest.approx(res["areas_2d"][TAG_CALCIUM] * L, rel=1e-6)
+    md = load_mesh(res["msh"], 3)
+    from dolfinx.mesh import compute_midpoints
+    zc = compute_midpoints(md.mesh, 3, md.cell_tags.find(TAG_CALCIUM))[:, 2]
+    assert zc.min() > m and zc.max() < m + L
+
+
 def test_extrusion_3d_ring_defaults(tmp_path):
     """Ring case with the configured margin and axial size (coarse cross-section)."""
     res = mesh3d_from_labelmap(make_case("ring"), 1.0, tmp_path / "r3.msh", h_ca=0.1, h_soft=0.3)

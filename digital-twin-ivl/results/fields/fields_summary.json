@@ -1,0 +1,37 @@
+{
+ "C-A180-T0.2-SUP": {
+  "ivl": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.5038518847447813,
+   "seconds": 151.86436800299998,
+   "file": "results/fields/C-A180-T0.2-SUP_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "stent_post_ivl": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.5038518847447813,
+   "seconds": 18.4564951389998,
+   "file": "results/fields/C-A180-T0.2-SUP_stent_post_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "ivl_erosion": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.4299379711861953,
+   "seconds": 159.524415202,
+   "file": "results/fields/C-A180-T0.2-SUP_ivl_erosion.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  }
+ }
+}

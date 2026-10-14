@@ -62,6 +62,14 @@ design:
     thickness_mm: [0.2, 0.8]
     morphology: [superficial_sheet, nodule]
     basis: "DESIGN: two arcs, the thinnest and thickest levels, a sheet and a nodule (8 core lesions)"
+  length_series_3d:               # D12: src/drivers/stage_length3d.py (3D runs stop at damage onset)
+    cross_sections: [C-A180-T0.4-SUP]
+    h_axial_ca_mm: 0.5              # 2 quadratic layers over the shortest calcified length (1 mm); L = 5 mm: 10
+    h_axial_margin_mm: 1.0          # calcium-free end blocks: as discretisation.example3d.h_axial_mm
+    basis: "DESIGN (analyst choice under D12, 2026-10-14): core cross-sections at thickness 0.4 mm (the 3D in-plane calcium size, discretisation.example3d.h_calcium_mm = 0.15 mm, leaves fewer than 2 elements across 0.2 mm) whose 2D cohort run shows damage onset under IVL, so the onset load is defined in 2D; in-plane sizes as the D1 3D example; the 2D reference uses the same in-plane mesh; axial size 0.5 mm in the calcified block (P2 elements; with 0.25 mm the L = 5 mm model would have 24 axial layers against 7 in the D1 example, whose damage-onset run took 41 min; not affordable here with the direct solver)"
+  field_lesions:                  # src/drivers/stage_fields.py: damage/displacement fields for figures only
+    lesions: [C-A180-T0.2-SUP, C-A180-T0.2-DEEP, C-A180-T0.2-NOD, C-A180-T0.2-FRAG]
+    basis: "DESIGN: one core lesion per morphology at the same arc (180 deg) and thickness (0.2 mm), so the damage patterns differ only by morphology; re-runs of the cohort protocols (IVL phase field, IVL erosion, post-IVL stent) that store fields"
   pilot_2d:                       # Checkpoint 2 pilot (3 lesions)
     - {arc_deg: 90,  thickness_mm: 0.2, morphology: superficial_sheet}
     - {arc_deg: 270, thickness_mm: 0.4, morphology: deep_sheet}

@@ -18,7 +18,8 @@ blocks share their interfaces (conforming). Lipid, fibrous and wall volumes
 keep their tag in every block (lipid therefore spans the whole segment).
 The cross-sectional mesh (size field ``h_ca``/``h_soft`` as in 2D) is copied
 to every layer; the axial layer count per block is
-``ceil(block_length / h_axial)``.
+``ceil(block_length / h)``, with ``h = h_axial`` in the calcified block and
+``h_axial_margin`` (default ``h_axial``) in the two end blocks.
 
 Facet tags: ``TAG_LUMEN_BND`` / ``TAG_OUTER_BND`` on the lateral surfaces
 extruded from the 2D lumen / outer lines (identified by the midpoint of the
@@ -62,7 +63,7 @@ def _extrude_block(gmsh, surfaces: list[int], dz: float, n_layers: int) -> tuple
 def mesh3d_from_labelmap(plm: PolarLabelMap, ca_length: float, out_msh, *, margin: float | None = None,
                          h_axial: float | None = None, h_ca: float | None = None, h_soft: float | None = None,
                          r_iel_default=None, allow_pending: bool = False, smooth: float | None = None,
-                         simplify_tol: float | None = None) -> dict:
+                         simplify_tol: float | None = None, h_axial_margin: float | None = None) -> dict:
     """Extruded tetrahedral mesh of a calcified segment, written to ``out_msh``.
 
     Parameters
@@ -73,6 +74,8 @@ def mesh3d_from_labelmap(plm: PolarLabelMap, ca_length: float, out_msh, *, margi
     margin : calcium-free length ``m`` at each end; default
         ``geometry.margin_3d_mm``.
     h_axial : axial element size; default ``discretisation.h_axial_3d_mm``.
+    h_axial_margin : axial element size of the two calcium-free end blocks;
+        default ``h_axial``.
     h_ca, h_soft, r_iel_default, allow_pending, smooth, simplify_tol : as in
         :func:`dtivl.meshing.mask_to_mesh.mesh_from_labelmap`.
 
@@ -92,13 +95,15 @@ def mesh3d_from_labelmap(plm: PolarLabelMap, ca_length: float, out_msh, *, margi
     h_ca = P.get("discretisation.h_calcium_mm").value if h_ca is None else float(h_ca)
     h_soft = P.get("discretisation.h_soft_mm").value if h_soft is None else float(h_soft)
     check_sizes(h_ca, h_soft)
-    if h_axial <= 0:
-        raise ValueError("h_axial must be > 0")
+    h_axial_margin = h_axial if h_axial_margin is None else float(h_axial_margin)
+    if h_axial <= 0 or h_axial_margin <= 0:
+        raise ValueError("h_axial and h_axial_margin must be > 0")
     part = build_partition(plm, r_iel_default=r_iel_default, allow_pending=allow_pending,
                            smooth=smooth, simplify_tol=simplify_tol)
     blocks = [margin, float(ca_length), margin] if margin > 0 else [float(ca_length)]
     middle = 1 if margin > 0 else 0
-    n_layers = [max(1, math.ceil(b / h_axial - 1e-9)) for b in blocks]
+    h_blocks = [h_axial_margin, h_axial, h_axial_margin] if margin > 0 else [h_axial]
+    n_layers = [max(1, math.ceil(b / h - 1e-9)) for b, h in zip(blocks, h_blocks)]
     z_total = float(sum(blocks))
     out_msh = Path(out_msh)
     out_msh.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +171,6 @@ def mesh3d_from_labelmap(plm: PolarLabelMap, ca_length: float, out_msh, *, margi
         "pixel_areas": polar_pixel_areas(plm, r_iel_default=r_iel_default, allow_pending=allow_pending),
         "z_blocks": z_blocks, "n_layers": n_layers, "length": z_total,
         "ca_length": float(ca_length), "margin": margin,
-        "h_ca": h_ca, "h_soft": h_soft, "h_axial": h_axial,
+        "h_ca": h_ca, "h_soft": h_soft, "h_axial": h_axial, "h_axial_margin": h_axial_margin,
         "lumen_area": float(part.lumen.area), "partition_info": part.info,
     }
