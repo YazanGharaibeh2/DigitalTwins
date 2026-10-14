@@ -1,32 +1,36 @@
-"""Manuscript text, one function per section; every number through ``ctx`` (see build_manuscript.py).
+"""Manuscript assembly: one module per part, each a function ``blocks(ctx) -> list`` of blocks.
 
-Draft status: skeleton. The sections are filled once the cohort, sensitivity
-and metrics stages are complete.
+Every number goes through ``ctx`` (see build_manuscript.py). Parts whose module does not exist yet
+are left out, so the manuscript builds at every stage of drafting.
 """
 from __future__ import annotations
 
-from build_manuscript import Ctx, Figure, Heading, Para, Table
+import importlib
+
+from build_manuscript import Ctx, Heading
 
 TITLE = "In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting"
 
-
-def front(ctx: Ctx) -> list:
-    return [Heading(TITLE, 0)]
-
-
-def methods_cohort(ctx: Ctx) -> list:
-    core = ctx.data("results/cohort_summary.json")["n_per_set"]
-    return [
-        Heading("2. Materials and Methods", 1),
-        Heading("2.1. Lesion Cohort", 2),
-        Para(f"The core set contains {ctx.v('results/cohort_summary.json', 'n_per_set.core', fmt='d')} "
-             f"two-dimensional lesions and the hold-out set "
-             f"{ctx.v('results/cohort_summary.json', 'n_per_set.holdout', fmt='d')} lesions "
-             f"({ctx.fig('fig2_cohort_gallery')}). Calcium fracture under IVL is reported in "
-             f"{ctx.cite('hill2020disruptcad3', 'ali2019disruptcad2')}."),
-        Figure("fig2_cohort_gallery", "Core factorial cohort."),
-    ]
+#: manuscript order (MDPI research article)
+PARTS = ("s0_front",          # title, authors, abstract, keywords
+         "s1_introduction",
+         "s2_methods",
+         "s3_results",
+         "s4_discussion",
+         "s5_conclusions",
+         "s6_back")           # supplementary, contributions, funding, statements, abbreviations
 
 
 def document(ctx: Ctx) -> list:
-    return front(ctx) + methods_cohort(ctx)
+    out = []
+    for name in PARTS:
+        try:
+            mod = importlib.import_module(name)
+        except ModuleNotFoundError as exc:
+            if exc.name != name:
+                raise
+            continue
+        out += mod.blocks(ctx)
+    if not out or not isinstance(out[0], Heading) or out[0].level != 0:
+        out = [Heading(TITLE, 0)] + out
+    return out

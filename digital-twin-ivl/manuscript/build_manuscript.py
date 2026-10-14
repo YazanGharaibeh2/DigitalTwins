@@ -11,7 +11,7 @@ the ledger. Allowed exceptions: citation numbers, Figure/Table/Section numbers,
 "2D"/"3D", decision labels (D1-D15), lesion identifiers, model names (AT1,
 P1/P2) and inline math between ``$...$``.
 
-Usage: ``python manuscript/build_manuscript.py [--no-docx]``
+Usage: ``python manuscript/build_manuscript.py [--no-docx] [--draft]``
 """
 from __future__ import annotations
 
@@ -361,7 +361,8 @@ def references_blocks(ctx: Ctx) -> list:
 
 
 # ------------------------------------------------------------------ build
-def build(docx: bool = True) -> dict:
+def build(docx: bool = True, draft: bool = False) -> dict:
+    """``draft``: missing figure files are reported instead of failing the build."""
     import sections
 
     ctx = Ctx()
@@ -372,9 +373,9 @@ def build(docx: bool = True) -> dict:
         raise BuildError("numbers not taken from results files (rule 1):\n" + "\n".join(bad))
     blocks += references_blocks(ctx)
     md = render_md(ctx, blocks)
-    for name in ctx.figures:
-        if not (ROOT / "figures" / f"{name}.png").exists():
-            raise BuildError(f"figure file missing: figures/{name}.png")
+    missing = [n for n in ctx.figures if not (ROOT / "figures" / f"{n}.png").exists()]
+    if missing and not draft:
+        raise BuildError(f"figure files missing: {missing}")
     banned = re.search(r"\bvalidat\w*", strip_marks(md), re.I)
     if banned:
         raise BuildError(f"rule 3: the word {banned.group(0)!r} appears in the manuscript")
@@ -386,14 +387,16 @@ def build(docx: bool = True) -> dict:
     if docx:
         render_docx(ctx, blocks, OUT_DOCX)
     return {"md": str(OUT_MD), "docx": str(OUT_DOCX) if docx else None, "n_numbers": len(ctx.ledger),
-            "n_references": len(ctx.cite_order), "figures": ctx.figures, "tables": ctx.tables}
+            "n_references": len(ctx.cite_order), "figures": ctx.figures, "tables": ctx.tables,
+            "missing_figures": missing}
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--no-docx", action="store_true")
+    ap.add_argument("--draft", action="store_true", help="allow missing figure files")
     a = ap.parse_args(argv)
-    print(json.dumps(build(docx=not a.no_docx), indent=1))
+    print(json.dumps(build(docx=not a.no_docx, draft=a.draft), indent=1))
     return 0
 
 
