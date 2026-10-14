@@ -69,6 +69,7 @@ class LitParam:
     sd: float | None = None
     lower: float | None = None   # bounds if the value or range is "a-b"
     upper: float | None = None
+    alt: float | None = None     # alternative value if the range column is a single number, e.g. "1450 (other FE input)"
 
 
 @dataclass(frozen=True)
@@ -108,6 +109,13 @@ def _parse_numbers(value_str: str, range_str: str, factor: float):
     return value, sd, lower, upper
 
 
+def _parse_alt(range_str: str, factor: float) -> float | None:
+    """Alternative value: a range column holding one number with an optional parenthesised remark
+    (e.g. ``"1450 (other FE input)"``); ``None`` otherwise (SD, bounds, counts, free text)."""
+    m = re.fullmatch(rf"\s*({_NUM})\s*(?:\([^()]*\))?\s*", range_str)
+    return float(m.group(1)) * factor if m else None
+
+
 @functools.lru_cache(maxsize=None)
 def load_literature(path: str | Path = LIT_CSV) -> dict[str, LitParam]:
     out: dict[str, LitParam] = {}
@@ -120,7 +128,7 @@ def load_literature(path: str | Path = LIT_CSV) -> dict[str, LitParam]:
                 name=row["parameter"], value_str=row["value"], range_str=row["range"],
                 unit=unit, source=row["source"], notes=row["notes"],
                 status=_status_from_notes(row["notes"]),
-                value=value, sd=sd, lower=lower, upper=upper,
+                value=value, sd=sd, lower=lower, upper=upper, alt=_parse_alt(row["range"], factor),
             )
     return out
 
@@ -135,7 +143,8 @@ def lit(name: str, transform: str = "value", allow_unverified: bool = False) -> 
     """Return a literature value in base units.
 
     ``transform`` is one of ``value``, ``value+sd``, ``value-sd``, ``lower``,
-    ``upper``.
+    ``upper``, ``alt`` (the alternative value of a single-number range column,
+    :func:`_parse_alt`).
     """
     p = load_literature()[name]
     if p.status not in MAIN_ANALYSIS_OK and not allow_unverified:
@@ -150,6 +159,8 @@ def lit(name: str, transform: str = "value", allow_unverified: bool = False) -> 
         v = p.lower
     elif transform == "upper":
         v = p.upper
+    elif transform == "alt":
+        v = p.alt
     else:
         raise ValueError(f"unknown transform {transform!r}")
     if v is None:
@@ -183,14 +194,19 @@ def _eval_expr(expr: str) -> float:
 
 
 def resolve(entry: Any, *, allow_pending: bool = False) -> Quantity:
-    """Resolve one config entry (typed value, ``lit:`` or ``expr:``)."""
+    """Resolve one config entry (typed value, ``lit:`` or ``expr:``).
+
+    ``sens`` items are numbers or entries resolved the same way (e.g. a ``lit:`` row with a
+    transform and its own ``allow_status``).
+    """
     if isinstance(entry, (int, float)):
         return Quantity(float(entry), "", "config:design", "DESIGN")
     if not isinstance(entry, dict):
         raise TypeError(f"cannot resolve {entry!r}")
     sens = tuple()
     if "sens" in entry:
-        sens = tuple(float(x) for x in entry["sens"])
+        sens = tuple(resolve(x, allow_pending=allow_pending).value if isinstance(x, dict) else float(x)
+                     for x in entry["sens"])
     if "lit" in entry:
         allowed = set(entry.get("allow_status", []))
         p = load_literature()[entry["lit"]]
