@@ -76,6 +76,7 @@ design:
     morris_conf_resamples: 1000     # bootstrap resamples of mu_star_conf
     morris_conf_level: 0.95
     seed_offset: 15                 # SALib seed (sampling and bootstrap) = design.seed + seed_offset
+  composite_index_name: {value: LIFT, expansion: "Lithotripsy-Induced Fracture Tendency index", basis: "DESIGN (analyst proposal 2026-10-14; the PI may change it): name of the composite mechanics index of the metrics stage (metrics.composite). Alternatives considered: CaFI (Calcium Fracture Index), MCI (Mechanical Calcium Index).", status: DESIGN}
 
 geometry:                         # fixed reference geometry of the core set
   lumen_area_mm2: {lit: pre_procedure_MLA_IVL_lesions}       # 2.2 mm^2 -> circular lumen
@@ -162,3 +163,45 @@ loads:
   perivascular_k_MPa_per_mm: {value: 1.0e-4, sens: [1.0e-3, 1.0e-2, 1.0e-1], basis: "ASSUMPTION: negligible support; stabilises rigid-body modes only", status: ASSUMPTION}
   contact_penalty_MPa_per_mm: {value: 1.0e3, basis: "NUMERICAL: penalty stiffness; sensitivity in verification", status: NUMERICAL}
   malapposition_gap_mm: {value: 0.1, sens: [0.05, 0.2], basis: "ASSUMPTION: OCT malapposition distance threshold (not verified)", status: ASSUMPTION}
+
+metrics:              # Phase 5 predictive metrics (src/stats/, src/drivers/stage_metrics.py). Analyst proposal 2026-10-14, status DESIGN until the PI confirms.
+  bootstrap_n: {value: 2000, basis: "DESIGN: study plan (2000-sample bootstrap); percentile intervals", status: DESIGN}
+  bootstrap_stratified: {value: true, basis: "DESIGN: binary outcomes are resampled within each outcome class, so every resample keeps the event and non-event counts of the set", status: DESIGN}
+  seed_offset: {value: 500, basis: "DESIGN: rng entropy of the metrics stage = design.seed + seed_offset; each analysis draws from its own stream (numpy SeedSequence spawn key = CRC32 of the outcome/predictor/analysis key)", status: DESIGN}
+  ci_level: {value: 0.95, basis: "DESIGN: two-sided 95 % intervals (percentile bootstrap; Wilson score intervals for sensitivity, specificity and accuracy)", status: DESIGN}
+  min_per_class: {value: 2, basis: "DESIGN: a binary analysis of a set needs at least this many lesions in each outcome class; otherwise it is reported as not computed, with the reason", status: DESIGN}
+  min_rows_continuous: {value: 5, basis: "DESIGN: minimum number of lesions with an outcome for a censored or continuous outcome analysis of a set", status: DESIGN}
+  logistic_C: {value: 1.0, basis: "DESIGN: inverse L2 penalty strength of every logistic model (scikit-learn LogisticRegression, l1_ratio 0, lbfgs) on z-scored predictors; fixed a priori, not tuned", status: DESIGN}
+  sets: {value: {derivation: core, test: holdout}, basis: "DESIGN: thresholds, directions, predictor selection and model fits use the core set only; the hold-out set is used only to evaluate them unchanged", status: DESIGN}
+  candidates:
+    value:
+      mechanics: [pred_sigma1_p95, pred_sigma1_p99, pred_sigma1_mean, pred_sigma1_peak_nl, pred_sed_mean, pred_sed_peak_nl, pred_scf_edge_nl, pred_frac_eps_gt_epsf, pred_frac_eps_gt_half_epsf, pred_frac_sig_gt_sigc, pred_frac_sig_gt_half_sigc, pred_min_thickness_high_stress]
+      geometry: [ca_arc_total_deg, ca_thickness_max, ca_depth, ca_area, n_deposits, lumen_area, lipid_arc_deg, plaque_ecc_index]
+      comparator: [fujino_score]
+    basis: "DESIGN: mechanics = pre-treatment linear-analysis predictors (results 'predictors' block, pred_* columns; pred_p_lumen_MPa and pred_seconds are the load and the run time, not predictors); geometry = cohort descriptors; comparator = cross-sectional Fujino score (max 3 in 2D). Outcomes come only from the nonlinear damage runs."
+    status: DESIGN
+  forbidden_predictor_prefixes: {value: [ivl_load_], basis: "DESIGN: the IVL load factor (ivl_load_* columns: T, T_equivalent and the transient records) is an input of the outcome model and is refused as a predictor; outcome columns (<protocol>_*) are refused as well", status: DESIGN}
+  direction:
+    value:
+      default: 1
+      overrides: {pred_min_thickness_high_stress: -1, ca_thickness_max: -1, ca_depth: -1, ca_area: core, n_deposits: core, lumen_area: core, lipid_arc_deg: core, plaque_ecc_index: core}
+    basis: "DESIGN: expected sign of the association with damage (+1: a higher value predicts damage and an earlier onset; -1: a lower value does). Stress, energy, area-fraction and edge-concentration predictors, the calcium arc and the Fujino score (higher = more severe calcification) +1; thinner calcium where the stress is high, thinner and more superficial calcium -1. 'core': no sign stated a priori; set on the core set as the sign giving AUC >= 0.5 (reported per predictor as direction_source 'core'; optimistic; re-derived inside each LOOCV fold, kept fixed in the bootstrap)."
+    status: DESIGN
+  outcomes:
+    value:
+      - {name: ivl_fracture, role: primary, kind: binary, column: ivl_fracture, protocol: ivl, ok_status: [ok], models: true}
+      - {name: ivl_onset, role: secondary, kind: censored, column: ivl_onset, event: ivl_fracture, protocol: ivl, ok_status: [ok], censor: ivl_peak_pressure}
+      - {name: balloon_only_fracture, role: secondary, kind: binary, column: balloon_only_fracture, protocol: balloon_only, ok_status: [ok], models: false}
+      - {name: balloon_10atm_fracture, role: secondary, kind: binary, column: balloon_10atm_fracture, protocol: balloon_10atm, ok_status: [ok], models: false}
+      - {name: stent_post_ivl_expansion, role: secondary, kind: continuous, column: stent_post_ivl_stent_expansion_pct, protocol: stent_post_ivl, ok_status: [ok, limited]}
+      - {name: stent_no_ivl_expansion, role: secondary, kind: continuous, column: stent_no_ivl_stent_expansion_pct, protocol: stent_no_ivl, ok_status: [ok, limited]}
+    basis: "DESIGN: D10 primary outcome = through-thickness damage under IVL (rows with ivl_status ok). Secondary: IVL damage-onset load (lumen pressure at onset, MPa; event = through-thickness damage, otherwise right-censored at the lesion's peak IVL pressure p_bal + T_equivalent x ivl_peak_pressure_MPa x ivl_pulse_scale, the largest load the lesion saw; T enters only this censoring value, never a predictor), fracture under the 4 atm IVL balloon alone and under the 10 atm plain balloon, stent expansion with and without prior IVL (status 'limited' = pressure-limited expansion, kept; 'failed' runs excluded). Logistic models (composite, incremental value) only where models is true."
+    status: DESIGN
+  composite:
+    value: {pool: [mechanics], max_predictors: 3, max_abs_spearman: 0.8, min_discrimination: 0.6}
+    basis: "DESIGN (rule written on 2026-10-14, before any metric was computed on cohort outcomes): candidates = the pool predictors without missing or constant values on the training rows and with univariable discrimination max(AUC, 1 - AUC) >= min_discrimination on the training rows (so that the model is not filled with uninformative predictors), ranked by that discrimination (ties: list order); taken in rank order, skipping any candidate with |Spearman rho| > max_abs_spearman against one already chosen, up to max_predictors (study plan: <= 3; fewer if the candidates run out); L2-penalised logistic regression (logistic_C) on the z-scored selected predictors; the index is the model log-odds. The training rows are the core set; the rule is re-applied inside every LOOCV fold and bootstrap resample, and the hold-out set is never used for a choice."
+    status: DESIGN
+  incremental:
+    value: {geometry_model: [ca_arc_total_deg, ca_thickness_max, ca_depth, n_deposits], mechanics_pool: [mechanics]}
+    basis: "DESIGN: geometry-only model = penalised logistic regression on the descriptors of the core design factors (arc, thickness, depth, deposit count); geometry + mechanics model = the same descriptors plus the mechanics predictors chosen by the composite rule. Compared by apparent AUC (paired bootstrap with both models refitted in every resample), LOOCV AUC, log-loss and Brier score (paired bootstrap of the out-of-fold predictions) and on the hold-out set (paired bootstrap of the hold-out rows)."
+    status: DESIGN
