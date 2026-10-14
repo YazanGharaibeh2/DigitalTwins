@@ -101,6 +101,10 @@ def synthetic_cohort(n_hold: int = 24, seed: int = SEED, leak_T: bool = True) ->
     for p in ("stent_post_ivl", "stent_no_ivl"):
         df[f"{p}_fracture"] = frac
         df[f"{p}_stent_expansion_pct"] = 85.0 - 4.0 * df["ca_thickness"] + rng.normal(0, 0.5, n)
+    sub = df.index[df["set"] == "core"][:12]                  # erosion comparator: a core subset only
+    df["ivl_erosion_status"], df["ivl_erosion_fracture"] = None, np.nan
+    df.loc[sub, "ivl_erosion_status"] = "ok"
+    df.loc[sub, "ivl_erosion_fracture"] = frac[sub].astype(float)
     df.loc[3, "ivl_status"] = "failed"                       # excluded from the IVL outcomes
     df.loc[5, "stent_no_ivl_status"] = "limited"             # pressure-limited expansion: kept
     df.loc[7, "stent_post_ivl_status"] = np.nan              # not run yet
@@ -626,3 +630,9 @@ def test_ranked_outcome_with_missing_column_is_not_computed():
     col = S._Collector()
     res = S.analyse_ranked(col, oc["name"], oc, df, cfg, None)
     assert "not in the table" in res["note"]
+
+
+def test_erosion_comparator_outcome_uses_its_subset_only(stage_run):
+    js = stage_run[0] if isinstance(stage_run, tuple) else stage_run
+    ero = js["outcomes"]["ivl_erosion_fracture"]
+    assert ero["core"]["n"] <= 12 and "composite" not in ero

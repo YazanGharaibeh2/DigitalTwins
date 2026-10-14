@@ -790,6 +790,11 @@ def _incremental(col, name, oc, core, hold, cfg, spec_g, spec_gm) -> dict:
 def analyse_binary(col: _Collector, name: str, oc: dict, df: pd.DataFrame, cfg: MetricsConfig) -> dict:
     """Analyses (a)-(d) of one binary outcome (models only when the outcome has ``models: true``)."""
     t, excl = _outcome_table(df, oc, cfg)
+    if "_y" not in t:                                  # outcome column missing from the table
+        reason = f"outcome column {oc['column']!r} not in the table"
+        col.nc(name, "all analyses", reason, cfg.derivation_set)
+        return {"role": oc["role"], "kind": "binary", "column": oc["column"], "protocol": oc["protocol"],
+                "excluded": excl, "note": reason}
     core, hold = t[t["set"] == cfg.derivation_set], t[t["set"] == cfg.test_set]
     out = {"role": oc["role"], "kind": "binary", "column": oc["column"], "protocol": oc["protocol"],
            "ok_status": oc.get("ok_status"), "excluded": excl,
