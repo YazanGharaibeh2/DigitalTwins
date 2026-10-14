@@ -8,3 +8,7 @@ digital-twin-ivl/cohort/meshes/sizing/
 .claude/worktrees/
 digital-twin-ivl/results/cohort_runs/locks/
 digital-twin-ivl/results/cohort_runs/*.json.tmp
+digital-twin-ivl/results/sensitivity_*_runs/locks/
+digital-twin-ivl/results/sensitivity_*.tmp
+digital-twin-ivl/results/sensitivity_*_runs/*.tmp
+digital-twin-ivl/cohort/meshes/sensitivity/
