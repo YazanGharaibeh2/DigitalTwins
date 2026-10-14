@@ -15,3 +15,5 @@ digital-twin-ivl/cohort/meshes/sensitivity/
 
 # manuscript build cache
 digital-twin-ivl/manuscript/__pycache__/
+digital-twin-ivl/cohort/meshes/length3d/
+digital-twin-ivl/cohort/meshes/fields/
