@@ -65,5 +65,40 @@
    "file": "results/fields/C-A180-T0.2-DEEP_ivl_erosion.npz",
    "cohort_record": false
   }
+ },
+ "C-A180-T0.2-NOD": {
+  "ivl": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.46055536626558635,
+   "seconds": 216.45449074099997,
+   "file": "results/fields/C-A180-T0.2-NOD_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "stent_post_ivl": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.46055536626558635,
+   "seconds": 457.435404761,
+   "file": "results/fields/C-A180-T0.2-NOD_stent_post_ivl.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  },
+  "ivl_erosion": {
+   "status": "ok",
+   "fracture": true,
+   "onset_load": 0.36477000000000004,
+   "seconds": 229.83445640200011,
+   "file": "results/fields/C-A180-T0.2-NOD_ivl_erosion.npz",
+   "cohort_record": true,
+   "fracture_matches": true,
+   "onset_matches": true,
+   "status_matches": true
+  }
  }
 }
