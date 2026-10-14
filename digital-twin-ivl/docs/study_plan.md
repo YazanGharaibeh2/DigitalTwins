@@ -24,8 +24,8 @@ Working title (D6): *In Silico Digital Twins of Calcified Coronary Lesions under
 **Verification and plausibility (Phase 4).**
 - Lamé check with < 1% error.
 - Three-level mesh convergence with GCI [52] on peak calcium stress and SED.
-- Sensitivity to ℓ, to the bulk/shear ratio K/μ, and to foundation stiffness.
-- Morris screening of phase-field outcomes on 3 lesions; Sobol indices [53,54] for the linear predictors.
+- One-at-a-time sensitivity on the three pilot lesions: ℓ, the bulk/shear ratio K/μ, foundation stiffness, IVL pulse scale, no crack filler (D9), the Rankine-type driving force (D10), the calcium density (D15) and the stress-controlled failure criterion (D5).
+- Morris screening of the phase-field outcomes (damage-onset load, through-thickness damage under IVL and under the balloon alone) on 4 core lesions spanning arc, thickness and morphology: C-A90-T0.4-SUP, C-A180-T0.8-DEEP, C-A270-T0.2-NOD and C-A360-T0.4-FRAG. Inputs: calcium modulus, failure strain, IVL pulse scale, ℓ, foundation stiffness, calcium density (the only density varied), soft-tissue K/μ and fibrous modulus. The crack filler is varied one at a time only. Sobol indices [53,54] for the linear predictors.
 - Consistency checks against published observations, with agreement and disagreement reported plainly:
   - direction of the arc and thickness effects [9,18];
   - lower fracture in nodules [8,9];

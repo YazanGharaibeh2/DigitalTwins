@@ -31,3 +31,13 @@ def test_erosion_subset_is_in_core():
 
     sub = erosion_subset()
     assert len(sub) == 8 and set(sub) <= set(cohort_ids(("core",)))
+
+
+def test_alt_values_parsed_only_where_marked_as_alternative():
+    """D15: only a range column "number (remark marking an alternative value)" gives ``alt``; a number
+    with a remark naming a subgroup or another quantity (e.g. Fujino "96 (score 0-3)") does not."""
+    lit = P.load_literature()
+    with_alt = {name: row.alt for name, row in lit.items() if row.alt is not None}
+    assert with_alt == {"density_calcified_plaque_model_input": pytest.approx(1450)}
+    assert lit["fujino_score4_stent_expansion"].alt is None
+    assert P.get("materials.density.calcium").sens == (lit["density_calcified_plaque_model_input"].alt,)
