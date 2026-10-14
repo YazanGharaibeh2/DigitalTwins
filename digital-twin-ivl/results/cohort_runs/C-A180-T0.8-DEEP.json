@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A180-T0.8-DEEP",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 5630,
+  "n_cells": 11068,
+  "n_cells_per_tag": {
+   "1": 2284,
+   "2": 2936,
+   "4": 5848
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 1.7574176531735601,
+  "sigma1_p99": 2.1832728942102166,
+  "sigma1_mean": 0.5145779381044822,
+  "sigma1_peak_nl": 2.1820666952218315,
+  "sed_mean": 0.0008603341627400851,
+  "sed_peak_nl": 0.006720889541668343,
+  "scf_edge_nl": 3.9516995424863786,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.0,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.0,
+  "min_thickness_high_stress": 0.8,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.902631127999939
+ }
+}
