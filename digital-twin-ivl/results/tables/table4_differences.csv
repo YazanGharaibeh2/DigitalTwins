@@ -1,0 +1,6 @@
+Comparison,Set,AUC a,AUC b,ΔAUC (95% CI),Share of resamples with ΔAUC ≤ 0,Δ log-loss (95% CI),Δ Brier (95% CI)
+LIFT (LOOCV) - Fujino score,core,1.00,0.35,0.65 (0.46–0.83),0.000,,
+"σ1, 95th percentile - Fujino score",core,1.00,0.35,0.65 (0.46–0.83),0.000,,
+"LIFT (LOOCV) - σ1, 95th percentile",core,1.00,1.00,0.00 (0.00–0.00)†,1.000,,
+"geometry + mechanics − geometry, apparent (refit in each resample)",core,1.00,1.00,0.00 (0.00–0.00),0.981,,
+"geometry + mechanics − geometry, LOOCV",core,0.99,0.96,0.03 (0.00–0.11),0.264,−0.082 (−0.151 to −0.029),−0.030 (−0.064 to −0.006)
