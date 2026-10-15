@@ -16,6 +16,7 @@ PARTS = ("s0_front",          # title, authors, abstract, keywords
          "s1_introduction",
          "s2_methods",
          "s2_statistics",     # 2.10 Statistical Analysis
+         "s2_software",       # 2.11 Software and Reproducibility
          "s3_results",
          "s4_discussion",
          "s5_conclusions",
