@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A270-T0.8-DEEP",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 7673,
+  "n_cells": 15154,
+  "n_cells_per_tag": {
+   "1": 2898,
+   "2": 3417,
+   "4": 8839
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 2.650338359030632,
+  "sigma1_p99": 3.4605244490708906,
+  "sigma1_mean": 0.6992945430795643,
+  "sigma1_peak_nl": 3.534215853937446,
+  "sed_mean": 0.001917107900768443,
+  "sed_peak_nl": 0.016718311158972394,
+  "scf_edge_nl": 3.5384368516658697,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.000421126197604795,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.004913468037567689,
+  "min_thickness_high_stress": 0.8,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.7222836179998922
+ }
+}

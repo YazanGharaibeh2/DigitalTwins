@@ -26,5 +26,91 @@
   "min_thickness_high_stress": 0.8,
   "p_lumen_MPa": 0.4053,
   "seconds": 0.552722630000062
+ },
+ "transient": {
+  "T": 0.04984946175032433,
+  "T_equivalent": 0.05616372888217977,
+  "sigma1_peak_transient": 2.838702453767856,
+  "sigma1_static": 56.94549858904719,
+  "sigma1_static_equivalent": 50.54334016394965,
+  "t_peak": 3.123791713483526,
+  "peak_at_window_end": false,
+  "seconds": 38.65890195599968
+ },
+ "protocols": {
+  "physiological": {
+   "status": "ok",
+   "summary": {
+    "p_target": 0.01599864,
+    "p_reached": 0.015998639999999998,
+    "cap_radius": null
+   },
+   "n_steps": 10,
+   "n_steps_unconverged_stagger": 0,
+   "final": {
+    "p": 0.015998639999999998,
+    "R_in": null,
+    "R_cap": null,
+    "lumen_area": 2.227810110742955,
+    "max_d": 0.0,
+    "n_crack_cells": 0,
+    "p_contact_mean": 0.0
+   },
+   "max_lumen_area": 2.227810110742955,
+   "cracks": {
+    "fracture": false,
+    "n_fractures": 0,
+    "n_partial": 0,
+    "diffuse": false,
+    "n_diffuse": 0,
+    "damaged_fraction": 0.0,
+    "max_depth_frac": 0.0,
+    "pattern": [],
+    "location_frac": [],
+    "onset_load": null,
+    "onset_phase": null,
+    "n_cracked_cells": 0,
+    "cracked_measure": 0.0,
+    "ca_measure": 5.119502599066
+   },
+   "seconds": 5.420890869999312
+  },
+  "balloon_only": {
+   "status": "ok",
+   "summary": {
+    "p_target": 0.4053,
+    "p_reached": 0.4053,
+    "cap_radius": 1.595
+   },
+   "n_steps": 10,
+   "n_steps_unconverged_stagger": 0,
+   "final": {
+    "p": 0.4053,
+    "R_in": null,
+    "R_cap": 1.595,
+    "lumen_area": 2.701404973346768,
+    "max_d": 0.0,
+    "n_crack_cells": 0,
+    "p_contact_mean": 0.0
+   },
+   "max_lumen_area": 2.701404973346768,
+   "cracks": {
+    "fracture": false,
+    "n_fractures": 0,
+    "n_partial": 0,
+    "diffuse": false,
+    "n_diffuse": 0,
+    "damaged_fraction": 0.0,
+    "max_depth_frac": 0.0,
+    "pattern": [],
+    "location_frac": [],
+    "onset_load": null,
+    "onset_phase": null,
+    "n_cracked_cells": 0,
+    "cracked_measure": 0.0,
+    "ca_measure": 5.119502599066
+   },
+   "seconds": 7.671038741000302
+  }
  }
 }
