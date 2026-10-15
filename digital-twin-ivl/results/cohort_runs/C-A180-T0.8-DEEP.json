@@ -266,6 +266,75 @@
     "ca_measure": 3.815288249381
    },
    "seconds": 33.686303315999794
+  },
+  "stent_no_ivl": {
+   "status": "ok",
+   "summary": {
+    "K_s": 6.068239979987641,
+    "R_target": 1.605,
+    "p_rated": 1.6212,
+    "R_min": 0.8304012539313279,
+    "R_dep": 1.6049999999999989,
+    "P_dep": 0.499481712284681,
+    "reached_target": true,
+    "expand_status": "ok",
+    "max_contact_pressure_mean": 0.5493356804454066,
+    "R_final": 1.5263770926078968,
+    "P_final": 0.47686451039212957,
+    "recoil_status": "ok",
+    "n_bisection": 13,
+    "recoil_residual": -0.0002381595874902387,
+    "metrics": {
+     "lumen_area_pre": 2.2124524562680006,
+     "lumen_area_post": 7.311051599310816,
+     "lumen_gain": 5.098599143042815,
+     "msa": 7.319367477932822,
+     "stent_expansion_pct": 82.0585557269373,
+     "acute_recoil_pct": 4.898623513526614,
+     "malapposition_area": 0.0,
+     "malapposed_frac": 0.0,
+     "reached_target": true,
+     "max_contact_pressure_mean": 0.5493356804454066,
+     "R_dep": 1.6049999999999989,
+     "R_final": 1.5263770926078968,
+     "malapposition_gap_mm": 0.1,
+     "reference_diameter_mm": 3.37
+    }
+   },
+   "n_steps": 35,
+   "n_steps_unconverged_stagger": 12,
+   "final": {
+    "p": 0.0,
+    "R_in": 1.5263770926078968,
+    "R_cap": null,
+    "lumen_area": 7.311051599310816,
+    "max_d": 1.0,
+    "n_crack_cells": 5633,
+    "p_contact_mean": 0.47686451039212957
+   },
+   "max_lumen_area": 8.083188884495167,
+   "cracks": {
+    "fracture": false,
+    "n_fractures": 0,
+    "n_partial": 1,
+    "diffuse": true,
+    "n_diffuse": 1,
+    "damaged_fraction": 0.9660678592929131,
+    "max_depth_frac": 1.0,
+    "pattern": [
+     "diffuse"
+    ],
+    "location_frac": [
+     null
+    ],
+    "onset_load": 1.1402407523587963,
+    "onset_phase": "stent_expand",
+    "n_cracked_cells": 5633,
+    "cracked_measure": 3.6858273516649085,
+    "ca_measure": 3.815288249381
+   },
+   "seconds": 2125.107286372
   }
- }
+ },
+ "complete": true
 }
