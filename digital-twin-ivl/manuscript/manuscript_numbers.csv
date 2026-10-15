@@ -490,25 +490,29 @@ id,label,value,scale,printed,source,key
 488,lesions.*.ca_E_MPa,1100.356701,1.0,1100,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
 489,pilot ivl fracture at E=1100.36 [events],0,1.0,0,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [events]
 490,pilot ivl fracture at E=1100.36 [n],3,1.0,3,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [n]
-491,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
-492,outcomes.ivl_fracture.post_hoc.outcome_criterion_benchmark.core.auc,0.97265625,1.0,0.97,results/metrics_summary.json,outcomes.ivl_fracture.post_hoc.outcome_criterion_benchmark.core.auc
-493,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
-494,outcomes.ivl_fracture.post_hoc.fujino_arc_tolerance.core.arc_cutoff_deg,180.0,1.0,180,results/metrics_summary.json,outcomes.ivl_fracture.post_hoc.fujino_arc_tolerance.core.arc_cutoff_deg
-495,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc,0.880859375,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc
-496,outcomes.ivl_fracture.univariable.ca_thickness_max.auc,0.541015625,1.0,0.54,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_thickness_max.auc
-497,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
-498,sigma_crit (MPa),7.300123960000006,1.0,7.3,src/materials/constitutive.py MaterialSet.baseline().sigma_crit,sigma_crit (MPa)
-499,calcification_fracture_stress.value,0.179,1.0,0.179,params/literature_parameters.csv,calcification_fracture_stress.value
-500,min(by_h.ell_mm) x 1000,20.0,1.0,20,results/diag_ell.json,min(by_h.ell_mm) x 1000
-501,count(predictor quantities in max_rel_change_default_vs_fine),7,1.0,7,results/verification_mesh_convergence.json,count(predictor quantities in max_rel_change_default_vs_fine)
-502,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
-503,core IVL runs with unconverged steps | ivl_fracture [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged steps | ivl_fracture [events]
-504,core IVL runs with unconverged steps | ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core IVL runs with unconverged steps | ivl_fracture [n]
-505,core IVL runs with unconverged steps | no ivl_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core IVL runs with unconverged steps | no ivl_fracture [events]
-506,core IVL runs with unconverged steps | no ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core IVL runs with unconverged steps | no ivl_fracture [n]
-507,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
-508,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
-509,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
-510,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
-511,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
-512,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells
+491,moduli_MPa,210.225,1.0,210,results/modulus_window.json,moduli_MPa
+492,by_modulus[210.225].n_ivl_fracture [events],1,1.0,1,results/modulus_window.json,by_modulus[210.225].n_ivl_fracture [events]
+493,by_modulus[210.225].n_ivl_fracture [n],1,1.0,1,results/modulus_window.json,by_modulus[210.225].n_ivl_fracture [n]
+494,by_modulus[210.225].n_balloon_fracture,0,1.0,0,results/modulus_window.json,by_modulus[210.225].n_balloon_fracture
+495,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
+496,outcomes.ivl_fracture.post_hoc.outcome_criterion_benchmark.core.auc,0.97265625,1.0,0.97,results/metrics_summary.json,outcomes.ivl_fracture.post_hoc.outcome_criterion_benchmark.core.auc
+497,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
+498,outcomes.ivl_fracture.post_hoc.fujino_arc_tolerance.core.arc_cutoff_deg,180.0,1.0,180,results/metrics_summary.json,outcomes.ivl_fracture.post_hoc.fujino_arc_tolerance.core.arc_cutoff_deg
+499,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc,0.880859375,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc
+500,outcomes.ivl_fracture.univariable.ca_thickness_max.auc,0.541015625,1.0,0.54,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_thickness_max.auc
+501,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
+502,sigma_crit (MPa),7.300123960000006,1.0,7.3,src/materials/constitutive.py MaterialSet.baseline().sigma_crit,sigma_crit (MPa)
+503,calcification_fracture_stress.value,0.179,1.0,0.179,params/literature_parameters.csv,calcification_fracture_stress.value
+504,min(by_h.ell_mm) x 1000,20.0,1.0,20,results/diag_ell.json,min(by_h.ell_mm) x 1000
+505,count(predictor quantities in max_rel_change_default_vs_fine),7,1.0,7,results/verification_mesh_convergence.json,count(predictor quantities in max_rel_change_default_vs_fine)
+506,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
+507,core IVL runs with unconverged steps | ivl_fracture [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged steps | ivl_fracture [events]
+508,core IVL runs with unconverged steps | ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core IVL runs with unconverged steps | ivl_fracture [n]
+509,core IVL runs with unconverged steps | no ivl_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core IVL runs with unconverged steps | no ivl_fracture [events]
+510,core IVL runs with unconverged steps | no ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core IVL runs with unconverged steps | no ivl_fracture [n]
+511,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
+512,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
+513,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
+514,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
+515,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
+516,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells

@@ -319,6 +319,8 @@ The IVL balloon inflated without pulses produced no through-thickness damage in 
 
 In the pilot sweep of the calcium modulus (Section 2.4), only 365 MPa gave through-thickness damage under IVL in all 3 pilot lesions without damage under the IVL balloon alone. At the next lower modulus (121.1 MPa) the balloon alone damaged 1 of 3 lesions; at the next higher modulus (1100 MPa) IVL damaged 0 of 3. The fracture outcome of the model is therefore sensitive to the calcium modulus, and the calibrated value lies in a narrow window of the sweep.
 
+In the post hoc runs at two calcium moduli inside the calibration window, at 210 MPa, IVL damaged 1 of 1 core lesions and the IVL balloon alone damaged 0.
+
 [pending] (results/sensitivity_oat.json)
 
 [pending] (results/sensitivity_morris.json)

@@ -953,13 +953,44 @@ def _l3d_text(ctx: Ctx) -> str:
     return txt + f" ({ctx.fig('fig7_sensitivity')}e)."
 
 
+MODWIN = "results/modulus_window.json"
+
+
+def _modwin_text(ctx: Ctx, best: str | None) -> str:
+    """Post hoc (D18): outcomes and AUCs at the two moduli inside the calibration window."""
+    m = ctx.data(MODWIN)
+    parts = []
+    for Ek, e in m.get("by_modulus", {}).items():
+        E = float(Ek)
+        if not e.get("n"):
+            continue
+        key = f"by_modulus[{Ek}]"
+        txt = (f"at {ctx.num(E, src=MODWIN, key='moduli_MPa', fmt='.0f')} MPa, IVL damaged "
+               f"{_k_of_n(ctx, e['n_ivl_fracture'], e['n'], key=f'{key}.n_ivl_fracture', src=MODWIN)} core lesions "
+               f"and the IVL balloon alone damaged {ctx.count(e['n_balloon_fracture'], src=MODWIN, key=f'{key}.n_balloon_fracture')}")
+        aucs = [f"{pname(ctx, p)} {ctx.num(e[p]['auc'], src=MODWIN, key=f'{key}.{p}.auc', fmt='.2f')}"
+                for p in (best, "fujino_score") if p and isinstance(e.get(p), dict)]
+        if aucs:
+            txt += " (AUC of " + _and(aucs) + ")"
+        parts.append(txt)
+    if not parts:
+        return ""
+    n_done = sum(e.get("n_runs_complete", 0) for e in m["by_modulus"].values())
+    n_plan = sum(e.get("n_runs_planned", 0) for e in m["by_modulus"].values())
+    if n_done < n_plan:
+        if not ctx.draft:
+            raise BuildError(f"modulus-window runs incomplete: {n_done} of {n_plan}")
+        ctx.pending.append(f"{MODWIN}: {n_done} of {n_plan} runs")
+    return ("In the post hoc runs at two calcium moduli inside the calibration window, " + "; ".join(parts) + ".")
+
+
 def s36(ctx: Ctx) -> list:
     from build_manuscript import ROOT
     best = ctx.opt(MS, f"{PRIMARY}.fujino_comparison.best_single_mechanics")
     paras = [Heading("3.6. Sensitivity and Uncertainty", 2), Para(_modulus_window(ctx))]
     texts = []
-    for rel, fn in ((OAT, _oat_text), (MORRIS, _morris_text), (SOBOL, lambda c: _sobol_text(c, best)),
-                    (L3D, _l3d_text)):
+    for rel, fn in ((MODWIN, lambda c: _modwin_text(c, best)), (OAT, _oat_text), (MORRIS, _morris_text),
+                    (SOBOL, lambda c: _sobol_text(c, best)), (L3D, _l3d_text)):
         if (ROOT / rel).exists():
             texts.append(fn(ctx))
         elif ctx.draft:
