@@ -334,6 +334,63 @@
     "ca_measure": 3.362518880595
    },
    "seconds": 1891.04091713
+  },
+  "ivl_erosion": {
+   "status": "ok",
+   "summary": {
+    "T": 0.09784702253602748,
+    "p_bal": 0.4053,
+    "p_peak": 5.0,
+    "pulse_scale": 1.0,
+    "p_top": 0.8945351126801374,
+    "cap_radius": 1.595,
+    "max_d": 1.0,
+    "max_p_cap_mean": 0.21013440834745264
+   },
+   "n_steps": 33,
+   "n_steps_unconverged_stagger": 0,
+   "final": {
+    "p": 0.0,
+    "R_in": null,
+    "R_cap": null,
+    "lumen_area": 2.212452456268014,
+    "max_d": 1.0,
+    "n_crack_cells": 956,
+    "p_contact_mean": 0.0
+   },
+   "max_lumen_area": 7.85150490050976,
+   "cracks": {
+    "fracture": true,
+    "n_fractures": 1,
+    "n_partial": 5,
+    "diffuse": false,
+    "n_diffuse": 0,
+    "damaged_fraction": 0.18454556580816814,
+    "max_depth_frac": 1.0,
+    "pattern": [
+     "circumferential",
+     "radial",
+     "undetermined",
+     "undetermined",
+     "undetermined",
+     "undetermined"
+    ],
+    "location_frac": [
+     0.002187858218371695,
+     0.12059805005224523,
+     0.3006259191631006,
+     0.24493819566202404,
+     0.21536507561798715,
+     0.19111347641896467
+    ],
+    "onset_load": 0.6499175563400688,
+    "onset_phase": "ivl_pulse",
+    "n_cracked_cells": 956,
+    "cracked_measure": 0.6205379493600525,
+    "ca_measure": 3.362518880595
+   },
+   "seconds": 241.70836776700003
   }
- }
+ },
+ "complete": true
 }
