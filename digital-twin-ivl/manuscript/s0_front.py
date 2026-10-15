@@ -7,7 +7,7 @@ from build_manuscript import Ctx, Heading, Para
 from s3_results import MS, OUT, PRIMARY, _diff_word, _vci, pname
 
 KEYWORDS = ("intravascular lithotripsy", "coronary artery calcification", "finite element analysis",
-            "phase-field fracture", "digital twin", "in silico", "stent expansion", "optical coherence tomography")
+            "phase-field fracture", "computational biomechanics", "in silico", "stent expansion", "optical coherence tomography")
 
 
 def blocks(ctx: Ctx) -> list:

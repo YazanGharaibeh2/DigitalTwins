@@ -111,6 +111,47 @@
     "ca_measure": 5.119502599066
    },
    "seconds": 7.671038741000302
+  },
+  "balloon_10atm": {
+   "status": "ok",
+   "summary": {
+    "p_target": 1.01325,
+    "p_reached": 1.01325,
+    "cap_radius": 1.595
+   },
+   "n_steps": 10,
+   "n_steps_unconverged_stagger": 3,
+   "final": {
+    "p": 1.01325,
+    "R_in": null,
+    "R_cap": 1.595,
+    "lumen_area": 8.003233004972762,
+    "max_d": 1.0,
+    "n_crack_cells": 7774,
+    "p_contact_mean": 0.0
+   },
+   "max_lumen_area": 8.003233004972762,
+   "cracks": {
+    "fracture": true,
+    "n_fractures": 1,
+    "n_partial": 0,
+    "diffuse": true,
+    "n_diffuse": 1,
+    "damaged_fraction": 1.0,
+    "max_depth_frac": 1.0,
+    "pattern": [
+     "diffuse"
+    ],
+    "location_frac": [
+     null
+    ],
+    "onset_load": 0.709275,
+    "onset_phase": "balloon_10atm",
+    "n_cracked_cells": 7774,
+    "cracked_measure": 5.119502599066,
+    "ca_measure": 5.119502599066
+   },
+   "seconds": 2043.240105905
   }
  }
 }

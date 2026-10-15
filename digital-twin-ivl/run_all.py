@@ -152,6 +152,12 @@ def _metrics():
     stage_metrics.run()
 
 
+def _modulus_window():
+    from dtivl.drivers import stage_modulus_window
+    stage_modulus_window.run()
+    stage_modulus_window.analyze()
+
+
 def _consistency():
     from dtivl.drivers import stage_consistency
     stage_consistency.run()
@@ -206,6 +212,8 @@ STAGES = [
     Stage("fields", _fields, note="figure fields; resumes per lesion"),
     Stage("length3d", _length3d, note="D12 3D length series (hours); resumes per run"),
     Stage("metrics", _metrics, always=True),
+    Stage("modulus_window", _modulus_window, always=True,
+          note="D18 post hoc: core IVL runs at two moduli in the calibration window (96 runs; resumes per run)"),
     Stage("consistency", _consistency, always=True),
     Stage("figures", _figures, always=True),
     Stage("tables", _tables, always=True),

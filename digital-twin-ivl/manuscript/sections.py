@@ -9,7 +9,8 @@ import importlib
 
 from build_manuscript import Ctx, Heading
 
-TITLE = "In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting"
+TITLE = ("In Silico Models of Calcified Coronary Lesions under an Equivalent Lithotripsy Load: Linear Stress "
+         "Predictors of Calcium Damage")   # D17
 
 #: manuscript order (MDPI research article)
 PARTS = ("s0_front",          # title, authors, abstract, keywords

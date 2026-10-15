@@ -1,0 +1,21 @@
+{
+ "note": "POST HOC (decision D18, added after the first draft with the outcomes known): core IVL and balloon-alone runs and predictor analyses at the log-midpoints between the calibrated calcium modulus (D8) and its neighbouring pilot-sweep moduli; all other inputs at baseline",
+ "moduli_MPa": [
+  210.224637,
+  633.748385
+ ],
+ "best_single_mechanics": "pred_sigma1_peak_nl",
+ "by_modulus": {
+  "210.225": {
+   "n_runs_complete": 1,
+   "n_runs_planned": 48,
+   "n": 1,
+   "n_ivl_fracture": 1,
+   "n_balloon_fracture": 0
+  },
+  "633.748": {
+   "n_runs_complete": 0,
+   "n_runs_planned": 48
+  }
+ }
+}

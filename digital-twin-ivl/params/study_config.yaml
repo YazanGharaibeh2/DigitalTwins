@@ -10,13 +10,13 @@
 #     literature value; the pipeline refuses to run the main analysis while
 #     any entry used by it is PENDING (see dtivl.params.check_ready).
 
-decisions:            # Checkpoint 1 answers (PI, 2026-10-11); Checkpoint 2 answers (PI, 2026-10-13)
+decisions:            # Checkpoint 1 answers (PI, 2026-10-11); Checkpoint 2 answers (PI, 2026-10-13); Checkpoint 3 answers (PI, 2026-10-15)
   D1: "Test the 3D code on one 3D example with Fujino score 4 before the cohort run."
   D2: "Calcium thickness levels 0.2 and 0.4 mm."
   D3: "Calcium length levels (3D only) 1, 3, 5 mm."
   D4: "Morphologies: superficial sheet, deep sheet, calcified nodule (protruding), fragmented. Lipid and fibrous-cap variation only in the hold-out set."
   D5: "Calcium failure: primary strain-controlled (eps_f from Holzapfel 2004, sigma_c = E*eps_f); sensitivity stress-controlled (sigma_c = 179 kPa fixed)."
-  D6: "Title: In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting."
+  D6: "Title (superseded by D17): In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting."
   D7: "Network allow-list: not yet available (checked 2026-10-11)."
   D8: "Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis."
   D9: "Crack filler approved (degradation floor k = mu_fibrous/mu_calcium); sensitivity with k = k_residual (no filler) where the solver allows (PI, 2026-10-13)."
@@ -26,6 +26,11 @@ decisions:            # Checkpoint 1 answers (PI, 2026-10-11); Checkpoint 2 answ
   D13: "Erosion comparator kept on a subset (PI, 2026-10-13)."
   D14: "IVL represented by the single-pulse quasi-static peak equivalence; limitation stated (no pulse-count accumulation) (PI, 2026-10-13)."
   D15: "SECONDARY-status inputs approved as explicit exceptions (tissue densities for the transient IVL factor, physiological pressure), with a calcium-density sensitivity run (PI, 2026-10-13)."
+  D16: "Scope (PI, 2026-10-15, Checkpoint 3 option a): keep the model; the paper reports how well a cheap linear-elastic stress measure of the untreated lesion anticipates nonlinear phase-field damage onset under an equivalent (quasi-static) lithotripsy load in a designed in silico cohort. No claims of lithotripsy-specific mechanisms, calcium-limited expansion or stent outcomes beyond exploratory analyses."
+  D17: "Title (PI, 2026-10-15; replaces D6): In Silico Models of Calcified Coronary Lesions under an Equivalent Lithotripsy Load: Linear Stress Predictors of Calcium Damage."
+  D18: "Post-hoc analyses approved (PI, 2026-10-15, Checkpoint 3 P4), each reported as post hoc: Fujino arc tolerance at the cut-off; core AUCs without the calibration geometries; outcome-criterion benchmark (linear stress scaled to the peak load over the failure stress); flexible geometry comparator with a penalty sensitivity; core IVL runs at two calcium moduli inside the calibration window."
+  D19: "Confirmed (PI, 2026-10-15, Checkpoint 3 P5): composite name LIFT; composite rule ranked by the oriented AUC; onset and censoring definitions; consistency criteria; D12 subset and axial mesh size; ca_depth_min as the depth predictor; nanoindentation modulus SECONDARY; split of the Fujino 0-3 literature row; IVL pulse width SECONDARY, approved as an exception alongside D15."
+  D20: "Compute (Checkpoint 3 P3, no change requested): sensitivity analyses run as designed (one-at-a-time 39 runs, Morris 216 runs, Sobol), after the cohort and the D18 modulus runs."
 
 design:
   seed: 20261009
