@@ -33,11 +33,13 @@ def blocks(ctx: Ctx) -> list:
         Para(
             f"The models were implemented in Python {_lock_version(ctx, 'python')} with DOLFINx "
             f"{_lock_version(ctx, 'fenics-dolfinx')} {c('dolfinx2023')} and PETSc {_lock_version(ctx, 'petsc')} "
-            f"(direct solver MUMPS), meshes were generated with Gmsh {_req_version(ctx, 'gmsh')} "
-            f"{c('geuzaine2009gmsh')}, and the statistics used scikit-learn {_req_version(ctx, 'scikit-learn')}, "
-            f"SciPy {_req_version(ctx, 'scipy')} and SALib {_req_version(ctx, 'SALib')} {c('herman2017salib')}. "
+            f"with the direct solver MUMPS {_lock_version(ctx, 'mumps-mpi')}. Meshes were generated with Gmsh "
+            f"{_req_version(ctx, 'gmsh')} {c('geuzaine2009gmsh')}. The statistics used scikit-learn "
+            f"{_req_version(ctx, 'scikit-learn')} and SciPy {_req_version(ctx, 'scipy')}, and the global "
+            f"sensitivity analyses used SALib {_req_version(ctx, 'SALib')} {c('herman2017salib')}. "
             "A single script regenerates every result, figure, table and this manuscript from the configuration "
-            "and the literature parameter table; all random draws are seeded. Every number in the text is read "
-            "from a results or parameter file when the manuscript is built, and the build lists each number "
-            "with its source and fails if the text contains a number that was not read from a file."),
+            "and the literature parameter table, and all random draws are seeded. Every number in the text is read, "
+            "when the manuscript is built, from a results file, the parameter files, the source code (solver and "
+            "design constants) or the environment files (software versions). The build lists each number with its "
+            "source and fails if the text contains a number that was not read from a file."),
     ]

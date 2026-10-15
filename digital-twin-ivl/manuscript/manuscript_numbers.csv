@@ -28,118 +28,168 @@ id,label,value,scale,printed,source,key
 26,fracture_angle_cutoff_cutting_balloon.value,198.0,1.0,198,params/literature_parameters.csv,fracture_angle_cutoff_cutting_balloon.value
 27,fracture_thickness_cutoff_cutting_balloon.value,0.445,1.0,0.445,params/literature_parameters.csv,fracture_thickness_cutoff_cutting_balloon.value
 28,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
-29,calcification_modulus_nanoindentation.lower,10000.0,0.001,10,params/literature_parameters.csv,calcification_modulus_nanoindentation.lower
-30,calcification_modulus_nanoindentation.upper,25000.0,0.001,25,params/literature_parameters.csv,calcification_modulus_nanoindentation.upper
-31,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
-32,len(design.core_factorial.arc_deg),4,1.0,4,params/study_config.yaml,len(design.core_factorial.arc_deg)
-33,len(design.core_factorial.thickness_mm),3,1.0,3,params/study_config.yaml,len(design.core_factorial.thickness_mm)
-34,len(design.core_factorial.morphology),4,1.0,4,params/study_config.yaml,len(design.core_factorial.morphology)
-35,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
-36,metrics.composite.value.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.value.max_predictors
-37,design.core_factorial.arc_deg[0],90,1.0,90,params/study_config.yaml,design.core_factorial.arc_deg[0]
-38,design.core_factorial.arc_deg[1],180,1.0,180,params/study_config.yaml,design.core_factorial.arc_deg[1]
-39,design.core_factorial.arc_deg[2],270,1.0,270,params/study_config.yaml,design.core_factorial.arc_deg[2]
-40,design.core_factorial.arc_deg[3],360,1.0,360,params/study_config.yaml,design.core_factorial.arc_deg[3]
-41,design.core_factorial.thickness_mm[0],0.2,1.0,0.2,params/study_config.yaml,design.core_factorial.thickness_mm[0]
-42,design.core_factorial.thickness_mm[1],0.4,1.0,0.4,params/study_config.yaml,design.core_factorial.thickness_mm[1]
-43,design.core_factorial.thickness_mm[2],0.8,1.0,0.8,params/study_config.yaml,design.core_factorial.thickness_mm[2]
-44,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
-45,geometry.lumen_area_mm2,2.2,1000000.0,2.2e+06,params/study_config.yaml,geometry.lumen_area_mm2
-46,geometry.reference_diameter_mm,3.37,1000.0,3.37e+03,params/study_config.yaml,geometry.reference_diameter_mm
-47,geometry.wall_thickness_mm,0.567,1000.0,567,params/study_config.yaml,geometry.wall_thickness_mm
-48,plaque_burden_check.implied_plaque_burden_pct,80.58117809838276,1.0,80.6,results/cohort_summary.json,plaque_burden_check.implied_plaque_burden_pct
-49,geometry.depth_superficial_mm,0.16,1000.0,1.6e+02,params/study_config.yaml,geometry.depth_superficial_mm
-50,geometry.depth_deep_mm,0.33999999999999997,1000.0,3.4e+02,params/study_config.yaml,geometry.depth_deep_mm
-51,geometry.nodule_height_mm,0.3,1000.0,3e+02,params/study_config.yaml,geometry.nodule_height_mm
-52,geometry.nodule_base_arc_deg,60.0,1.0,60,params/study_config.yaml,geometry.nodule_base_arc_deg
-53,geometry.fragment_pitch_deg,45.0,1.0,45,params/study_config.yaml,geometry.fragment_pitch_deg
-54,geometry.fragment_fill,0.6,100.0,60,params/study_config.yaml,geometry.fragment_fill
-55,geometry.calcium_iel_clearance_mm,0.05,1000.0,50,params/study_config.yaml,geometry.calcium_iel_clearance_mm
-56,plaque_growth.n_grown.core,16,1.0,16,results/cohort_summary.json,plaque_growth.n_grown.core
-57,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
-58,design.seed,20261009,1.0,20261009,params/study_config.yaml,design.seed
-59,design.holdout_lhs.ranges.arc_deg[0],60,1.0,60,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[0]
-60,design.holdout_lhs.ranges.arc_deg[1],360,1.0,360,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[1]
-61,design.holdout_lhs.ranges.thickness_mm[0],0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[0]
-62,design.holdout_lhs.ranges.thickness_mm[1],0.8,1.0,0.8,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[1]
-63,discretisation.polar_n_theta,360,1.0,360,params/study_config.yaml,discretisation.polar_n_theta
-64,discretisation.polar_dr_mm x 1000,10.0,1.0,10,params/study_config.yaml,discretisation.polar_dr_mm x 1000
-65,fujino_angle_threshold.notes[points],2,1.0,2,params/literature_parameters.csv,fujino_angle_threshold.notes[points]
-66,fujino_angle_threshold.value,180.0,1.0,180,params/literature_parameters.csv,fujino_angle_threshold.value
-67,fujino_thickness_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_thickness_threshold.notes[points]
-68,fujino_thickness_threshold.value,0.5,1.0,0.5,params/literature_parameters.csv,fujino_thickness_threshold.value
-69,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
-70,discretisation.h_calcium_mm x 1000,40.0,1.0,40,params/study_config.yaml,discretisation.h_calcium_mm x 1000
-71,discretisation.h_soft_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.h_soft_mm
-72,geometry.margin_3d_mm,2.0,1000.0,2000,params/study_config.yaml,geometry.margin_3d_mm
-73,discretisation.example3d.h_calcium_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.example3d.h_calcium_mm
-74,discretisation.example3d.h_soft_mm,0.4,1.0,0.4,params/study_config.yaml,discretisation.example3d.h_soft_mm
-75,design.length_series_3d.h_axial_ca_mm,0.5,1.0,0.5,params/study_config.yaml,design.length_series_3d.h_axial_ca_mm
-76,design.length_series_3d.h_axial_margin_mm,1.0,1.0,1,params/study_config.yaml,design.length_series_3d.h_axial_margin_mm
-77,fibrous_E,2.312,1.0,2.31,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),fibrous_E
-78,lipid_E x 1000,5.5,1.0,5.5,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),lipid_E x 1000
-79,k_over_mu,50.0,1.0,50,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_over_mu
-80,ca_nu,0.3,1.0,0.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_nu
-81,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
-82,ca_E,365.006198,1.0,365,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_E
-83,sigma_crit = ca_E x eps_f,7.300123960000006,1.0,7.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit = ca_E x eps_f
-84,sigma_c,0.179,1.0,0.18,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_c
-85,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
-86,loads.perivascular_k_MPa_per_mm,0.0001,1.0,0.0001,params/study_config.yaml,loads.perivascular_k_MPa_per_mm
-87,loads.contact_penalty_MPa_per_mm,1000.0,1.0,1000,params/study_config.yaml,loads.contact_penalty_MPa_per_mm
-88,loads.physiological_pressure,0.01599864,1000.0,16,params/study_config.yaml,loads.physiological_pressure
-89,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-90,geometry.ivl_balloon_diameter_mm,3.19,1000.0,3.19e+03,params/study_config.yaml,geometry.ivl_balloon_diameter_mm
-91,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
-92,geometry.stent_target_diameter_mm,3.21,1000.0,3.21e+03,params/study_config.yaml,geometry.stent_target_diameter_mm
-93,"stent_rated_burst_pressure.value [atm, as tabulated]",16.0,1.0,16,params/literature_parameters.csv,"stent_rated_burst_pressure.value [atm, as tabulated]"
-94,K_s_MPa_per_mm,6.068239979987641,1.0,6.07,results/calibration_stent.json,K_s_MPa_per_mm
-95,loads.stent_recoil_target_pct,4.3,1.0,4.3,params/study_config.yaml,loads.stent_recoil_target_pct
-96,MAX_HALVINGS,6,1.0,6,src/solvers/nonlinear.py,MAX_HALVINGS
-97,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-98,loads.ivl_peak_pressure_MPa,5.0,1.0,5,params/study_config.yaml,loads.ivl_peak_pressure_MPa
-99,loads.ivl_pulse_scale,1.0,1.0,1,params/study_config.yaml,loads.ivl_pulse_scale
-100,k_floor = mu_fibrous / mu_Ca,0.005489587147595048,1.0,0.0055,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_floor = mu_fibrous / mu_Ca
-101,eps_f = calcification_fracture_stretch - 1,0.020000000000000018,1.0,0.02,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),eps_f = calcification_fracture_stretch - 1
-102,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
-103,fracture.ell_over_h,2.0,1.0,2,params/study_config.yaml,fracture.ell_over_h
-104,STAGGER_TOL,0.001,1.0,0.001,src/solvers/nonlinear.py,STAGGER_TOL
-105,STAGGER_MAX_IT,100,1.0,100,src/solvers/nonlinear.py,STAGGER_MAX_IT
-106,erosion subset size,8,1.0,8,params/study_config.yaml,size of design.erosion_subset
-107,fracture.d_crack,0.9,1.0,0.9,params/study_config.yaml,fracture.d_crack
-108,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-109,SIGMA1_PERCENTILE,95.0,1.0,95,src/metrics/predictors.py,SIGMA1_PERCENTILE
-110,SIGMA1_PERCENTILE_HIGH,99.0,1.0,99,src/metrics/predictors.py,SIGMA1_PERCENTILE_HIGH
-111,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
-112,EDGE_MIN_WINDOW_DEG,10.0,1.0,10,src/metrics/predictors.py,EDGE_MIN_WINDOW_DEG
-113,HIGH_STRESS_PERCENTILE,90.0,1.0,90,src/metrics/predictors.py,HIGH_STRESS_PERCENTILE
-114,n_oat_runs(),39,1.0,39,src/drivers/stage_sensitivity.py,n_oat_runs()
-115,len(morris_inputs()),8,1.0,8,src/drivers/stage_sensitivity.py,len(morris_inputs())
-116,len(design.sensitivity.morris_lesions),4,1.0,4,params/study_config.yaml,len(design.sensitivity.morris_lesions)
-117,design.sensitivity.morris_trajectories,6,1.0,6,params/study_config.yaml,design.sensitivity.morris_trajectories
-118,n_morris_runs(),216,1.0,216,src/drivers/stage_sensitivity.py,n_morris_runs()
-119,number of design.sensitivity.sobol.inputs set true,5,1.0,5,params/study_config.yaml,number of design.sensitivity.sobol.inputs set true
-120,len(design.length_series_3d.cross_sections),1,1.0,1,params/study_config.yaml,len(design.length_series_3d.cross_sections)
-121,design.lengths_3d_mm[0],1,1.0,1,params/study_config.yaml,design.lengths_3d_mm[0]
-122,design.lengths_3d_mm[1],3,1.0,3,params/study_config.yaml,design.lengths_3d_mm[1]
-123,design.lengths_3d_mm[2],5,1.0,5,params/study_config.yaml,design.lengths_3d_mm[2]
-124,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-125,metrics.bootstrap_n,2000.0,1.0,2000,params/study_config.yaml,metrics.bootstrap_n
-126,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
-127,len(metrics.candidates.geometry),8,1.0,8,params/study_config.yaml,len(metrics.candidates.geometry)
-128,metrics.min_per_class,2.0,1.0,2,params/study_config.yaml,metrics.min_per_class
-129,metrics.composite.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.max_predictors
-130,metrics.composite.min_discrimination,0.6,1.0,0.60,params/study_config.yaml,metrics.composite.min_discrimination
-131,metrics.composite.max_abs_spearman,0.8,1.0,0.80,params/study_config.yaml,metrics.composite.max_abs_spearman
-132,metrics.logistic_C,1.0,1.0,1.0,params/study_config.yaml,metrics.logistic_C
-133,len(metrics.incremental.geometry_model),4,1.0,4,params/study_config.yaml,len(metrics.incremental.geometry_model)
-134,metrics.min_rows_continuous,5.0,1.0,5,params/study_config.yaml,metrics.min_rows_continuous
-135,design.seed,20261009,1.0,20261009,params/study_config.yaml,design.seed
-136,metrics.seed_offset,500,1.0,500,params/study_config.yaml,metrics.seed_offset
-137,python,'3.12.15',1.0,3.12.15,environment.lock.txt,python
-138,fenics-dolfinx,'0.11.0',1.0,0.11.0,environment.lock.txt,fenics-dolfinx
-139,petsc,'3.25.6',1.0,3.25.6,environment.lock.txt,petsc
-140,gmsh,'4.15.2',1.0,4.15.2,requirements.txt,gmsh
-141,scikit-learn,'1.9.1',1.0,1.9.1,requirements.txt,scikit-learn
-142,scipy,'1.18.1',1.0,1.18.1,requirements.txt,scipy
-143,SALib,'1.6.0',1.0,1.6.0,requirements.txt,SALib
+29,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
+30,len(design.core_factorial.arc_deg),4,1.0,4,params/study_config.yaml,len(design.core_factorial.arc_deg)
+31,len(design.core_factorial.thickness_mm),3,1.0,3,params/study_config.yaml,len(design.core_factorial.thickness_mm)
+32,len(design.core_factorial.morphology),4,1.0,4,params/study_config.yaml,len(design.core_factorial.morphology)
+33,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
+34,metrics.composite.value.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.value.max_predictors
+35,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
+36,design.core_factorial.arc_deg[0],90,1.0,90,params/study_config.yaml,design.core_factorial.arc_deg[0]
+37,design.core_factorial.arc_deg[1],180,1.0,180,params/study_config.yaml,design.core_factorial.arc_deg[1]
+38,design.core_factorial.arc_deg[2],270,1.0,270,params/study_config.yaml,design.core_factorial.arc_deg[2]
+39,design.core_factorial.arc_deg[3],360,1.0,360,params/study_config.yaml,design.core_factorial.arc_deg[3]
+40,design.core_factorial.thickness_mm[0],0.2,1.0,0.2,params/study_config.yaml,design.core_factorial.thickness_mm[0]
+41,design.core_factorial.thickness_mm[1],0.4,1.0,0.4,params/study_config.yaml,design.core_factorial.thickness_mm[1]
+42,design.core_factorial.thickness_mm[2],0.8,1.0,0.8,params/study_config.yaml,design.core_factorial.thickness_mm[2]
+43,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
+44,geometry.lumen_area_mm2,2.2,1.0,2.2,params/study_config.yaml,geometry.lumen_area_mm2
+45,geometry.reference_diameter_mm,3.37,1.0,3.37,params/study_config.yaml,geometry.reference_diameter_mm
+46,core_geometry.plaque_thickness_mm,0.8481716128115996,1.0,0.848,results/cohort_summary.json,core_geometry.plaque_thickness_mm
+47,geometry.wall_thickness_mm,0.567,1.0,0.567,params/study_config.yaml,geometry.wall_thickness_mm
+48,media_thickness_main_branches.value,0.214,1.0,0.214,params/literature_parameters.csv,media_thickness_main_branches.value
+49,plaque_burden_check.implied_plaque_burden_pct,80.58117809838276,1.0,80.6,results/cohort_summary.json,plaque_burden_check.implied_plaque_burden_pct
+50,geometry.depth_superficial_mm,0.16,1.0,0.16,params/study_config.yaml,geometry.depth_superficial_mm
+51,geometry.depth_deep_mm,0.33999999999999997,1.0,0.34,params/study_config.yaml,geometry.depth_deep_mm
+52,geometry.nodule_height_mm,0.3,1.0,0.3,params/study_config.yaml,geometry.nodule_height_mm
+53,geometry.nodule_base_arc_deg,60.0,1.0,60,params/study_config.yaml,geometry.nodule_base_arc_deg
+54,geometry.fragment_pitch_deg,45.0,1.0,45,params/study_config.yaml,geometry.fragment_pitch_deg
+55,geometry.fragment_fill,0.6,100.0,60,params/study_config.yaml,geometry.fragment_fill
+56,geometry.calcium_iel_clearance_mm,0.05,1.0,0.05,params/study_config.yaml,geometry.calcium_iel_clearance_mm
+57,plaque_growth.n_grown.core,16,1.0,16,results/cohort_summary.json,plaque_growth.n_grown.core
+58,len(design.pilot_2d),3,1.0,3,params/study_config.yaml,len(design.pilot_2d)
+59,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
+60,design.seed + HOLDOUT_SEED_OFFSET,20261010,1.0,20261010,params/study_config.yaml + src/geometry/cohort.py,design.seed + HOLDOUT_SEED_OFFSET
+61,design.holdout_lhs.ranges.arc_deg[lower],60,1.0,60,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[lower]
+62,design.holdout_lhs.ranges.arc_deg[upper],360,1.0,360,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[upper]
+63,design.holdout_lhs.ranges.thickness_mm[lower],0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[lower]
+64,design.holdout_lhs.ranges.thickness_mm[upper],0.8,1.0,0.8,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[upper]
+65,calcium_depth_ex_vivo_FDOCT value -/+ sd[lower],0.16,1.0,0.16,params/literature_parameters.csv,calcium_depth_ex_vivo_FDOCT value -/+ sd[lower]
+66,calcium_depth_ex_vivo_FDOCT value -/+ sd[upper],0.33999999999999997,1.0,0.34,params/literature_parameters.csv,calcium_depth_ex_vivo_FDOCT value -/+ sd[upper]
+67,pre_procedure_MLA_IVL_lesions value -/+ sd[lower],1.4000000000000001,1.0,1.4,params/literature_parameters.csv,pre_procedure_MLA_IVL_lesions value -/+ sd[lower]
+68,pre_procedure_MLA_IVL_lesions value -/+ sd[upper],3.0,1.0,3,params/literature_parameters.csv,pre_procedure_MLA_IVL_lesions value -/+ sd[upper]
+69,design.holdout_lhs.ranges.ecc_index[lower],0.0,1.0,0,params/study_config.yaml,design.holdout_lhs.ranges.ecc_index[lower]
+70,1 - 1 / eccentric_plaque_threshold_max_over_min,0.6666666666666667,1.0,0.667,params/literature_parameters.csv,1 - 1 / eccentric_plaque_threshold_max_over_min
+71,eccentric_plaque_threshold_max_over_min.value,3.0,1.0,3,params/literature_parameters.csv,eccentric_plaque_threshold_max_over_min.value
+72,design.holdout_lhs.ranges.lipid_fraction x 100,50.0,1.0,50,params/study_config.yaml,design.holdout_lhs.ranges.lipid_fraction x 100
+73,count(set == holdout and lipid_arc_deg > 0),8,1.0,8,cohort/cohort.csv,count(set == holdout and lipid_arc_deg > 0)
+74,design.holdout_lhs.ranges.lipid_arc_deg[0],90,1.0,90,params/study_config.yaml,design.holdout_lhs.ranges.lipid_arc_deg[0]
+75,lipid_arc_high_risk_threshold.value,180.0,1.0,180,params/literature_parameters.csv,lipid_arc_high_risk_threshold.value
+76,min_cap_thickness_OCT_culprit_AMI / _SAP[lower],0.047,1.0,0.047,params/literature_parameters.csv,min_cap_thickness_OCT_culprit_AMI / _SAP[lower]
+77,min_cap_thickness_OCT_culprit_AMI / _SAP[upper],0.1026,1.0,0.1,params/literature_parameters.csv,min_cap_thickness_OCT_culprit_AMI / _SAP[upper]
+78,design.holdout_lhs.ranges.lipid_thickness_mm,0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.lipid_thickness_mm
+79,plaque_growth.n_grown.holdout,7,1.0,7,results/cohort_summary.json,plaque_growth.n_grown.holdout
+80,discretisation.polar_n_theta,360,1.0,360,params/study_config.yaml,discretisation.polar_n_theta
+81,discretisation.polar_dr_mm x 1000,10.0,1.0,10,params/study_config.yaml,discretisation.polar_dr_mm x 1000
+82,fujino_angle_threshold.notes[points],2,1.0,2,params/literature_parameters.csv,fujino_angle_threshold.notes[points]
+83,fujino_angle_threshold.value,180.0,1.0,180,params/literature_parameters.csv,fujino_angle_threshold.value
+84,fujino_thickness_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_thickness_threshold.notes[points]
+85,fujino_thickness_threshold.value,0.5,1.0,0.5,params/literature_parameters.csv,fujino_thickness_threshold.value
+86,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
+87,discretisation.h_calcium_mm x 1000,40.0,1.0,40,params/study_config.yaml,discretisation.h_calcium_mm x 1000
+88,discretisation.h_soft_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.h_soft_mm
+89,geometry.margin_3d_mm,2.0,1.0,2,params/study_config.yaml,geometry.margin_3d_mm
+90,discretisation.example3d.h_calcium_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.example3d.h_calcium_mm
+91,discretisation.example3d.h_soft_mm,0.4,1.0,0.4,params/study_config.yaml,discretisation.example3d.h_soft_mm
+92,design.length_series_3d.h_axial_ca_mm,0.5,1.0,0.5,params/study_config.yaml,design.length_series_3d.h_axial_ca_mm
+93,design.length_series_3d.h_axial_margin_mm,1.0,1.0,1,params/study_config.yaml,design.length_series_3d.h_axial_margin_mm
+94,fracture.ell_over_h x discretisation.example3d.h_calcium_mm,0.3,1.0,0.3,params/study_config.yaml,fracture.ell_over_h x discretisation.example3d.h_calcium_mm
+95,fibrous_E,2.312,1.0,2.31,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),fibrous_E
+96,lipid_E x 1000,5.5,1.0,5.5,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),lipid_E x 1000
+97,k_over_mu,50.0,1.0,50,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_over_mu
+98,ca_nu,0.3,1.0,0.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_nu
+99,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
+100,N_E_SWEEP,9,1.0,9,src/drivers/stage_pilot.py,N_E_SWEEP
+101,min,1.466,1.0,1.47,src/drivers/stage_pilot.py e_sweep(),min
+102,max / 1000,10.0,1.0,10,src/drivers/stage_pilot.py e_sweep(),max / 1000
+103,ca_E,365.006198,1.0,365,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_E
+104,sigma_crit = ca_E x eps_f,7.300123960000006,1.0,7.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit = ca_E x eps_f
+105,sigma_crit / sigma_c,40.782815418994446,1.0,41,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit / sigma_c
+106,sigma_c,0.179,1.0,0.18,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_c
+107,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
+108,loads.perivascular_k_MPa_per_mm,0.0001,1.0,0.0001,params/study_config.yaml,loads.perivascular_k_MPa_per_mm
+109,loads.contact_penalty_MPa_per_mm,1000.0,1.0,1000,params/study_config.yaml,loads.contact_penalty_MPa_per_mm
+110,len(COHORT_PROTOCOLS),6,1.0,6,src/drivers/stage_cohort_runs.py,len(COHORT_PROTOCOLS)
+111,loads.physiological_pressure,0.01599864,1000.0,16,params/study_config.yaml,loads.physiological_pressure
+112,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
+113,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
+114,geometry.ivl_balloon_diameter_mm,3.19,1.0,3.19,params/study_config.yaml,geometry.ivl_balloon_diameter_mm
+115,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
+116,loads.poba_pressure_atm,1.01325,1.0,1.01,params/study_config.yaml,loads.poba_pressure_atm
+117,geometry.stent_target_diameter_mm,3.21,1.0,3.21,params/study_config.yaml,geometry.stent_target_diameter_mm
+118,"stent_rated_burst_pressure.value [atm, as tabulated]",16.0,1.0,16,params/literature_parameters.csv,"stent_rated_burst_pressure.value [atm, as tabulated]"
+119,loads.balloon_rated_pressure_atm,1.6212,1.0,1.62,params/study_config.yaml,loads.balloon_rated_pressure_atm
+120,K_s_MPa_per_mm,6.068239979987641,1.0,6.07,results/calibration_stent.json,K_s_MPa_per_mm
+121,loads.stent_recoil_target_pct,4.3,1.0,4.3,params/study_config.yaml,loads.stent_recoil_target_pct
+122,MAX_HALVINGS,6,1.0,6,src/solvers/nonlinear.py,MAX_HALVINGS
+123,loads.ivl_peak_pressure_MPa,5.0,1.0,5,params/study_config.yaml,loads.ivl_peak_pressure_MPa
+124,loads.ivl_pulse_scale,1.0,1.0,1,params/study_config.yaml,loads.ivl_pulse_scale
+125,ivl_pulse_duration upper bound (us),2.0,1.0,2,src/solvers/transient.py default_pulse_width_us(),ivl_pulse_duration upper bound (us)
+126,k_floor = mu_fibrous / mu_Ca,0.005489587147595048,1.0,0.0055,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_floor = mu_fibrous / mu_Ca
+127,eps_f = calcification_fracture_stretch - 1,0.020000000000000018,1.0,0.02,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),eps_f = calcification_fracture_stretch - 1
+128,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
+129,fracture.ell_over_h,2.0,1.0,2,params/study_config.yaml,fracture.ell_over_h
+130,STAGGER_TOL,0.001,1.0,0.001,src/solvers/nonlinear.py,STAGGER_TOL
+131,STAGGER_MAX_IT,100,1.0,100,src/solvers/nonlinear.py,STAGGER_MAX_IT
+132,size of design.erosion_subset,8,1.0,8,params/study_config.yaml,size of design.erosion_subset
+133,design.erosion_subset.arc_deg[0],180,1.0,180,params/study_config.yaml,design.erosion_subset.arc_deg[0]
+134,design.erosion_subset.arc_deg[1],360,1.0,360,params/study_config.yaml,design.erosion_subset.arc_deg[1]
+135,fracture.d_crack,0.9,1.0,0.9,params/study_config.yaml,fracture.d_crack
+136,MIN_PIECE_CELLS,3,1.0,3,src/fracture/cracks.py,MIN_PIECE_CELLS
+137,DIFFUSE_REGION_FRAC,0.5,100.0,50,src/fracture/cracks.py,DIFFUSE_REGION_FRAC
+138,100 x (stent_target_diameter_mm / reference_diameter_mm)^2,90.72986466377266,1.0,90.7,params/study_config.yaml,100 x (stent_target_diameter_mm / reference_diameter_mm)^2
+139,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
+140,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
+141,SIGMA1_PERCENTILE,95.0,1.0,95,src/metrics/predictors.py,SIGMA1_PERCENTILE
+142,SIGMA1_PERCENTILE_HIGH,99.0,1.0,99,src/metrics/predictors.py,SIGMA1_PERCENTILE_HIGH
+143,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
+144,EDGE_MIN_WINDOW_DEG,10.0,1.0,10,src/metrics/predictors.py,EDGE_MIN_WINDOW_DEG
+145,HIGH_STRESS_PERCENTILE,90.0,1.0,90,src/metrics/predictors.py,HIGH_STRESS_PERCENTILE
+146,design.lengths_3d_mm[0],1,1.0,1,params/study_config.yaml,design.lengths_3d_mm[0]
+147,design.lengths_3d_mm[1],3,1.0,3,params/study_config.yaml,design.lengths_3d_mm[1]
+148,design.lengths_3d_mm[2],5,1.0,5,params/study_config.yaml,design.lengths_3d_mm[2]
+149,len(GCI_LESIONS),2,1.0,2,src/drivers/stage_verification.py,len(GCI_LESIONS)
+150,len(GCI_FACTORS),3,1.0,3,src/drivers/stage_verification.py,len(GCI_FACTORS)
+151,len(pilot_ids()),3,1.0,3,src/drivers/stage_pilot.py,len(pilot_ids())
+152,n_oat_runs(),39,1.0,39,src/drivers/stage_sensitivity.py,n_oat_runs()
+153,len(morris_inputs()),8,1.0,8,src/drivers/stage_sensitivity.py,len(morris_inputs())
+154,log10_ca_E[lower],121.07848700000004,1.0,121.1,src/drivers/stage_sensitivity.py morris_inputs(),log10_ca_E[lower]
+155,log10_ca_E[upper],1100.3567009999997,1.0,1100,src/drivers/stage_sensitivity.py morris_inputs(),log10_ca_E[upper]
+156,eps_f[lower],0.014999999999999902,1.0,0.015,src/drivers/stage_sensitivity.py morris_inputs(),eps_f[lower]
+157,eps_f[upper],0.02499999999999991,1.0,0.025,src/drivers/stage_sensitivity.py morris_inputs(),eps_f[upper]
+158,ivl_pulse_scale[lower],0.5,1.0,0.5,src/drivers/stage_sensitivity.py morris_inputs(),ivl_pulse_scale[lower]
+159,ivl_pulse_scale[upper],1.0,1.0,1,src/drivers/stage_sensitivity.py morris_inputs(),ivl_pulse_scale[upper]
+160,ell_over_h[lower],1.5,1.0,1.5,src/drivers/stage_sensitivity.py morris_inputs(),ell_over_h[lower]
+161,ell_over_h[upper],3.0,1.0,3,src/drivers/stage_sensitivity.py morris_inputs(),ell_over_h[upper]
+162,log10_k_perivascular[lower],0.0001,1.0,0.0001,src/drivers/stage_sensitivity.py morris_inputs(),log10_k_perivascular[lower]
+163,log10_k_perivascular[upper],0.1,1.0,0.1,src/drivers/stage_sensitivity.py morris_inputs(),log10_k_perivascular[upper]
+164,rho_calcium[lower],1450.0,1.0,1450,src/drivers/stage_sensitivity.py morris_inputs(),rho_calcium[lower]
+165,rho_calcium[upper],2050.0,1.0,2050,src/drivers/stage_sensitivity.py morris_inputs(),rho_calcium[upper]
+166,k_over_mu_soft[lower],20.0,1.0,20,src/drivers/stage_sensitivity.py morris_inputs(),k_over_mu_soft[lower]
+167,k_over_mu_soft[upper],200.0,1.0,200,src/drivers/stage_sensitivity.py morris_inputs(),k_over_mu_soft[upper]
+168,fibrous_E[lower],0.927,1.0,0.927,src/drivers/stage_sensitivity.py morris_inputs(),fibrous_E[lower]
+169,fibrous_E[upper],4.492,1.0,4.49,src/drivers/stage_sensitivity.py morris_inputs(),fibrous_E[upper]
+170,len(design.sensitivity.morris_lesions),4,1.0,4,params/study_config.yaml,len(design.sensitivity.morris_lesions)
+171,design.sensitivity.morris_trajectories,6,1.0,6,params/study_config.yaml,design.sensitivity.morris_trajectories
+172,n_morris_runs(),216,1.0,216,src/drivers/stage_sensitivity.py,n_morris_runs()
+173,number of design.sensitivity.sobol.inputs set true,5,1.0,5,params/study_config.yaml,number of design.sensitivity.sobol.inputs set true
+174,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+175,metrics.bootstrap_n,2000.0,1.0,2000,params/study_config.yaml,metrics.bootstrap_n
+176,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
+177,len(metrics.candidates.geometry),8,1.0,8,params/study_config.yaml,len(metrics.candidates.geometry)
+178,metrics.min_per_class,2.0,1.0,2,params/study_config.yaml,metrics.min_per_class
+179,metrics.composite.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.max_predictors
+180,metrics.composite.min_discrimination,0.6,1.0,0.60,params/study_config.yaml,metrics.composite.min_discrimination
+181,metrics.composite.max_abs_spearman,0.8,1.0,0.80,params/study_config.yaml,metrics.composite.max_abs_spearman
+182,metrics.logistic_C,1.0,1.0,1.0,params/study_config.yaml,metrics.logistic_C
+183,len(metrics.incremental.geometry_model),4,1.0,4,params/study_config.yaml,len(metrics.incremental.geometry_model)
+184,metrics.min_rows_continuous,5.0,1.0,5,params/study_config.yaml,metrics.min_rows_continuous
+185,design.seed + metrics.seed_offset,20261509,1.0,20261509,params/study_config.yaml,design.seed + metrics.seed_offset
+186,python,'3.12.15',1.0,3.12.15,environment.lock.txt,python
+187,fenics-dolfinx,'0.11.0',1.0,0.11.0,environment.lock.txt,fenics-dolfinx
+188,petsc,'3.25.6',1.0,3.25.6,environment.lock.txt,petsc
+189,mumps-mpi,'5.8.2',1.0,5.8.2,environment.lock.txt,mumps-mpi
+190,gmsh,'4.15.2',1.0,4.15.2,requirements.txt,gmsh
+191,scikit-learn,'1.9.1',1.0,1.9.1,requirements.txt,scikit-learn
+192,scipy,'1.18.1',1.0,1.18.1,requirements.txt,scipy
+193,SALib,'1.6.0',1.0,1.6.0,requirements.txt,SALib
