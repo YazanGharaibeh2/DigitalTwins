@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A270-T0.8-SUP",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 6841,
+  "n_cells": 13443,
+  "n_cells_per_tag": {
+   "1": 2748,
+   "2": 2921,
+   "4": 7774
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 2.6580504909677907,
+  "sigma1_p99": 3.592181203798554,
+  "sigma1_mean": 0.6918479507063173,
+  "sigma1_peak_nl": 3.705213678446173,
+  "sed_mean": 0.001953262442098968,
+  "sed_peak_nl": 0.018331854187235295,
+  "scf_edge_nl": 3.856807815318243,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.0041580383000241455,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.008477600081003546,
+  "min_thickness_high_stress": 0.8,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.552722630000062
+ }
+}
