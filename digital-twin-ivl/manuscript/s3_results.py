@@ -202,14 +202,19 @@ def s32(ctx: Ctx) -> list:
     paras = []
     # completion, convergence flags
     ok_ivl = _ok(core, "ivl")
-    n_uc = int((ok_ivl["ivl_unconverged_steps"].fillna(0) > 0).sum())
+    uc = ok_ivl["ivl_unconverged_steps"].fillna(0) > 0
+    pos = ok_ivl["ivl_fracture"] == 1
+    n_uc_pos, n_uc_neg = int((uc & pos).sum()), int((uc & ~pos).sum())
     stent_lim = int((core["stent_post_ivl_status"] == "limited").sum() + (core["stent_no_ivl_status"] == "limited").sum())
     paras.append(Para(
         f"The core set comprised {ctx.count(len(core), src=OUT, key='count(set == core)')} lesions and the "
         f"hold-out set {ctx.count(len(hold), src=OUT, key='count(set == holdout)')}. "
-        f"{_status_sentence(ctx, core, 'core')} In {_k_of_n(ctx, n_uc, len(ok_ivl), key='core IVL runs with unconverged_steps > 0')} "
-        "completed IVL runs of the core set, at least one load step was accepted after the staggered iteration "
-        "reached its iteration limit (Section 2.6). "
+        f"{_status_sentence(ctx, core, 'core')} In "
+        f"{_k_of_n(ctx, n_uc_pos, int(pos.sum()), key='core IVL runs with unconverged_steps > 0 | ivl_fracture')} "
+        "completed IVL runs of the core set with through-thickness damage and in "
+        f"{_k_of_n(ctx, n_uc_neg, int((~pos).sum()), key='core IVL runs with unconverged_steps > 0 | no ivl_fracture')} "
+        "without it, at least one load step was accepted after the staggered iteration reached its iteration limit "
+        "(Section 2.6). "
         + ("No stent run of the core set was pressure-limited." if stent_lim == 0 else
            f"Stent expansion was pressure-limited (status limited) in "
            f"{ctx.count(stent_lim, src=OUT, key='count(core stent_*_status == limited)')} stent runs of the core set.")))
@@ -225,6 +230,7 @@ def s32(ctx: Ctx) -> list:
         "the damage class of every core lesion). The plain balloon was inflated to a higher pressure than the IVL "
         f"balloon ({_atm_mpa(ctx, 'loads.poba_pressure_atm')} versus {_atm_mpa(ctx, 'loads.ivl_balloon_pressure_atm')}); "
         "the plain-balloon result is compared with a published cadaver observation in Section 3.5."))
+    paras.append(_ivl_load_para(ctx, core))
     # IVL by design factor
     t = _ok(core, "ivl")
     by = []
@@ -248,16 +254,24 @@ def s32(ctx: Ctx) -> list:
         + " of arc. By thickness it occurred in " + _and(byt) + ", and by morphology in " + _and(bym) + "."))
     # damage pattern
     f = t[t["ivl_fracture"] == 1]
-    n_diff = int((f["ivl_diffuse"] == 1).sum())
+    nf = t[t["ivl_fracture"] == 0]
+    dmin = float(f["ivl_damaged_fraction"].min()) if len(f) else math.nan
+    n_whole = int((f["ivl_damaged_fraction"] >= 1.0).sum())
+    n_none = int((nf["ivl_damaged_fraction"] <= 0.0).sum())
     er = df[df["ivl_erosion_status"] == "ok"] if "ivl_erosion_status" in df else df.iloc[0:0]
     n_er_f = int((er["ivl_erosion_fracture"] == 1).sum())
     med_cracks = float(er.loc[er["ivl_erosion_fracture"] == 1, "ivl_erosion_n_fractures"].median()) if n_er_f else math.nan
-    lead = ("The phase-field damage was mostly spread over the deposit rather than concentrated in discrete "
-            "cracks: in " if len(f) and n_diff > len(f) / 2 else "In ")
+    all_none = len(f) > 0 and n_whole == len(f) and n_none == len(nf)
     paras.append(Para(
-        lead + f"{_k_of_n(ctx, n_diff, len(f), key='core ivl_diffuse | ivl_fracture')} core lesions with "
-        "through-thickness damage under IVL, damage covered at least half of the damaged calcium region (the "
-        f"diffuse pattern of Section 2.7; {ctx.fig('fig4_damage_fields')}a). The element-erosion comparator, run on "
+        ("The phase-field outcome was all or nothing. " if all_none else "")
+        + f"In {_k_of_n(ctx, n_whole, len(f), key='core ivl_damaged_fraction == 1 | ivl_fracture')} core lesions "
+        "with through-thickness damage under IVL, the damage covered the whole calcium (the smallest damaged "
+        f"fraction was {ctx.num(100 * dmin, src=OUT, key='min(ivl_damaged_fraction | ivl_fracture) x 100', fmt='.0f')}%), "
+        f"and in {_k_of_n(ctx, n_none, len(nf), key='core ivl_damaged_fraction == 0 | no ivl_fracture')} lesions "
+        f"without it no calcium cell was damaged ({ctx.fig('fig4_damage_fields')}a)."
+        + (" Through-thickness damage was therefore equivalent to damage onset before the peak IVL load."
+           if all_none else "")
+        + " The element-erosion comparator, run on "
         f"{ctx.count(len(er), src=OUT, key='count(ivl_erosion_status == ok)')} lesions, gave through-thickness "
         f"cracks in {ctx.count(n_er_f, src=OUT, key='count(ivl_erosion_fracture == 1)')} of them, as discrete "
         f"cracks (median {ctx.num(med_cracks, src=OUT, key='median(ivl_erosion_n_fractures | ivl_erosion_fracture == 1)', fmt='g')} "
@@ -289,12 +303,14 @@ def s32(ctx: Ctx) -> list:
         f"{ctx.count(n_both_f, src=OUT, key='count(both, ivl_fracture == 1 and stent_no_ivl_fracture == 1)')} also "
         "had it under stenting without IVL. Across the core stent runs, the expansion ranged from "
         f"{ctx.num(lo_all, src=OUT, key='min(stent_*_stent_expansion_pct | core, ok or limited)', fmt='.1f')}% to "
-        f"{ctx.num(hi_all, src=OUT, key='max(stent_*_stent_expansion_pct | core, ok or limited)', fmt='.1f')}%."),
+        f"{ctx.num(hi_all, src=OUT, key='max(stent_*_stent_expansion_pct | core, ok or limited)', fmt='.1f')}%. "
+        + _stent_target_sentence(ctx, core)),
     )
     return [Heading("3.2. Simulated Lesion Outcomes", 2), *paras,
             Figure("fig4_damage_fields",
                    "Calcium damage fields of one lesion per morphology with the same arc and thickness. (a) IVL with "
-                   "the phase field: damage. (b) IVL with the element-erosion comparator: eroded calcium cells. (c) "
+                   "the phase field: damage. (b) IVL with the element-erosion comparator: eroded calcium cells"
+                   + _erosion_extra_note() + ". (c) "
                    "Stent deployed after IVL: damage, with the lumen outline after stenting and the reference lumen. "
                    "Deformed configuration, final state of each run."),
             Figure("fig5_outcomes",
@@ -303,6 +319,56 @@ def s32(ctx: Ctx) -> list:
                    "partial damage only, no damage onset, or not run; IVL cells give the damage-onset load. (b) "
                    "Stent expansion without IVL and after IVL for each lesion; open markers: pressure-limited "
                    "expansion.")]
+
+
+def _ivl_load_para(ctx: Ctx, core) -> Para:
+    """The equivalent IVL load against the plain-balloon pressure, and the overlap of their outcomes."""
+    from dtivl import params as P
+    t = core[(core["ivl_status"] == "ok") & (core["balloon_10atm_status"] == "ok")]
+    p_poba = P.get("loads.poba_pressure_atm").value
+    below = int((t["ivl_p_top"] < p_poba).sum())
+    iv = t["ivl_fracture"] == 1
+    pb = t["balloon_10atm_fracture"] == 1
+    lum0 = P.get("geometry.lumen_area_mm2").value
+    bo = _ok(core, "balloon_only")
+    return Para(
+        "In the nonlinear model, IVL acted as a quasi-static inflation to the peak equivalent pressure, which ranged "
+        f"from {ctx.num(float(t['ivl_p_top'].min()), src=OUT, key='min(ivl_p_top | core)', fmt='.2f')} to "
+        f"{ctx.num(float(t['ivl_p_top'].max()), src=OUT, key='max(ivl_p_top | core)', fmt='.2f')} MPa and was below the "
+        f"plain-balloon pressure in {_k_of_n(ctx, below, len(t), key='count(ivl_p_top < poba pressure)')} lesions. "
+        f"Of the {ctx.count(int(iv.sum()), src=OUT, key='count(ivl_fracture | both ok)')} lesions damaged under IVL, "
+        f"{ctx.count(int((iv & pb).sum()), src=OUT, key='count(ivl_fracture and balloon_10atm_fracture)')} were also "
+        "damaged under the plain balloon, which damaged "
+        f"{ctx.count(int((pb & ~iv).sum()), src=OUT, key='count(balloon_10atm_fracture and not ivl_fracture)')} "
+        f"further lesion{'' if int((pb & ~iv).sum()) == 1 else 's'}"
+        + ("; in this model the two protocols therefore differed only in load magnitude. "
+           if int((iv & ~pb).sum()) == 0 else ". ")
+        + "The lesions "
+        "did not resist dilation: under the IVL balloon pressure alone, the lumen area grew from "
+        f"{ctx.param('geometry.lumen_area_mm2', fmt='.2g')} mm² to "
+        f"{ctx.num(float(bo['balloon_only_max_lumen_area'].min()), src=OUT, key='min(balloon_only_max_lumen_area)', fmt='.1f')}–"
+        f"{ctx.num(float(bo['balloon_only_max_lumen_area'].max()), src=OUT, key='max(balloon_only_max_lumen_area)', fmt='.1f')} mm².")
+
+
+def _stent_target_sentence(ctx: Ctx, core) -> str:
+    vals = [v for p in ("stent_no_ivl", "stent_post_ivl") for v in _ok(core, p)[f"{p}_reached_target"].tolist()]
+    n_ok = sum(bool(v) for v in vals if v == v)
+    if vals and n_ok == len(vals):
+        return ("Every stent reached its target diameter, so the expansion differed between lesions only through "
+                "the elastic recoil after unloading.")
+    return (f"The stent reached its target diameter in {_k_of_n(ctx, n_ok, len(vals), key='count(stent_*_reached_target)')} "
+            "runs.")
+
+
+def _erosion_extra_note() -> str:
+    """Morphologies of the figure lesions whose erosion runs are outside the comparator subset (figure-only)."""
+    from dtivl import params as P
+    sub = P.raw("design.erosion_subset")
+    morph = set(sub.get("morphology", [])) if isinstance(sub, dict) else set()
+    extra = [MORPH_WORDS.get(m, m) for m in ("superficial_sheet", "deep_sheet", "nodule", "fragmented")
+             if morph and m not in morph]
+    return (f"; the {_and(extra)} runs were made for this figure only and are outside the comparator subset"
+            if extra else "")
 
 
 # ------------------------------------------------------------------ 3.3
@@ -367,16 +433,17 @@ def s33(ctx: Ctx) -> list:
             f"leave-one-out log-loss of {ctx.v(MS, f'{comp}.core.loocv_log_loss', fmt='.3f')} and Brier score of "
             f"{ctx.v(MS, f'{comp}.core.loocv_brier', fmt='.3f')}. Its leave-one-out AUC was "
             + _diff_word(*(g(f"{lift_best}.delta_ci_{s}") for s in ("lo", "hi")),
-                         "higher than", "lower than", "not different from")
+                         "higher than", "lower than", "not clearly different from")
             + f" that of {pname(ctx, best)} (difference "
             f"{_vci(ctx, MS, f'{lift_best}.delta_auc', (f'{lift_best}.delta_ci_lo', f'{lift_best}.delta_ci_hi'), inner=True)})."))
     paras.append(Para(
         f"Compared with the Fujino score, the AUC of {pname(ctx, best)} was "
         + _diff_word(g(f"{best_fj}.delta_ci_lo"), g(f"{best_fj}.delta_ci_hi"), "higher", "lower",
-                     "not different (the interval includes zero)")
+                     "not clearly different (the interval includes zero)")
         + f" (difference {_vci(ctx, MS, f'{best_fj}.delta_auc', (f'{best_fj}.delta_ci_lo', f'{best_fj}.delta_ci_hi'), inner=True)}), "
-        f"and so was the leave-one-out AUC of {name} "
-        f"(difference {_vci(ctx, MS, f'{lift_fj}.delta_auc', (f'{lift_fj}.delta_ci_lo', f'{lift_fj}.delta_ci_hi'), inner=True)}). "
+        f"and the leave-one-out AUC of {name} was "
+        + _diff_word(g(f"{lift_fj}.delta_ci_lo"), g(f"{lift_fj}.delta_ci_hi"), "higher", "lower", "not clearly different")
+        + f" (difference {_vci(ctx, MS, f'{lift_fj}.delta_auc', (f'{lift_fj}.delta_ci_lo', f'{lift_fj}.delta_ci_hi'), inner=True)}). "
         "The geometry-only model had a leave-one-out AUC of "
         f"{ctx.v(MS, f'{incl}.auc_b', fmt='.2f')}, and adding the selected mechanics predictors gave "
         f"{ctx.v(MS, f'{incl}.auc_a', fmt='.2f')} (difference "
@@ -384,6 +451,8 @@ def s33(ctx: Ctx) -> list:
         f"{ctx.fig('fig6_prediction')}d). The apparent difference with both models refitted in every resample was "
         f"{_vci(ctx, MS, f'{inca}.delta_auc', (f'{inca}.delta_ci_lo', f'{inca}.delta_ci_hi'))}. "
         + _incremental_sentence(ctx, incl)))
+    paras.append(_fujino_artefact_para(ctx, best))
+    paras.append(_selection_para(ctx, best, rank))
     paras.append(_holdout_para(ctx, best, name))
     paras.append(Figure(
         "fig6_prediction",
@@ -396,6 +465,65 @@ def s33(ctx: Ctx) -> list:
     paras.append(tables_ms.table3(ctx))
     paras += tables_ms.table4(ctx)
     return paras
+
+
+def _fujino_artefact_para(ctx: Ctx, best: str) -> Para:
+    """Post-hoc: the 180 deg design level measures just below the strict arc cut-off of the Fujino score."""
+    ph = f"{PRIMARY}.post_hoc.fujino_arc_tolerance.core"
+    d = f"{ph}.{best} - fujino_arc_tolerance"
+    g = lambda k: ctx.opt(MS, k)  # noqa: E731
+    if g(f"{ph}.auc") is None:
+        return Para(f"{Ctx.PENDING} (post-hoc Fujino sensitivity)")
+    return Para(
+        f"The arc criterion of the Fujino score awards points above {ctx.v(MS, f'{ph}.arc_cutoff_deg', fmt='g')}°. "
+        f"The {ctx.v(MS, f'{ph}.n_arc_just_below_cutoff', fmt='d')} core lesions of the "
+        f"{ctx.v(MS, f'{ph}.arc_cutoff_deg', fmt='g')}° design level measured just below it on the label map and "
+        f"received no arc points; {_n_below_damaged(ctx)} were damaged under IVL. In a post hoc sensitivity "
+        "analysis "
+        "added after the first draft, an arc within "
+        f"{ctx.v(MS, f'{ph}.arc_tolerance_deg', fmt='g')}° below the cut-off was counted as meeting it. The Fujino "
+        f"score then had an AUC of {_vci(ctx, MS, f'{ph}.auc', f'{ph}.auc_ci')}, and its difference from "
+        f"{pname(ctx, best)} was {_vci(ctx, MS, f'{d}.delta_auc', (f'{d}.delta_ci_lo', f'{d}.delta_ci_hi'))}; the "
+        "advantage of the mechanics predictor over the Fujino score therefore "
+        + ("depends on where the design levels fall relative to the score's cut-offs."
+           if (g(f"{d}.delta_ci_lo") or 0) <= 0 else "persisted."))
+
+
+def _n_below_damaged(ctx: Ctx) -> str:
+    """'k of n': core lesions with IVL outcome whose measured arc lies within the tolerance below the cut-off."""
+    from dtivl.drivers.stage_metrics import FUJINO_ARC_TOL_DEG
+    from dtivl.geometry.fujino import fujino_criteria
+    thr = fujino_criteria()["angle"].threshold
+    t = _ok(ctx.data(OUT)[ctx.data(OUT)["set"] == "core"], "ivl")
+    arc = t["ca_arc_total_deg"].astype(float)
+    sel = t[(arc <= thr) & (arc + FUJINO_ARC_TOL_DEG >= thr)]
+    return _k_of_n(ctx, int((sel["ivl_fracture"] == 1).sum()), len(sel), key="core ivl_fracture | arc just below cut-off")
+
+
+def _selection_para(ctx: Ctx, best: str, rank: list) -> Para:
+    """Selection of the best predictor, predictors against their stated direction, calibration geometries."""
+    U = f"{PRIMARY}.univariable"
+    uni = ctx.opt(MS, U) or {}
+    n_mech = sum(1 for r in rank if r["group"] == "mechanics")
+    against = [p for p, u in uni.items() if u.get("direction_source") == "config"
+               and (u.get("auc_ci") or [None, None])[1] is not None and u["auc_ci"][1] < 0.5]
+    ex = f"{PRIMARY}.post_hoc.core_without_calibration_geometries"
+    txt = (f"{pname(ctx, best)[0].upper() + pname(ctx, best)[1:]} had the largest core AUC of the "
+           f"{ctx.count(n_mech, src=MS, key='count(univariable_ranking | mechanics)')} mechanics candidates and was "
+           "selected on the same core lesions; its intervals and its differences from other scores do not include "
+           "this selection and are therefore optimistic.")
+    if against:
+        lst = _and([f"{pname(ctx, p)} (AUC {_vci(ctx, MS, f'{U}.{p}.auc', f'{U}.{p}.auc_ci', inner=True)})"
+                    for p in against])
+        txt += (" " + lst[0].upper() + lst[1:] + (" was" if len(against) == 1 else " were")
+                + " associated with damage in the direction opposite to the one stated before the analysis.")
+    n_ex = len(ctx.opt(MS, f"{ex}.excluded") or [])
+    if n_ex and ctx.opt(MS, f"{ex}.{best}.auc") is not None:
+        txt += (f" Without the {ctx.count(n_ex, src=MS, key=f'len({ex}.excluded)')} core lesions that share the "
+                "geometry of the pilot lesions used to calibrate the calcium modulus (post hoc), the AUC of "
+                f"{pname(ctx, best)} was {_vci(ctx, MS, f'{ex}.{best}.auc', f'{ex}.{best}.auc_ci')} and that of the "
+                f"Fujino score {_vci(ctx, MS, f'{ex}.fujino_score.auc', f'{ex}.fujino_score.auc_ci')}.")
+    return Para(txt)
 
 
 def _incremental_sentence(ctx: Ctx, incl: str) -> str:

@@ -838,6 +838,79 @@ def analyse_binary(col: _Collector, name: str, oc: dict, df: pd.DataFrame, cfg: 
     out["fujino_comparison"] = _fujino_comparison(col, name, core, cfg, uni, res["_index"])
     out["incremental_value"] = _incremental(col, name, oc, core, hold, cfg, specs["geometry"],
                                             specs["geometry+mechanics"])
+    out["post_hoc"] = _post_hoc(name, core, hold, cfg, uni, out["fujino_comparison"].get("best_single_mechanics"))
+    return out
+
+
+#: post-hoc analyses added after the review of the first draft (2026-10-15); reported as such
+POST_HOC_NOTE = ("POST HOC (added 2026-10-15 after the draft review, with the outcomes known): sensitivity of the "
+                 "Fujino comparison to the arc cut-off (the label map measures the 180 deg design arc as 179 deg, "
+                 "just below the strict '> 180 deg' criterion: an arc within FUJINO_ARC_TOL_DEG below a cut-off is "
+                 "counted as meeting it), and core AUCs without the core geometries of the pilot lesions used for "
+                 "the calcium-modulus calibration (D8)")
+#: arc measurement tolerance of the post-hoc Fujino sensitivity (deg; rasterisation of the label map)
+FUJINO_ARC_TOL_DEG = 2.0
+
+
+def _fujino_arc_tolerance(df: pd.DataFrame) -> np.ndarray:
+    """Cross-sectional Fujino score with an arc within FUJINO_ARC_TOL_DEG below the arc cut-off counted as
+    meeting it (thickness criterion unchanged, strict '>'), from the measured arc and thickness columns."""
+    from dtivl.geometry.fujino import fujino_criteria
+    c = fujino_criteria()
+    arc = pd.to_numeric(df["ca_arc_total_deg"], errors="coerce").to_numpy(float)
+    th = pd.to_numeric(df["ca_thickness_max"], errors="coerce").to_numpy(float)
+    return (c["angle"].points * (arc + FUJINO_ARC_TOL_DEG >= c["angle"].threshold)
+            + c["thickness"].points * (th > c["thickness"].threshold)).astype(float)
+
+
+def _post_hoc(name, core, hold, cfg, uni, best) -> dict:
+    """(e) Post-hoc analyses (:data:`POST_HOC_NOTE`): (1) Fujino score with the arc tolerance, its AUC and its
+    paired AUC difference from the best single mechanics predictor, and the number of lesions whose
+    measured arc lies within one design step below the arc cut-off; (2) core AUCs of the best predictor and
+    of the Fujino score without the calibration geometries."""
+    from dtivl.drivers.stage_pilot import pilot_ids
+    from dtivl.geometry.fujino import fujino_criteria
+    out = {"note": POST_HOC_NOTE}
+    thr = fujino_criteria()["angle"].threshold
+    sets = {cfg.derivation_set: core, cfg.test_set: hold}
+    fi = {}
+    for set_name, t in sets.items():
+        if t is None or len(t) == 0 or "_y" not in t:
+            fi[set_name] = {"n": 0, "note": "no rows"}
+            continue
+        y = t["_y"].to_numpy(int)
+        inc = _fujino_arc_tolerance(t)
+        arc = pd.to_numeric(t["ca_arc_total_deg"], errors="coerce").to_numpy(float)
+        e = {**_counts(y), "n_arc_just_below_cutoff": int(((arc <= thr) & (arc + FUJINO_ARC_TOL_DEG >= thr)).sum()),
+             "arc_cutoff_deg": thr, "arc_tolerance_deg": FUJINO_ARC_TOL_DEG}
+        if e["n_pos"] >= cfg.min_per_class and e["n_neg"] >= cfg.min_per_class:
+            rng = R.rng_for(cfg.seed, f"{name}|post_hoc|fujino_arc_tolerance|{set_name}")
+            r = R.roc_analysis(y, inc, 1, n_boot=cfg.n_boot, rng=rng, level=cfg.level, stratified=cfg.stratified)
+            e.update(auc=r["auc"], auc_ci=[r["auc_ci_lo"], r["auc_ci_hi"]], auc_ci_degenerate=r["auc_ci_degenerate"])
+            if best and best in t:
+                xb = uni[best]["direction"] * pd.to_numeric(t[best], errors="coerce").to_numpy(float)
+                ok = np.isfinite(xb)
+                idx = R.bootstrap_indices(R.rng_for(cfg.seed, f"{name}|post_hoc|best-fujino_arc_tolerance|{set_name}"),
+                                          cfg.n_boot, int(ok.sum()), y[ok], cfg.stratified)
+                e[f"{best} - fujino_arc_tolerance"] = M.paired_bootstrap_fixed(y[ok], xb[ok], inc[ok], idx, cfg.level)
+        else:
+            e["note"] = f"fewer than {cfg.min_per_class} lesions in a class"
+        fi[set_name] = e
+    out["fujino_arc_tolerance"] = fi
+    calib = {f"C{p[1:]}" if p.startswith("P") else p for p in pilot_ids()}
+    keep = ~core["lesion_id"].isin(calib)
+    t = core[keep]
+    y = t["_y"].to_numpy(int)
+    ex = {"excluded": sorted(calib & set(core["lesion_id"])), **_counts(y)}
+    if ex["n_pos"] >= cfg.min_per_class and ex["n_neg"] >= cfg.min_per_class:
+        for p in [q for q in (best, "fujino_score") if q and q in t]:
+            x = uni[p]["direction"] * pd.to_numeric(t[p], errors="coerce").to_numpy(float)
+            ok = np.isfinite(x)
+            rng = R.rng_for(cfg.seed, f"{name}|post_hoc|no_calibration|{p}")
+            r = R.roc_analysis(y[ok], x[ok], 1, n_boot=cfg.n_boot, rng=rng, level=cfg.level, stratified=cfg.stratified)
+            ex[p] = {"auc": r["auc"], "auc_ci": [r["auc_ci_lo"], r["auc_ci_hi"]],
+                     "auc_ci_degenerate": r["auc_ci_degenerate"]}
+    out["core_without_calibration_geometries"] = ex
     return out
 
 

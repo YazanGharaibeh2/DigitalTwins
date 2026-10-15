@@ -275,7 +275,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sigma1_p99": {
@@ -306,7 +309,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sigma1_mean": {
@@ -337,7 +343,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sigma1_peak_nl": {
@@ -368,7 +377,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sed_mean": {
@@ -399,7 +411,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sed_peak_nl": {
@@ -430,7 +445,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_scf_edge_nl": {
@@ -461,7 +479,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_frac_eps_gt_half_epsf": {
@@ -492,7 +513,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_frac_sig_gt_sigc": {
@@ -523,7 +547,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_frac_sig_gt_half_sigc": {
@@ -554,7 +581,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_min_thickness_high_stress": {
@@ -585,7 +615,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_arc_total_deg": {
@@ -616,7 +649,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_thickness_max": {
@@ -647,7 +683,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_depth_min": {
@@ -678,7 +717,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_area": {
@@ -709,7 +751,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "n_deposits": {
@@ -740,7 +785,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "lumen_area": {
@@ -771,7 +819,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "plaque_ecc_index": {
@@ -802,7 +853,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "fujino_score": {
@@ -833,7 +887,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     }
    },
@@ -1333,7 +1390,10 @@
         "sens": null,
         "spec": null,
         "acc": null,
-        "auc": null
+        "auc": null,
+        "auc_ci_lo": null,
+        "auc_ci_hi": null,
+        "auc_ci_degenerate": null
        }
       },
       "pred_sigma1_peak_nl": {
@@ -1361,7 +1421,10 @@
         "sens": null,
         "spec": null,
         "acc": null,
-        "auc": null
+        "auc": null,
+        "auc_ci_lo": null,
+        "auc_ci_hi": null,
+        "auc_ci_degenerate": null
        }
       },
       "LIFT": {
@@ -1792,6 +1855,64 @@
      "n_pos": 0,
      "n_neg": 0,
      "note": "no hold-out rows"
+    }
+   },
+   "post_hoc": {
+    "note": "POST HOC (added 2026-10-15 after the draft review, with the outcomes known): sensitivity of the Fujino comparison to the arc cut-off (the label map measures the 180 deg design arc as 179 deg, just below the strict '> 180 deg' criterion: an arc within FUJINO_ARC_TOL_DEG below a cut-off is counted as meeting it), and core AUCs without the core geometries of the pilot lesions used for the calcium-modulus calibration (D8)",
+    "fujino_arc_tolerance": {
+     "core": {
+      "n": 32,
+      "n_pos": 16,
+      "n_neg": 16,
+      "n_arc_just_below_cutoff": 9,
+      "arc_cutoff_deg": 180.0,
+      "arc_tolerance_deg": 2.0,
+      "auc": 0.892578125,
+      "auc_ci": [
+       0.763671875,
+       1.0
+      ],
+      "auc_ci_degenerate": false,
+      "pred_sigma1_peak_nl - fujino_arc_tolerance": {
+       "auc_a": 0.96484375,
+       "auc_b": 0.892578125,
+       "delta_auc": 0.072265625,
+       "delta_ci_lo": -0.0390625,
+       "delta_ci_hi": 0.205078125,
+       "delta_ci_degenerate": false,
+       "boot_frac_delta_le_0": 0.138,
+       "n_boot_valid": 2000
+      }
+     },
+     "holdout": {
+      "n": 0,
+      "note": "no rows"
+     }
+    },
+    "core_without_calibration_geometries": {
+     "excluded": [
+      "C-A270-T0.4-DEEP",
+      "C-A90-T0.2-SUP"
+     ],
+     "n": 30,
+     "n_pos": 14,
+     "n_neg": 16,
+     "pred_sigma1_peak_nl": {
+      "auc": 0.9642857142857143,
+      "auc_ci": [
+       0.8882812500000001,
+       1.0
+      ],
+      "auc_ci_degenerate": false
+     },
+     "fujino_score": {
+      "auc": 0.6138392857142857,
+      "auc_ci": [
+       0.4106584821428572,
+       0.7901785714285714
+      ],
+      "auc_ci_degenerate": false
+     }
     }
    }
   },
@@ -2547,7 +2668,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sigma1_p99": {
@@ -2578,7 +2702,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sigma1_mean": {
@@ -2609,7 +2736,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sigma1_peak_nl": {
@@ -2640,7 +2770,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sed_mean": {
@@ -2671,7 +2804,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_sed_peak_nl": {
@@ -2702,7 +2838,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_scf_edge_nl": {
@@ -2733,7 +2872,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_frac_eps_gt_half_epsf": {
@@ -2764,7 +2906,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_frac_sig_gt_sigc": {
@@ -2795,7 +2940,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_frac_sig_gt_half_sigc": {
@@ -2826,7 +2974,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "pred_min_thickness_high_stress": {
@@ -2857,7 +3008,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_arc_total_deg": {
@@ -2888,7 +3042,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_thickness_max": {
@@ -2919,7 +3076,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_depth_min": {
@@ -2950,7 +3110,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "ca_area": {
@@ -2981,7 +3144,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "n_deposits": {
@@ -3012,7 +3178,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "lumen_area": {
@@ -3043,7 +3212,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "plaque_ecc_index": {
@@ -3074,7 +3246,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     },
     "fujino_score": {
@@ -3105,7 +3280,10 @@
       "sens": null,
       "spec": null,
       "acc": null,
-      "auc": null
+      "auc": null,
+      "auc_ci_lo": null,
+      "auc_ci_hi": null,
+      "auc_ci_degenerate": null
      }
     }
    }
