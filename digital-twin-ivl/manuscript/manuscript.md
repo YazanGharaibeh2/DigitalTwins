@@ -47,7 +47,7 @@ Every input of the two-dimensional (2D) main analysis is listed with its value, 
 | calcium | Young's modulus (baseline, D8) | $E_{Ca}$ | 365 | MPa | 1.466; 10000 | CALIBRATED | D8, Checkpoint 2: point 6 of the 9 log-spaced pilot sweep points over sens_E (equality checked by … |
 | calcium | Poisson's ratio | ν_Ca | 0.3 | - |  | VERIFIED | [35] |
 | calcium | density (transient model) | ρ_Ca | 2050 | kg/m³ | 1450 | SECONDARY | [59,60] |
-| calcium | longitudinal sound speed (transient model) | $c_{Ca}$ | 2000 | m/s |  | VERIFIED | [56] |
+| calcium | longitudinal sound speed (transient model) | $c_{Ca}$ | 2000 | m/s |  | VERIFIED | Rooney 1982 |
 | fibrous tissue | Young's modulus, small strain (neo-Hookean, μ = E/3) | $E_f$ | 2.31 | MPa | 0.927; 4.492 | VERIFIED | [34] |
 | fibrous tissue | bulk-to-shear modulus ratio (wall, fibrous tissue, lipid) | K/μ | 50 | - | 20; 200 | ASSUMPTION | near-incompressibility penalty K/mu for soft tissues |
 | fibrous tissue | density (transient model) | ρ_f | 1080 | kg/m³ |  | SECONDARY | [61] |
@@ -60,7 +60,7 @@ Every input of the two-dimensional (2D) main analysis is listed with its value, 
 | wall | Yeoh coefficient c20 | $c20$ | −0.0734 | MPa |  | VERIFIED | [47] |
 | wall | Yeoh coefficient c30 | $c30$ | 0.415 | MPa |  | VERIFIED | [47] |
 | wall | density (transient model) | ρ_w | 1080 | kg/m³ |  | SECONDARY | [61] |
-| wall | longitudinal sound speed (transient model) | $c_w$ | 1610 | m/s |  | VERIFIED | [55] |
+| wall | longitudinal sound speed (transient model) | $c_w$ | 1610 | m/s |  | VERIFIED | Rooney 1979 |
 | loads | physiological lumen pressure | $p_{phys}$ | 0.016 | MPa |  | SECONDARY | [51] |
 | loads | IVL balloon pressure (balloon alone, IVL inflation, predictor load) | $p_{bal}$ | 0.405 | MPa |  | VERIFIED | [6,7] |
 | loads | plain balloon pressure (no pulses) | $p_{POBA}$ | 1.01 | MPa |  | VERIFIED | [50] |
@@ -383,134 +383,134 @@ The following abbreviations are used in this manuscript: AT1, phase-field fractu
 
 ## References
 
-1. Mintz, G. S. Intravascular Imaging of Coronary Calcification and Its Clinical Implications. *JACC: Cardiovascular Imaging* **2015**, *8*, 461–471.
+1. Mintz, G. S. Intravascular Imaging of Coronary Calcification and Its Clinical Implications. *JACC: Cardiovascular Imaging* **2015**, *8*, 461–471. https://doi.org/10.1016/j.jcmg.2015.02.003.
 
-2. Fujino, A.; Mintz, G. S.; Matsumura, M.; et al. A New Optical Coherence Tomography-Based Calcium Scoring System to Predict Stent Underexpansion. *EuroIntervention* **2018**, *13*, e2182–e2189. https://doi.org/10.4244/EIJ-D-17-00962.
+2. Fujino, A.; Mintz, G. S.; Matsumura, M.; Lee, T.; Kim, S. Y.; Hoshino, M.; Usui, E.; Yonetsu, T.; Haag, E. S.; Shlofmitz, R. A.; Kakuta, T.; Maehara, A. A New Optical Coherence Tomography-Based Calcium Scoring System to Predict Stent Underexpansion. *EuroIntervention* **2018**, *13*, e2182–e2189. https://doi.org/10.4244/EIJ-D-17-00962.
 
-3. Fujino, A.; Mintz, G. S.; Lee, T.; et al. Predictors of Calcium Fracture Derived From Balloon Angioplasty and its Effect on Stent Expansion Assessed by Optical Coherence Tomography. *JACC: Cardiovascular Interventions* **2018**, *11*, 1015–1017. https://doi.org/10.1016/j.jcin.2018.02.004.
+3. Fujino, A.; Mintz, G. S.; Lee, T.; Hoshino, M.; Usui, E.; Kanaji, Y.; et al. Predictors of Calcium Fracture Derived From Balloon Angioplasty and its Effect on Stent Expansion Assessed by Optical Coherence Tomography. *JACC: Cardiovascular Interventions* **2018**, *11*, 1015–1017. https://doi.org/10.1016/j.jcin.2018.02.004.
 
-4. Authors to be confirmed. Predictors for Calcium Fracture With a Novel Cutting Balloon: An Optical Coherence Tomography Study. *JACC: Cardiovascular Interventions* **2022**. https://doi.org/10.1016/j.jcin.2022.02.017.
+4. Kurata, N.; Ishihara, T.; Iida, O.; Tsujimura, T.; Ito, K.; Hata, Y.; Toyoshima, T.; Higashino, N.; Nakao, S.; Mano, T. Predictors for Calcium Fracture With a Novel Cutting Balloon: An Optical Coherence Tomography Study. *JACC: Cardiovascular Interventions* **2022**, *15*, 904–906. https://doi.org/10.1016/j.jcin.2022.02.017.
 
 5. Kereiakes, D. J.; Virmani, R.; Hokama, J. Y.; Illindala, U.; Mena-Hurtado, C.; Holden, A.; Hill, J. M.; Lyden, S. P.; Ali, Z. A. Principles of Intravascular Lithotripsy for Calcific Plaque Modification. *JACC: Cardiovascular Interventions* **2021**, *14*, 1275–1292. https://doi.org/10.1016/j.jcin.2021.03.036.
 
 6. Tovar Forero, M. N.; Daemen, J. The Coronary Intravascular Lithotripsy System. *Interventional Cardiology Review* **2019**, *14*, 174–181. https://doi.org/10.15420/icr.2019.18.R1.
 
-7. Karimi Galougahi, K.; et al. Calcific Plaque Modification by Acoustic Shock Waves: Intravascular Lithotripsy in Coronary Interventions. *Circulation: Cardiovascular Interventions* **2021**. https://doi.org/10.1161/CIRCINTERVENTIONS.120.009354.
+7. Karimi Galougahi, K.; Patel, S.; Shlofmitz, R. A.; Maehara, A.; Kereiakes, D. J.; Hill, J. M.; Stone, G. W.; Ali, Z. A. Calcific Plaque Modification by Acoustic Shock Waves: Intravascular Lithotripsy in Coronary Interventions. *Circulation: Cardiovascular Interventions* **2021**, *14*, e009354. https://doi.org/10.1161/CIRCINTERVENTIONS.120.009354.
 
-8. Ali, Z. A.; et al. Safety and Effectiveness of Coronary Intravascular Lithotripsy for Treatment of Severely Calcified Coronary Stenoses: The Disrupt CAD II Study. *Circulation: Cardiovascular Interventions* **2019**, *12*, e008434. https://doi.org/10.1161/CIRCINTERVENTIONS.119.008434.
+8. Ali, Z. A.; Nef, H.; Escaned, J.; Werner, N.; Banning, A. P.; Hill, J. M.; De Bruyne, B.; Montorfano, M.; Lefevre, T.; Stone, G. W.; et al. Safety and Effectiveness of Coronary Intravascular Lithotripsy for Treatment of Severely Calcified Coronary Stenoses: The Disrupt CAD II Study. *Circulation: Cardiovascular Interventions* **2019**, *12*, e008434. https://doi.org/10.1161/CIRCINTERVENTIONS.119.008434.
 
-9. Hill, J. M.; et al. Intravascular Lithotripsy for Treatment of Severely Calcified Coronary Artery Disease. *Journal of the American College of Cardiology* **2020**. https://doi.org/10.1016/j.jacc.2020.09.603.
+9. Hill, J. M.; Kereiakes, D. J.; Shlofmitz, R. A.; Klein, A. J.; Riley, R. F.; Price, M. J.; Herrmann, H. C.; Bachinsky, W.; Waksman, R.; Stone, G. W.; Disrupt CAD III Investigators. Intravascular Lithotripsy for Treatment of Severely Calcified Coronary Artery Disease. *Journal of the American College of Cardiology* **2020**, *76*, 2635–2646. https://doi.org/10.1016/j.jacc.2020.09.603.
 
-10. Authors to be confirmed. TCT-120: Pooled Optical Coherence Tomography Analysis of the Disrupt CAD Studies. *Journal of the American College of Cardiology* **2021**. https://doi.org/10.1016/j.jacc.2021.09.970.
+10. Ali, Z.; Hill, J.; Saito, S.; et al. TCT-120 Optical Coherence Tomography Characterization of Shockwave Intravascular Lithotripsy for Treatment of Calcified Coronary Lesions: Patient-Level Pooled Analysis of the Disrupt CAD OCT Substudies. *Journal of the American College of Cardiology* **2021**, *78*, B50–B51. https://doi.org/10.1016/j.jacc.2021.09.970.
 
-11. Authors to be confirmed. Outcomes of Coronary Intravascular Lithotripsy for the Treatment of Calcified Nodules: A Pooled Analysis of the Disrupt CAD Studies. *EuroIntervention* **2024**. https://doi.org/10.4244/EIJ-D-24-00282.
+11. Ali, Z. A.; Shin, D.; Singh, M.; Malik, S.; Sakai, K.; Honton, B.; Kereiakes, D. J.; Hill, J. M.; Saito, S.; Di Mario, C.; Gonzalo, N.; Riley, R. F.; Maehara, A.; Matsumura, M.; Hokama, J.; West, N. E. J.; Stone, G. W.; Shlofmitz, R. A.; et al. Outcomes of Coronary Intravascular Lithotripsy for the Treatment of Calcified Nodules: A Pooled Analysis of the Disrupt CAD Studies. *EuroIntervention* **2024**, *20*, e1454–e1464. https://doi.org/10.4244/EIJ-D-24-00282.
 
 12. Emori, H.; Shiono, Y.; Kuriyama, N.; Honda, Y.; Ebihara, S.; Kadooka, K.; et al. Calcium Fracture After Intravascular Lithotripsy as Assessed With Optical Coherence Tomography. *Circulation Journal* **2023**, *87*, 799–805. https://doi.org/10.1253/circj.CJ-22-0695.
 
-13. Authors to be confirmed. Intravascular Laser Lithotripsy for Calcium Fracture in Human Coronary Arteries. *EuroIntervention*.
+13. Gruslova, A. B.; Katta, N.; Nolen, D.; Jenney, S.; Vela, D.; Buja, M.; Cilingiroglu, M.; Seddighi, Y.; Han, H. C.; Milner, T. E.; Feldman, M. D. Intravascular Laser Lithotripsy for Calcium Fracture in Human Coronary Arteries. *EuroIntervention* **2023**, *19*, e913–e922. https://doi.org/10.4244/EIJ-D-23-00487.
 
-14. Sato, ?; et al. A Revised Optical Coherence Tomography-Derived Calcium Score to Predict Stent Underexpansion in Severely Calcified Lesions. *JACC: Cardiovascular Interventions* **2025**. https://doi.org/10.1016/j.jcin.2024.12.001.
+14. Sato, T.; Matsumura, M.; Yamamoto, K.; Sugizaki, Y.; Shlofmitz, E.; Moses, J. W.; Khalique, O. K.; Thomas, S. V.; Malik, S.; Dakroub, A.; Singh, M.; Shin, D.; Cohen, D. J.; Mintz, G. S.; Shlofmitz, R. A.; Jeremias, A.; Ali, Z. A.; Maehara, A. A Revised Optical Coherence Tomography-Derived Calcium Score to Predict Stent Underexpansion in Severely Calcified Lesions. *JACC: Cardiovascular Interventions* **2025**, *18*, 622–633. https://doi.org/10.1016/j.jcin.2024.12.001.
 
-15. Gharaibeh, Y.; et al. Prediction of Stent Under-Expansion in Calcified Coronary Arteries Using Machine Learning on Intravascular Optical Coherence Tomography Images. *Scientific Reports* **2023**, *13*. https://doi.org/10.1038/s41598-023-44610-9.
+15. Gharaibeh, Y.; Lee, J.; Zimin, V. N.; Kolluru, C.; Dallan, L. A. P.; Pereira, G. T. R.; Vergara-Martel, A.; Kim, J. N.; Hoori, A.; Dong, P.; Gamage, P. T.; Gu, L.; Bezerra, H. G.; Al-Kindi, S.; Wilson, D. L. Prediction of Stent Under-Expansion in Calcified Coronary Arteries Using Machine Learning on Intravascular Optical Coherence Tomography Images. *Scientific Reports* **2023**, *13*, 18110. https://doi.org/10.1038/s41598-023-44610-9.
 
 16. Holzapfel, G. A.; Stadler, M.; Schulze-Bauer, C. A. J. A Layer-Specific Three-Dimensional Model for the Simulation of Balloon Angioplasty Using Magnetic Resonance Imaging and Mechanical Testing. *Annals of Biomedical Engineering* **2002**, *30*, 753–767.
 
-17. Lally, C.; Dolan, F.; Prendergast, P. J. Cardiovascular Stent Design and Vessel Stresses: A Finite Element Analysis. *Journal of Biomechanics* **2005**, *38*, 1574–1581.
+17. Lally, C.; Dolan, F.; Prendergast, P. J. Cardiovascular Stent Design and Vessel Stresses: A Finite Element Analysis. *Journal of Biomechanics* **2005**, *38*, 1574–1581. https://doi.org/10.1016/j.jbiomech.2004.07.022.
 
 18. Huang, H.; Virmani, R.; Younis, H.; Burke, A. P.; Kamm, R. D.; Lee, R. T. The Impact of Calcification on the Biomechanical Stability of Atherosclerotic Plaques. *Circulation* **2001**, *103*, 1051–1056.
 
 19. Conway, C.; McGarry, J. P.; Edelman, E. R.; McHugh, P. E. Numerical Simulation of Stent Angioplasty with Predilation: An Investigation into Lesion Constitutive Representation and Calcification Influence. *Annals of Biomedical Engineering* **2017**, *45*, 2244–2252. https://doi.org/10.1007/s10439-017-1851-3.
 
-20. Dong, P.; et al. Load-Sharing Characteristics of Stenting and Post-Dilation in Heavily Calcified Coronary Artery. *Scientific Reports* **2023**, *13*, 16878. https://doi.org/10.1038/s41598-023-43160-4.
+20. Dong, P.; Colmenarez, J.; Lee, J.; Shafiabadi Hassani, N.; Wilson, D. L.; Bezerra, H. G.; Gu, L. Load-Sharing Characteristics of Stenting and Post-Dilation in Heavily Calcified Coronary Artery. *Scientific Reports* **2023**, *13*, 16878. https://doi.org/10.1038/s41598-023-43160-4.
 
 21. Dong, P.; Ye, G.; Kaya, M.; Gu, L. Simulation-Driven Machine Learning for Predicting Stent Expansion in Calcified Coronary Artery. *Applied Sciences* **2020**, *10*, 5820. https://doi.org/10.3390/app10175820.
 
-22. Zhu, X.; Umezu, M.; Iwasaki, K. Finite Element Analysis of Cutting Balloon Expansion in a Calcified Artery Model of Circular Angle 180°: Effects of Balloon-to-Diameter Ratio and Number of Blades Facing Calcification on Potential Calcification Fracturing and Perforation Reduction. *PLoS ONE* **2021**. https://doi.org/10.1371/journal.pone.0251404.
+22. Zhu, X.; Umezu, M.; Iwasaki, K. Finite Element Analysis of Cutting Balloon Expansion in a Calcified Artery Model of Circular Angle 180°: Effects of Balloon-to-Diameter Ratio and Number of Blades Facing Calcification on Potential Calcification Fracturing and Perforation Reduction. *PLoS ONE* **2021**, *16*, e0251404. https://doi.org/10.1371/journal.pone.0251404.
 
-23. Li, J.; Cao, H.; Li, M.; Shu, L.; Lin, C. A Study of Balloon Type on Calcified Coronary Lesion Predilation: A Finite Element Analysis. *Proceedings of the Institution of Mechanical Engineers, Part H* **2023**. https://doi.org/10.1177/09544119231157853.
+23. Li, J.; Cao, H.; Li, M.; Shu, L.; Lin, C. A Study of Balloon Type on Calcified Coronary Lesion Predilation: A Finite Element Analysis. *Proceedings of the Institution of Mechanical Engineers, Part H* **2023**, *237*, 443–450. https://doi.org/10.1177/09544119231157853.
 
-24. Sogbadji, J.; Kadry, K.; Poletti, G.; Berti, F.; Edelman, E. R.; Nezami, F. R. Impact of Lesion Preparation-Induced Calcified Plaque Defects in Vascular Intervention for Atherosclerotic Disease: In Silico Assessment. *Biomechanics and Modeling in Mechanobiology* **2025**. https://doi.org/10.1007/s10237-024-01923-6.
+24. Sogbadji, J.; Kadry, K.; Poletti, G.; Berti, F.; Edelman, E. R.; Nezami, F. R. Impact of Lesion Preparation-Induced Calcified Plaque Defects in Vascular Intervention for Atherosclerotic Disease: In Silico Assessment. *Biomechanics and Modeling in Mechanobiology* **2025**, *24*, 539–552. https://doi.org/10.1007/s10237-024-01923-6.
 
-25. Bourdin, B.; Francfort, G. A.; Marigo, J.-J. Numerical Experiments in Revisited Brittle Fracture. *Journal of the Mechanics and Physics of Solids* **2000**, *48*, 797–826.
+25. Bourdin, B.; Francfort, G. A.; Marigo, J.-J. Numerical Experiments in Revisited Brittle Fracture. *Journal of the Mechanics and Physics of Solids* **2000**, *48*, 797–826. https://doi.org/10.1016/S0022-5096(99)00028-9.
 
 26. Miehe, C.; Hofacker, M.; Welschinger, F. A Phase Field Model for Rate-Independent Crack Propagation: Robust Algorithmic Implementation Based on Operator Splits. *Computer Methods in Applied Mechanics and Engineering* **2010**, *199*, 2765–2778. https://doi.org/10.1016/j.cma.2010.04.011.
 
-27. Tanné, E.; Li, T.; Bourdin, B.; Marigo, J.-J.; Maurini, C. Crack Nucleation in Variational Phase-Field Models of Brittle Fracture. *Journal of the Mechanics and Physics of Solids* **2018**.
+27. Tanné, E.; Li, T.; Bourdin, B.; Marigo, J.-J.; Maurini, C. Crack Nucleation in Variational Phase-Field Models of Brittle Fracture. *Journal of the Mechanics and Physics of Solids* **2018**, *110*, 80–99. https://doi.org/10.1016/j.jmps.2017.09.006.
 
-28. Gültekin, O.; Dal, H.; Holzapfel, G. A. A Phase-Field Approach to Model Fracture of Arterial Walls: Theory and Finite Element Analysis. *Computer Methods in Applied Mechanics and Engineering* **2016**, *312*, 542–566.
+28. Gültekin, O.; Dal, H.; Holzapfel, G. A. A Phase-Field Approach to Model Fracture of Arterial Walls: Theory and Finite Element Analysis. *Computer Methods in Applied Mechanics and Engineering* **2016**, *312*, 542–566. https://doi.org/10.1016/j.cma.2016.04.007.
 
 29. Kadry, K.; Olender, M. L.; Marlevi, D.; Edelman, E. R.; Nezami, F. R. A Platform for High-Fidelity Patient-Specific Structural Modelling of Atherosclerotic Arteries: From Intravascular Imaging to Three-Dimensional Stress Distributions. *Journal of the Royal Society Interface* **2021**, *18*, 20210436. https://doi.org/10.1098/rsif.2021.0436.
 
 30. Straughan, R.; Kadry, K.; Parikh, S. A.; Edelman, E. R.; Nezami, F. R. Fully Automated Construction of Three-Dimensional Finite Element Simulations from Optical Coherence Tomography. *Computers in Biology and Medicine* **2023**, *165*, 107341. https://doi.org/10.1016/j.compbiomed.2023.107341.
 
-31. Gharaibeh, Y.; et al. Deep Learning Segmentation of Coronary Calcified Plaque from Intravascular Optical Coherence Tomography (IVOCT) Images with Application to Finite Element Modeling of Stent Deployment. *Proc. SPIE Medical Imaging* **2019**, *10951*. https://doi.org/10.1117/12.2515256.
+31. Gharaibeh, Y.; Dong, P.; Prabhu, D.; Kolluru, C.; Lee, J.; Zimin, V.; Mozafari, H.; Bizzera, H.; Gu, L.; Wilson, D. Deep Learning Segmentation of Coronary Calcified Plaque from Intravascular Optical Coherence Tomography (IVOCT) Images with Application to Finite Element Modeling of Stent Deployment. *Proc. SPIE Medical Imaging* **2019**, *10951*, 109511C. https://doi.org/10.1117/12.2515256.
 
-32. Corral-Acero, J.; et al. The ‘Digital Twin’ to Enable the Vision of Precision Cardiology. *European Heart Journal* **2020**, *41*, 4556–4564. https://doi.org/10.1093/eurheartj/ehaa159.
+32. Corral-Acero, J.; Margara, F.; Marciniak, M.; Rodero, C.; Loncaric, F.; Feng, Y.; Gilbert, A.; Fernandes, J. F.; Bukhari, H. A.; Wajdan, A.; Villegas Martinez, M.; Sousa Santos, M.; Shamohammdi, M.; Luo, H.; Westphal, P.; Leeson, P.; DiAchille, P.; Gurev, V.; Mayr, M.; Geris, L.; Pathmanathan, P.; Morrison, T.; Cornelussen, R.; Prinzen, F.; Delhaas, T.; Doltra, A.; Sitges, M.; Vigmond, E. J.; Zacur, E.; Grau, V.; Rodriguez, B.; Remme, E. W.; Niederer, S.; Mortier, P.; McLeod, K.; Potse, M.; Pueyo, E.; Bueno-Orovio, A.; Lamata, P. The ‘Digital Twin’ to Enable the Vision of Precision Cardiology. *European Heart Journal* **2020**, *41*, 4556–4564. https://doi.org/10.1093/eurheartj/ehaa159.
 
 33. Viceconti, M.; Pappalardo, F.; Rodriguez, B.; Horner, M.; Bischoff, J.; Musuamba Tshinanu, F. In Silico Trials: Verification, Validation and Uncertainty Quantification of Predictive Models Used in the Regulatory Evaluation of Biomedical Products. *Methods* **2021**, *185*, 120–127. https://doi.org/10.1016/j.ymeth.2020.01.011.
 
-34. Loree, H. M.; Grodzinsky, A. J.; Park, S. Y.; Gibson, L. J.; Lee, R. T. Static Circumferential Tangential Modulus of Human Atherosclerotic Tissue. *Journal of Biomechanics* **1994**, *27*, 195–204.
+34. Loree, H. M.; Grodzinsky, A. J.; Park, S. Y.; Gibson, L. J.; Lee, R. T. Static Circumferential Tangential Modulus of Human Atherosclerotic Tissue. *Journal of Biomechanics* **1994**, *27*, 195–204. https://doi.org/10.1016/0021-9290(94)90209-7.
 
-35. Authors to be confirmed. Effect of Calcification Modulus and Geometry on Stress in Models of Calcified Atherosclerotic Plaque. *Cardiovascular Engineering and Technology* **2014**. https://doi.org/10.1007/s13239-014-0186-6.
+35. Buffinton, C. M.; Ebenstein, D. M. Effect of Calcification Modulus and Geometry on Stress in Models of Calcified Atherosclerotic Plaque. *Cardiovascular Engineering and Technology* **2014**, *5*, 244–260. https://doi.org/10.1007/s13239-014-0186-6.
 
-36. Holzapfel, G. A.; Sommer, G.; Regitnig, P. Anisotropic Mechanical Properties of Tissue Components in Human Atherosclerotic Plaques. *Journal of Biomechanical Engineering* **2004**, *126*, 657–665.
+36. Holzapfel, G. A.; Sommer, G.; Regitnig, P. Anisotropic Mechanical Properties of Tissue Components in Human Atherosclerotic Plaques. *Journal of Biomechanical Engineering* **2004**, *126*, 657–665. https://doi.org/10.1115/1.1800557.
 
-37. Sugiyama, T.; Yamamoto, E.; Fracassi, F.; et al. Calcified Plaques in Patients With Acute Coronary Syndromes. *JACC: Cardiovascular Interventions* **2019**.
+37. Sugiyama, T.; Yamamoto, E.; Fracassi, F.; Lee, H.; Yonetsu, T.; et al. Calcified Plaques in Patients With Acute Coronary Syndromes. *JACC: Cardiovascular Interventions* **2019**, *12*, 531–540. https://doi.org/10.1016/j.jcin.2018.12.013.
 
-38. Lee, J.; et al. Segmentation of Coronary Calcified Plaque in Intravascular OCT Images Using a Two-Step Deep Learning Approach. *IEEE Access* **2020**.
+38. Lee, J.; Gharaibeh, Y.; Kolluru, C.; Zimin, V. N.; Dallan, L. A. P.; Kim, J. N.; Bezerra, H. G.; Wilson, D. L. Segmentation of Coronary Calcified Plaque in Intravascular OCT Images Using a Two-Step Deep Learning Approach. *IEEE Access* **2020**, *8*, 225581–225593. https://doi.org/10.1109/ACCESS.2020.3045285.
 
-39. Yamada, T.; Taniguchi, N.; Hata, T.; Nakajima, S.; Kawakami, S.; Takahashi, A. Impact of Calcified Plaque Distribution on Symmetrical Stent Expansion After Intravascular Lithotripsy. *Journal of the Society for Cardiovascular Angiography & Interventions* **2025**. https://doi.org/10.1016/j.jscai.2025.102616.
+39. Yamada, T.; Taniguchi, N.; Hata, T.; Nakajima, S.; Kawakami, S.; Takahashi, A. Impact of Calcified Plaque Distribution on Symmetrical Stent Expansion After Intravascular Lithotripsy. *Journal of the Society for Cardiovascular Angiography & Interventions* **2025**, *4*, 102616. https://doi.org/10.1016/j.jscai.2025.102616.
 
-40. Konishi, ?; et al. The Histological Analysis of the Coronary Medial Thickness: Implications for Percutaneous Coronary Intervention. *PLoS ONE* **2023**, *18*, e0283840. https://doi.org/10.1371/journal.pone.0283840.
+40. Konishi, T.; Ghosh, S. K. B.; Sato, Y.; Kawakami, R.; Kawai, K.; Vozenilek, A. E.; Xu, W.; Bellissard, A.; Giasolli, R.; Chahal, D.; Virmani, R.; Finn, A. V. The Histological Analysis of the Coronary Medial Thickness: Implications for Percutaneous Coronary Intervention. *PLoS ONE* **2023**, *18*, e0283840. https://doi.org/10.1371/journal.pone.0283840.
 
-41. Rioufol, G.; et al. Adventitia Measurement in Coronary Artery: An in Vivo Intravascular Ultrasound Study. *Heart* **2006**, *92*, 985–986.
+41. Rioufol, G.; Elbaz, M.; Dubreuil, O.; Tabib, A.; Finet, G. Adventitia Measurement in Coronary Artery: An in Vivo Intravascular Ultrasound Study. *Heart* **2006**, *92*, 985–986. https://doi.org/10.1136/hrt.2005.062711.
 
-42. Authors to be confirmed. Volumetric Characterization of Human Coronary Calcification by Frequency-Domain Optical Coherence Tomography.
+42. Mehanna, E.; Bezerra, H. G.; Prabhu, D.; Brandt, E.; Chamié, D.; Yamamoto, H.; Attizzani, G. F.; Tahara, S.; Van Ditzhuijzen, N.; Fujino, Y.; Kanaya, T.; Stefano, G.; Wang, W.; Gargesha, M.; Wilson, D.; Costa, M. A. Volumetric Characterization of Human Coronary Calcification by Frequency-Domain Optical Coherence Tomography. **2013**, *77*, 2334–2340. https://doi.org/10.1253/circj.CJ-12-1458.
 
 43. Authors to be confirmed. [Title to be confirmed] (IVUS plaque eccentricity index). *Cardiovascular Ultrasound* **2016**. https://doi.org/10.1186/s12947-016-0090-3.
 
-44. Authors to be confirmed. CLIMA Study: Optical Coherence Tomography of the Proximal Left Anterior Descending Artery (High-Risk Lipid Arc).
+44. Prati, F.; Romagnoli, E.; Gatto, L.; La Manna, A.; Burzotta, F.; Ozaki, Y.; Marco, V.; Boi, A.; Fineschi, M.; Fabbiocchi, F.; Taglieri, N.; Niccoli, G.; Trani, C.; Versaci, F.; et al. CLIMA Study: Optical Coherence Tomography of the Proximal Left Anterior Descending Artery (High-Risk Lipid Arc). **2020**, *41*, 383–391. https://doi.org/10.1093/eurheartj/ehz520.
 
 45. Authors to be confirmed. In Vivo Optical Coherence Tomography of Culprit-Plaque Fibrous Cap Thickness (Massachusetts General Hospital OCT Registry).
 
-46. Geuzaine, C.; Remacle, J.-F. Gmsh: A 3-D Finite Element Mesh Generator with Built-in Pre- and Post-Processing Facilities. *International Journal for Numerical Methods in Engineering* **2009**, *79*, 1309–1331.
+46. Geuzaine, C.; Remacle, J.-F. Gmsh: A 3-D Finite Element Mesh Generator with Built-in Pre- and Post-Processing Facilities. *International Journal for Numerical Methods in Engineering* **2009**, *79*, 1309–1331. https://doi.org/10.1002/nme.2579.
 
 47. Escuer, J.; Martínez, M. A.; McGinty, S.; Peña, E. Mathematical Modelling of the Restenosis Process after Stent Implantation. *Journal of the Royal Society Interface* **2019**, *16*, 20190313. https://doi.org/10.1098/rsif.2019.0313.
 
 48. Holzapfel, G. A.; Sommer, G.; Gasser, C. T.; Regitnig, P. Determination of Layer-Specific Mechanical Properties of Human Coronary Arteries with Nonatherosclerotic Intimal Thickening and Related Constitutive Modeling. *American Journal of Physiology-Heart and Circulatory Physiology* **2005**, *289*, H2048–H2058. https://doi.org/10.1152/ajpheart.00934.2004.
 
-49. Authors to be confirmed. Mapping Elasticity Moduli of Atherosclerotic Plaque in Situ via Atomic Force Microscopy. *Journal of Structural Biology* **2011**.
+49. Tracqui; Broisat; Toczek, J.; Mesnier; Ohayon; Riou. Mapping Elasticity Moduli of Atherosclerotic Plaque in Situ via Atomic Force Microscopy. *Journal of Structural Biology* **2011**, *174*, 115–123. https://doi.org/10.1016/j.jsb.2011.01.010.
 
-50. Kawai, K.; et al. Histology, OCT, and Micro-CT Evaluation of Coronary Calcification Treated With Intravascular Lithotripsy: Atherosclerotic Cadaver Study. *JACC: Cardiovascular Interventions* **2023**, *16*, 2097–2108. https://doi.org/10.1016/j.jcin.2023.06.021.
+50. Kawai, K.; Sato, Y.; Hokama, J. Y.; et al. Histology, OCT, and Micro-CT Evaluation of Coronary Calcification Treated With Intravascular Lithotripsy: Atherosclerotic Cadaver Study. *JACC: Cardiovascular Interventions* **2023**, *16*, 2097–2108. https://doi.org/10.1016/j.jcin.2023.06.021.
 
-51. Whelton, P. K.; et al. 2017 ACC/AHA Guideline for the Prevention, Detection, Evaluation, and Management of High Blood Pressure in Adults.
+51. Whelton, P. K.; Carey, R. M.; Aronow, W. S.; Casey, D. E.; Collins, K. J.; Dennison Himmelfarb, C.; DePalma, S. M.; Gidding, S.; Jamerson, K. A.; Jones, D. W.; MacLaughlin, E. J.; Muntner, P.; Ovbiagele, B.; Smith, S. C.; Spencer, C. C.; Stafford, R. S.; Taler, S. J.; Thomas, R. J.; Williams, K. A.; Williamson, J. D.; Wright, J. T. 2017 ACC/AHA Guideline for the Prevention, Detection, Evaluation, and Management of High Blood Pressure in Adults. **2018**, *71*, e13–e115. https://doi.org/10.1161/HYP.0000000000000065.
 
 52. Abbott Vascular; Boston Scientific. XIENCE and SYNERGY Coronary Stent System Specifications (Nominal and Rated Burst Pressures).
 
-53. Authors to be confirmed. Comparison of in Vivo Acute Stent Recoil between the Bioabsorbable Everolimus-Eluting Coronary Stent and the Everolimus-Eluting Cobalt Chromium Coronary Stent.
+53. Tanimoto; et al. Comparison of in Vivo Acute Stent Recoil between the Bioabsorbable Everolimus-Eluting Coronary Stent and the Everolimus-Eluting Cobalt Chromium Coronary Stent. **2007**, *70*, 515–523. https://doi.org/10.1002/ccd.21136.
 
-54. Brinton, T. J.; et al. Feasibility of Shockwave Coronary Intravascular Lithotripsy for the Treatment of Calcified Coronary Stenoses: First Description. *Circulation* **2019**. https://doi.org/10.1161/CIRCULATIONAHA.118.036531.
+54. Brinton, T. J.; Ali, Z. A.; Hill, J. M.; et al. Feasibility of Shockwave Coronary Intravascular Lithotripsy for the Treatment of Calcified Coronary Stenoses: First Description. *Circulation* **2019**, *139*, 834–836. https://doi.org/10.1161/CIRCULATIONAHA.118.036531.
 
-55. Rooney, ?; et al. Speed of Sound in Excised Human and Canine Arteries (2–10 MHz). **1979**.
+55. Rooney; Gammell; Hestenes; Blankenhorn; Chin. Velocity of Sound in Arterial Tissue. *Journal of the Acoustical Society of America* **1979**.
 
-56. Rooney, ?; et al. Speed of Sound in Excised Arterial Lesions at 37 °C. **1982**.
+56. Rooney, J. A.; Gammell, P. M.; Hestenes, J. D.; Chin, H. P.; Blankenhorn, D. H. Velocity and Attenuation of Sound in Arterial Tissues. *Journal of the Acoustical Society of America* **1982**.
 
 57. Authors to be confirmed. Carotid Plaque Acoustic Study: Component Sound Speeds at 37 °C (Queen Mary University of London Research Repository).
 
 58. Authors to be confirmed. Acoustic Properties of Atherosclerosis of Human Aorta Obtained with High-Frequency Ultrasound. *Ultrasound in Medicine and Biology* **1998**.
 
-59. Authors to be confirmed. Minimizing Thermal Damage to Vascular Nerves While Drilling of Calcified Plaque. *BMC Research Notes* **2019**. https://doi.org/10.1186/s13104-019-4381-2.
+59. Gholampour, S.; Hajirayat, K. Minimizing Thermal Damage to Vascular Nerves While Drilling of Calcified Plaque. *BMC Research Notes* **2019**, *12*, 338. https://doi.org/10.1186/s13104-019-4381-2.
 
-60. Authors to be confirmed. [Stent-deployment finite element study with Ogden plaque models]. **2014**. https://doi.org/10.1186/s40759-014-0002-x.
+60. Schiavone, A.; Zhao, L. A Study of Balloon Type, System Constraint and Artery Constitutive Model Used in Finite Element Simulation of Stent Deployment. *Mechanics of Advanced Materials and Modern Processes* **2015**, *1*, 1. https://doi.org/10.1186/s40759-014-0002-x.
 
-61. Authors to be confirmed. [Thermal model of atherosclerotic arteries]. *BioMedical Engineering OnLine*. https://doi.org/10.1186/1475-925X-6-8.
+61. Ley, O.; Kim, T. Calculation of Arterial Wall Temperature in Atherosclerotic Arteries: Effect of Pulsatile Flow, Arterial Geometry, and Plaque Structure. *BioMedical Engineering OnLine* **2007**. https://doi.org/10.1186/1475-925X-6-8.
 
 62. Celik, I. B.; Ghia, U.; Roache, P. J.; Freitas, C. J.; Coleman, H.; Raad, P. E. Procedure for Estimation and Reporting of Uncertainty Due to Discretization in CFD Applications. *Journal of Fluids Engineering* **2008**, *130*, 078001. https://doi.org/10.1115/1.2960953.
 
-63. Authors to be confirmed. Serum Marker and CT Characteristics of Coronary Calcified Nodule Assessed by Intravascular Ultrasound. *BMC Cardiovascular Disorders* **2022**. https://doi.org/10.1186/s12872-022-02931-z.
+63. Li, J.; Jian, Z.; Wu, J.; Yang, J.; Guo, N.; Huang, X.; et al. Serum Marker and CT Characteristics of Coronary Calcified Nodule Assessed by Intravascular Ultrasound. *BMC Cardiovascular Disorders* **2022**. https://doi.org/10.1186/s12872-022-02931-z.
 
 64. Herman, J.; Usher, W. SALib: An Open-Source Python Library for Sensitivity Analysis. *Journal of Open Source Software* **2017**, *2*, 97. https://doi.org/10.21105/joss.00097.
 
-65. Saltelli, A.; Annoni, P.; Azzini, I.; Campolongo, F.; Ratto, M.; Tarantola, S. Variance Based Sensitivity Analysis of Model Output. Design and Estimator for the Total Sensitivity Index. *Computer Physics Communications* **2010**.
+65. Saltelli, A.; Annoni, P.; Azzini, I.; Campolongo, F.; Ratto, M.; Tarantola, S. Variance Based Sensitivity Analysis of Model Output. Design and Estimator for the Total Sensitivity Index. *Computer Physics Communications* **2010**, *181*, 259–270. https://doi.org/10.1016/j.cpc.2009.09.018.
 
 66. Authors to be confirmed. DOLFINx: The Next Generation FEniCS Problem Solving Environment. *Zenodo preprint* **2023**. https://doi.org/10.5281/zenodo.10447665.
