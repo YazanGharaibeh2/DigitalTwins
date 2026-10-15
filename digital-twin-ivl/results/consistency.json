@@ -1,0 +1,1937 @@
+{
+ "stage": "consistency with published observations (Phase 5)",
+ "wording": "Agreement labels state whether simulated (in silico) outcomes are consistent with published observations; they are not a test of the model against patients. Rows of kind model_internal (a criterion of the calcium-modulus calibration), calibration_target (a quantity the model was calibrated to), model_vs_model (the published value is another simulation) and geometry_plausibility are not independent comparisons with observations.",
+ "input": {
+  "path": "results/cohort_outcomes.csv",
+  "sha256": "1871f969a656d6a298652fcf05a18d43f9eab4baf74ebed7114c1f4055ddff0f",
+  "n_rows": 24,
+  "n_rows_used": 24,
+  "by_set": {
+   "core": 24
+  },
+  "baseline_ca_E_MPa": 365.006198,
+  "notes": [],
+  "cohort_summary": {
+   "path": "results/cohort_summary.json",
+   "found": true
+  },
+  "calibration": {
+   "path": "results/calibration_stent.json",
+   "found": true
+  },
+  "cohort": {
+   "path": "cohort/cohort.csv",
+   "found": true
+  }
+ },
+ "config": {
+  "seed": 20261609,
+  "n_boot": 2000,
+  "bootstrap_stratified": true,
+  "ci_level": 0.95,
+  "sets": [
+   "core",
+   "holdout"
+  ],
+  "derivation_set": "core",
+  "ok_status": {
+   "default": [
+    "ok"
+   ],
+   "stent_no_ivl": [
+    "ok",
+    "limited"
+   ],
+   "stent_post_ivl": [
+    "ok",
+    "limited"
+   ]
+  },
+  "allow_status": [
+   "SECONDARY"
+  ],
+  "min_n": 5,
+  "min_per_group": 2,
+  "require_ci": true,
+  "odds_ratio_correction": 0.5,
+  "provenance": {
+   "seed": "design.seed + consistency.seed_offset",
+   "bootstrap_n": "metrics.bootstrap_n",
+   "bootstrap_stratified": "metrics.bootstrap_stratified",
+   "ci_level": "metrics.ci_level",
+   "derivation_set": "metrics.sets"
+  },
+  "consistency_section": {
+   "seed_offset": {
+    "value": 600,
+    "basis": "DESIGN: rng entropy of the consistency stage = design.seed + seed_offset (an offset of its own, distinct from metrics.seed_offset); every bootstrap interval draws from its own stream (dtivl.stats.roc.rng_for, spawn key = CRC32 of 'check|quantity|set'). Bootstrap size, stratification of binary outcomes and interval level are those of the metrics stage (metrics.bootstrap_n, metrics.bootstrap_stratified, metrics.ci_level)",
+    "status": "DESIGN"
+   },
+   "sets": {
+    "value": [
+     "core",
+     "holdout"
+    ],
+    "basis": "DESIGN: every lesion-level check is computed on the core set (the designed factorial) and, in a separate row, on the hold-out set (Latin hypercube); the sets are never pooled. Youden cuts are derived on the core set only (as metrics.sets). The cohort geometry check (C12) is one cohort-level row",
+    "status": "DESIGN"
+   },
+   "ok_status": {
+    "value": {
+     "default": [
+      "ok"
+     ],
+     "stent_no_ivl": [
+      "ok",
+      "limited"
+     ],
+     "stent_post_ivl": [
+      "ok",
+      "limited"
+     ]
+    },
+    "basis": "DESIGN: protocol runs a check uses, as metrics.outcomes: fracture outcomes from runs with status ok; stent outcomes also from pressure-limited runs (status limited); failed and missing runs are excluded and counted in the row note",
+    "status": "DESIGN"
+   },
+   "allow_status": {
+    "value": [
+     "SECONDARY"
+    ],
+    "basis": "DESIGN: a comparison-only literature row of status SECONDARY (value quoted in later reviews, not seen in the primary source) may be shown next to the model, with its status in the row (C2 thickness cutoff); UNVERIFIED rows are never read",
+    "status": "DESIGN"
+   },
+   "min_n": {
+    "value": 5,
+    "basis": "DESIGN: minimum number of lesions with the model quantity for a check of one set (proportion, distribution or correlation); with fewer the check is not computed and the reason is given (as metrics.min_rows_continuous)",
+    "status": "DESIGN"
+   },
+   "min_per_group": {
+    "value": 2,
+    "basis": "DESIGN: odds ratio (C3) and Youden cut (C1, C2) need at least this many lesions in each morphology group or outcome class (as metrics.min_per_class)",
+    "status": "DESIGN"
+   },
+   "direction_rule": {
+    "value": {
+     "require_ci": true
+    },
+    "basis": "DESIGN: a direction check (Spearman rho against 0, odds ratio against 1) agrees when the point estimate lies on the expected side of the null value and its interval (metrics.ci_level) excludes the null value; partial when only the point estimate does; disagrees otherwise (including a point estimate equal to the null value). A check over several protocols agrees if every computed protocol agrees, disagrees if every one disagrees, and is partial otherwise",
+    "status": "DESIGN"
+   },
+   "odds_ratio": {
+    "value": {
+     "correction": 0.5
+    },
+    "basis": "DESIGN: Haldane-Anscombe correction, 0.5 added to every cell of the 2x2 table whether or not a cell is empty (one estimator in every data state), Woolf (log) interval at metrics.ci_level",
+    "status": "DESIGN"
+   },
+   "checks": {
+    "C1": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "larger calcium arc, more calcium fracture (plain balloon angioplasty, OCT; published arc cutoff)",
+      "column": "ca_arc_total_deg",
+      "expected_sign": 1,
+      "protocols": [
+       "balloon_10atm",
+       "ivl"
+      ],
+      "youden_protocol": "balloon_10atm",
+      "published": [
+       "fracture_angle_cutoff_balloon"
+      ]
+     },
+     "basis": "DESIGN: direction of the published plain-balloon predictor: Spearman rho of the total calcium arc (cohort descriptor) and the through-thickness fracture indicator under the plain balloon (protocol balloon_10atm, load loads.poba_pressure_atm) and under IVL, per consistency.direction_rule. The core Youden cut of the arc for plain-balloon fracture (dtivl.stats.roc, direction +1) is shown next to the published cutoff, descriptively; it is not part of the agreement (the core arc takes a few design levels)",
+     "status": "DESIGN"
+    },
+    "C2": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "thinner calcium, more calcium fracture (plain balloon angioplasty, OCT; published thickness cutoff)",
+      "column": "ca_thickness_max",
+      "expected_sign": -1,
+      "protocols": [
+       "balloon_10atm",
+       "ivl"
+      ],
+      "youden_protocol": "balloon_10atm",
+      "published": [
+       "fracture_thickness_cutoff_balloon"
+      ]
+     },
+     "basis": "DESIGN: as C1 for the maximum calcium thickness (cohort descriptor ca_thickness_max; the descriptor behind the published cutoff is not stated in the parameter row), expected sign -1; the core Youden cut (direction -1) is descriptive",
+     "status": "DESIGN"
+    },
+    "C3": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "calcified nodules fracture less often than sheet calcium under IVL (OCT)",
+      "protocol": "ivl",
+      "exposed": [
+       "nodule"
+      ],
+      "reference": [
+       "superficial_sheet",
+       "deep_sheet"
+      ],
+      "expected_sign": -1,
+      "published": [
+       "nodular_calcium_odds_ratio_for_fracture",
+       "fracture_rate_calcified_nodule_sites_IVL"
+      ]
+     },
+     "basis": "DESIGN: odds ratio of IVL fracture, nodule lesions vs sheet lesions (superficial + deep; fragmented lesions are in neither group), consistency.odds_ratio; agrees per consistency.direction_rule with an odds ratio below 1. The nodule fracture proportion (Wilson interval) is shown next to the published nodule-site rate, descriptively",
+     "status": "DESIGN"
+    },
+    "C4": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "lesion-level calcium fracture rate after IVL (OCT, Disrupt CAD trials)",
+      "protocol": "ivl",
+      "rule": "band_or_ci_overlap",
+      "published": [
+       "fracture_rate_DisruptCAD_III_OCT",
+       "fracture_rate_DisruptCAD_II_OCT"
+      ],
+      "caveat": "Neither set is a clinical case mix: the core set is a designed factorial of arc, thickness and morphology and the hold-out set a Latin hypercube over the same ranges, so the model fracture proportion follows from the design. OCT misses part of the calcium fractures (context row: an ex vivo study of laser, not electrohydraulic, IVL), whereas the model registers every through-thickness damage band of its cross-section.",
+      "context_rows": [
+       {
+        "row": "laser_IVL_OCT_modification_rate",
+        "cell": "range"
+       }
+      ]
+     },
+     "basis": "DESIGN: model IVL fracture proportion with a Wilson interval; agrees if the proportion lies within the range spanned by the published rates or its interval overlaps that range, disagrees otherwise (the row note says which condition held). The caveat and its context literature row (verbatim cell, not compared) are copied into the row note",
+     "status": "DESIGN"
+    },
+    "C5": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "a plain balloon (IVL catheter balloon inflated without lithotripsy pulses) does not fracture calcium (human cadaver coronary lesions, histology)",
+      "protocol": "balloon_10atm",
+      "rule": "zero",
+      "decision": "D8",
+      "published": [
+       "calcium_fracture_rate_POBA_10atm_cadaver_histology"
+      ]
+     },
+     "basis": "DESIGN: agrees only if no lesion fractures under the plain balloon (load loads.poba_pressure_atm, the inflation pressure of the same cadaver study), the published proportion being zero, disagrees otherwise; disagreement is expected at the calibrated calcium modulus (decision D8, materials.calcium.E)",
+     "status": "DESIGN"
+    },
+    "C6": {
+     "value": {
+      "kind": "model_internal",
+      "observation": "the IVL balloon inflated alone (no pulses) does not fracture calcium; model-internal surrogate of decision D8, calibrated on the pilot lesions only, not a published observation",
+      "protocol": "balloon_only",
+      "rule": "zero",
+      "decision": "D8",
+      "published": []
+     },
+     "basis": "DESIGN: the D8 calibration surrogate applied to the cohort lesions, which were not used for the calibration; agrees only if no lesion fractures under the IVL balloon alone",
+     "status": "DESIGN"
+    },
+    "C7": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "stent expansion after IVL (OCT, Disrupt CAD III)",
+      "protocol": "stent_post_ivl",
+      "column": "stent_expansion_pct",
+      "rule": "mean_within_sd",
+      "published": [
+       "stent_expansion_maxCa_site_DisruptCAD_III",
+       "stent_expansion_MSA_site_DisruptCAD_III"
+      ],
+      "site": "Model expansion (dtivl.metrics.outcomes.stent_metrics, run by dtivl.solvers.nonlinear.run_stent): stent area after recoil of the single modelled cross-section, msa = pi R_final^2 of the rigid cylinder (the in-stent minimum lumen area of that section), divided by one reference lumen area pi (D_ref/2)^2 with D_ref = geometry.reference_diameter_mm (cohort mean reference lumen diameter, not lesion-specific proximal and distal reference segments). The modelled section is the calcium site by construction (maximum-calcium-site definition) and, being the only section, also the minimum-stent-area section of the modelled segment (MSA-site definition), so both published definitions are shown."
+     },
+     "basis": "DESIGN: agrees if the model mean lies within published mean +/- 1 SD for every published site definition, partial if for some, disagrees if for none; the row note states the model definition and the expansion cap set by the deployment target (geometry.stent_target_diameter_mm vs geometry.reference_diameter_mm)",
+     "status": "DESIGN"
+    },
+    "C8": {
+     "value": {
+      "kind": "calibration_target",
+      "observation": "acute stent recoil (clinical QCA, cobalt-chromium everolimus-eluting stent)",
+      "protocols": [
+       "stent_no_ivl",
+       "stent_post_ivl"
+      ],
+      "column": "acute_recoil_pct",
+      "rule": "mean_within_sd",
+      "published": [
+       "acute_recoil_EES_CoCr_clinical"
+      ]
+     },
+     "basis": "DESIGN: calibration target, not an independent check: the stent radial stiffness (results/calibration_stent.json) was identified so that a calcium-free lesion shows the published recoil; the cohort recoil is reported per stent protocol against published mean +/- 1 SD (agrees if every protocol mean lies inside, partial if some, disagrees if none)",
+     "status": "DESIGN"
+    },
+    "C9": {
+     "value": {
+      "kind": "model_vs_model",
+      "observation": "calcium stress magnitude under post-dilation balloon loading in an earlier FE study (in silico)",
+      "columns": [
+       "pred_sigma1_p99",
+       "pred_sigma1_peak_nl"
+      ],
+      "load_column": "pred_p_lumen_MPa",
+      "target_load": "loads.poba_pressure_atm",
+      "factor": 3,
+      "published": [
+       "insilico_postdilation_calcium_stress"
+      ]
+     },
+     "basis": "DESIGN: the pre-treatment linear-elastic predictor stresses scaled from their load (pred_p_lumen_MPa) to the study's plain-balloon load (loads.poba_pressure_atm, the load of the published value, converted to MPa by dtivl.params); exact for the linear model. Agrees if the cohort median of every scaled stress lies within a factor 'factor' of the published value, partial if some, disagrees if none; not computed while the published row has no plain-number value",
+     "status": "DESIGN"
+    },
+    "C10": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "number of fractures per lesion and fraction of full-thickness fractures after IVL (pooled OCT analysis)",
+      "protocol": "ivl",
+      "count": {
+       "published": "fractures_per_lesion_pooled_IVL_OCT",
+       "rule": "mean_within_sd"
+      },
+      "fraction": {
+       "published": "full_thickness_fracture_fraction_pooled_IVL_OCT",
+       "rule": "published_in_ci"
+      },
+      "published": [
+       "fractures_per_lesion_pooled_IVL_OCT",
+       "full_thickness_fracture_fraction_pooled_IVL_OCT"
+      ]
+     },
+     "basis": "DESIGN: count = ivl_n_fractures over the lesions with IVL fracture (agrees if the mean lies within published mean +/- 1 SD); full-thickness fraction = sum n_fractures / sum (n_fractures + n_partial) over the IVL lesions with any crack component, percentile interval from a lesion-level bootstrap (fractures are nested in lesions; agrees if the published fraction lies inside). Both agree: agrees; one: partial; none: disagrees. Diffuse damage (ivl_diffuse) counts as one through-thickness fracture, as in dtivl.fracture.cracks",
+     "status": "DESIGN"
+    },
+    "C11": {
+     "value": {
+      "kind": "published_observation",
+      "observation": "higher OCT calcium (Fujino) score, lower stent expansion",
+      "column": "fujino_score",
+      "protocol": "stent_no_ivl",
+      "outcome": "stent_expansion_pct",
+      "expected_sign": -1,
+      "published": [
+       "fujino_score4_stent_expansion"
+      ]
+     },
+     "basis": "DESIGN: direction only: Spearman rho of the cross-sectional Fujino score and stent expansion without IVL, expected sign -1, per consistency.direction_rule; the published top-score group needs the calcium length criterion and does not exist in 2D",
+     "status": "DESIGN"
+    },
+    "C12": {
+     "value": {
+      "kind": "geometry_plausibility",
+      "observation": "implied plaque burden of the constructed lesions vs CTA plaque burden of calcified plaques and calcified nodules",
+      "source": "cohort_summary",
+      "published": [
+       "plaque_burden_calcified_plaque_CTA",
+       "plaque_burden_calcified_nodule_CTA"
+      ]
+     },
+     "basis": "DESIGN: values copied from results/cohort_summary.json (plaque_burden_check, plaque_growth), not recomputed: agrees if the reference geometry lies within the CTA range and no grown lesion (D11) exceeds the nodule value, partial if the reference lies within the range but some grown lesions exceed it, disagrees if the reference lies outside; not computed if the CTA values stored there differ from the literature table. One cohort-level row; n lesions = the consistency.sets entries of n_per_set",
+     "status": "DESIGN"
+    }
+   }
+  }
+ },
+ "software": {
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6"
+ },
+ "literature": {
+  "acute_recoil_EES_CoCr_clinical": {
+   "row": "acute_recoil_EES_CoCr_clinical",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "4.3",
+   "range_cell": "SD 7.1",
+   "source": "[Authors to be confirmed]. Comparison of in vivo acute stent recoil between the bioabsorbable everolimus-eluting coronary stent and the everolimus-eluting cobalt chromium coronary stent (ABSORB and SPIRIT trials, n=54). DOI not confirmed",
+   "value": 4.3,
+   "sd": 7.1,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "calcium_fracture_rate_POBA_10atm_cadaver_histology": {
+   "row": "calcium_fracture_rate_POBA_10atm_cadaver_histology",
+   "status": "VERIFIED",
+   "unit": "% of lesions",
+   "value_cell": "0",
+   "range_cell": "0 of 7 lesions (POBA) vs IVL 62.5 % of 8 lesions, P = 0.01",
+   "source": "Kawai K, et al. Histology, OCT, and Micro-CT Evaluation of Coronary Calcification Treated With Intravascular Lithotripsy: Atherosclerotic Cadaver Study. JACC Cardiovasc Interv. 2023;16(17):2097-2108. doi:10.1016/j.jcin.2023.06.021",
+   "value": 0.0,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fracture_angle_cutoff_balloon": {
+   "row": "fracture_angle_cutoff_balloon",
+   "status": "VERIFIED",
+   "unit": "deg",
+   "value_cell": "225",
+   "range_cell": "",
+   "source": "Fujino A, Mintz GS, Lee T, et al. Predictors of calcium fracture derived from balloon angioplasty and its effect on stent expansion assessed by optical coherence tomography. JACC Cardiovasc Interv 2018;11:1015-1017. doi:10.1016/j.jcin.2018.02.004",
+   "value": 225.0,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fracture_rate_DisruptCAD_III_OCT": {
+   "row": "fracture_rate_DisruptCAD_III_OCT",
+   "status": "VERIFIED",
+   "unit": "% of lesions",
+   "value_cell": "67.4",
+   "range_cell": "n=100",
+   "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+   "value": 67.4,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fracture_rate_DisruptCAD_II_OCT": {
+   "row": "fracture_rate_DisruptCAD_II_OCT",
+   "status": "VERIFIED",
+   "unit": "% of lesions",
+   "value_cell": "78.7",
+   "range_cell": "n=47",
+   "source": "Ali ZA, et al. Safety and effectiveness of coronary intravascular lithotripsy for treatment of severely calcified coronary stenoses: the Disrupt CAD II study. Circ Cardiovasc Interv 2019;12:e008434. doi:10.1161/CIRCINTERVENTIONS.119.008434",
+   "value": 78.7,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fracture_rate_calcified_nodule_sites_IVL": {
+   "row": "fracture_rate_calcified_nodule_sites_IVL",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "23.1",
+   "range_cell": "155 patients (Disrupt CAD III/IV OCT)",
+   "source": "[Authors to be confirmed]. Outcomes of coronary intravascular lithotripsy for the treatment of calcified nodules: a pooled analysis of the Disrupt CAD studies. EuroIntervention 2024. doi:10.4244/EIJ-D-24-00282",
+   "value": 23.1,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fracture_thickness_cutoff_balloon": {
+   "row": "fracture_thickness_cutoff_balloon",
+   "status": "SECONDARY",
+   "unit": "mm",
+   "value_cell": "0.24",
+   "range_cell": "",
+   "source": "Fujino A, Mintz GS, Lee T, et al. Predictors of calcium fracture derived from balloon angioplasty and its effect on stent expansion assessed by optical coherence tomography. JACC Cardiovasc Interv 2018;11:1015-1017. doi:10.1016/j.jcin.2018.02.004",
+   "value": 0.24,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fractures_per_lesion_pooled_IVL_OCT": {
+   "row": "fractures_per_lesion_pooled_IVL_OCT",
+   "status": "VERIFIED",
+   "unit": "count",
+   "value_cell": "3.1",
+   "range_cell": "SD 2.7",
+   "source": "[Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies (N=262). J Am Coll Cardiol 2021 (abstract supplement). doi:10.1016/j.jacc.2021.09.970",
+   "value": 3.1,
+   "sd": 2.7,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "fujino_score4_stent_expansion": {
+   "row": "fujino_score4_stent_expansion",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "78",
+   "range_cell": "96 (score 0-3)",
+   "source": "Fujino A, Mintz GS, Matsumura M, et al. A new optical coherence tomography-based calcium scoring system to predict stent underexpansion. EuroIntervention 2018;13:e2182-e2189. doi:10.4244/EIJ-D-17-00962",
+   "value": 78.0,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "full_thickness_fracture_fraction_pooled_IVL_OCT": {
+   "row": "full_thickness_fracture_fraction_pooled_IVL_OCT",
+   "status": "VERIFIED",
+   "unit": "% of fractures",
+   "value_cell": "72",
+   "range_cell": "",
+   "source": "[Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies (N=262). J Am Coll Cardiol 2021 (abstract supplement). doi:10.1016/j.jacc.2021.09.970",
+   "value": 72.0,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "insilico_postdilation_calcium_stress": {
+   "row": "insilico_postdilation_calcium_stress",
+   "status": "VERIFIED",
+   "unit": "MPa",
+   "value_cell": "1.5 (10 atm); 8.4 (20 atm)",
+   "range_cell": "",
+   "source": "Dong P, et al. Load-sharing characteristics of stenting and post-dilation in heavily calcified coronary artery. Sci Rep 2023;13:16878. doi:10.1038/s41598-023-43160-4",
+   "value": null,
+   "sd": null,
+   "alt": null,
+   "ok": false,
+   "reason": "literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand)"
+  },
+  "nodular_calcium_odds_ratio_for_fracture": {
+   "row": "nodular_calcium_odds_ratio_for_fracture",
+   "status": "VERIFIED",
+   "unit": "OR",
+   "value_cell": "0.24",
+   "range_cell": "95% CI 0.08-0.70",
+   "source": "Emori H, Shiono Y, Kuriyama N, Honda Y, Ebihara S, Kadooka K, et al. Calcium fracture after intravascular lithotripsy as assessed with optical coherence tomography. Circ J 2023;87:799-805. doi:10.1253/circj.CJ-22-0695",
+   "value": 0.24,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "plaque_burden_calcified_nodule_CTA": {
+   "row": "plaque_burden_calcified_nodule_CTA",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "85.40",
+   "range_cell": "P=0.005 vs calcified plaque without CN",
+   "source": "[Authors to be confirmed]. Serum marker and CT characteristics of coronary calcified nodule assessed by intravascular ultrasound. BMC Cardiovasc Disord 2022. doi:10.1186/s12872-022-02931-z",
+   "value": 85.4,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "plaque_burden_calcified_plaque_CTA": {
+   "row": "plaque_burden_calcified_plaque_CTA",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "77.05",
+   "range_cell": "CN 85.40; P=0.005",
+   "source": "[Authors to be confirmed]. Serum marker and CT characteristics of coronary calcified nodule assessed by intravascular ultrasound. BMC Cardiovasc Disord 2022. doi:10.1186/s12872-022-02931-z",
+   "value": 77.05,
+   "sd": null,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "stent_expansion_MSA_site_DisruptCAD_III": {
+   "row": "stent_expansion_MSA_site_DisruptCAD_III",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "78.4",
+   "range_cell": "SD 25.8",
+   "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+   "value": 78.4,
+   "sd": 25.8,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  },
+  "stent_expansion_maxCa_site_DisruptCAD_III": {
+   "row": "stent_expansion_maxCa_site_DisruptCAD_III",
+   "status": "VERIFIED",
+   "unit": "%",
+   "value_cell": "101.7",
+   "range_cell": "SD 28.9",
+   "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+   "value": 101.7,
+   "sd": 28.9,
+   "alt": null,
+   "ok": true,
+   "reason": null
+  }
+ },
+ "agreement_counts": {
+  "core": {
+   "agrees": 5,
+   "disagrees": 2,
+   "partial": 3,
+   "not computed": 1
+  },
+  "holdout": {
+   "agrees": 0,
+   "disagrees": 0,
+   "partial": 0,
+   "not computed": 11
+  },
+  "cohort": {
+   "agrees": 0,
+   "disagrees": 0,
+   "partial": 1,
+   "not computed": 0
+  }
+ },
+ "agreement_counts_by_kind": {
+  "core": {
+   "published_observation": {
+    "agrees": 3,
+    "disagrees": 2,
+    "partial": 3,
+    "not computed": 0
+   },
+   "model_internal": {
+    "agrees": 1,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 0
+   },
+   "calibration_target": {
+    "agrees": 1,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 0
+   },
+   "model_vs_model": {
+    "agrees": 0,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 1
+   }
+  },
+  "holdout": {
+   "published_observation": {
+    "agrees": 0,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 8
+   },
+   "model_internal": {
+    "agrees": 0,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 1
+   },
+   "calibration_target": {
+    "agrees": 0,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 1
+   },
+   "model_vs_model": {
+    "agrees": 0,
+    "disagrees": 0,
+    "partial": 0,
+    "not computed": 1
+   }
+  },
+  "cohort": {
+   "geometry_plausibility": {
+    "agrees": 0,
+    "disagrees": 0,
+    "partial": 1,
+    "not computed": 0
+   }
+  }
+ },
+ "not_computed": [
+  {
+   "id": "C1",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; balloon_10atm: fewer than 5 lesions (0); ivl: fewer than 5 lesions (0); Youden cut derived on the core set only"
+  },
+  {
+   "id": "C2",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; balloon_10atm: fewer than 5 lesions (0); ivl: fewer than 5 lesions (0); Youden cut derived on the core set only"
+  },
+  {
+   "id": "C3",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; fewer than 2 lesions in a morphology group (0 nodule, 0 superficial_sheet+deep_sheet)"
+  },
+  {
+   "id": "C4",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); Neither set is a clinical case mix: the core set is a designed factorial of arc, thickness and morphology and the hold-out set a Latin hypercube over the same ranges, so the model fracture proportion follows from the design. OCT misses part of the calcium fractures (context row: an ex vivo study of laser, not electrohydraulic, IVL), whereas the model registers every through-thickness damage band of its cross-section.; context, not compared: laser_IVL_OCT_modification_rate (range cell, status VERIFIED): 'n=19 ex vivo; microfractures missed by OCT in 57%'"
+  },
+  {
+   "id": "C5",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); decision D8: Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis."
+  },
+  {
+   "id": "C6",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); model-internal criterion, not a published observation; decision D8: Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis."
+  },
+  {
+   "id": "C7",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; Model expansion (dtivl.metrics.outcomes.stent_metrics, run by dtivl.solvers.nonlinear.run_stent): stent area after recoil of the single modelled cross-section, msa = pi R_final^2 of the rigid cylinder (the in-stent minimum lumen area of that section), divided by one reference lumen area pi (D_ref/2)^2 with D_ref = geometry.reference_diameter_mm (cohort mean reference lumen diameter, not lesion-specific proximal and distal reference segments). The modelled section is the calcium site by construction (maximum-calcium-site definition) and, being the only section, also the minimum-stent-area section of the modelled segment (MSA-site definition), so both published definitions are shown.; the deployment target (geometry.stent_target_diameter_mm 3.21 mm, reference geometry.reference_diameter_mm 3.37 mm) caps the model expansion at 90.73 % before recoil; expansion includes the calibrated stent recoil (C8); stent_post_ivl: fewer than 5 lesions (0)"
+  },
+  {
+   "id": "C8",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; calibration target, not an independent check: K_s = 6.068 MPa/mm was identified on the calcium-free version of P-A90-T0.2-SUP for a recoil of 4.3 % (results/calibration_stent.json, reached_target True); agreement is expected by construction; stent_no_ivl: fewer than 5 lesions (0); stent_post_ivl: fewer than 5 lesions (0)"
+  },
+  {
+   "id": "C9",
+   "set": "core",
+   "reason": "published value not read: literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand); model vs model: the published value is itself a finite-element result (other geometry, materials and balloon model), not a measurement; the predictor model is linear elastic, so scaling its stresses from pred_p_lumen_MPa to the target load is exact for that model (the damage model is nonlinear)"
+  },
+  {
+   "id": "C9",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; published value not read: literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand); model vs model: the published value is itself a finite-element result (other geometry, materials and balloon model), not a measurement; the predictor model is linear elastic, so scaling its stresses from pred_p_lumen_MPa to the target load is exact for that model (the damage model is nonlinear); pred_sigma1_p99: fewer than 5 lesions (0); pred_sigma1_peak_nl: fewer than 5 lesions (0)"
+  },
+  {
+   "id": "C10",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; count: fewer than 5 fractured lesions (0); fraction: fewer than 5 lesions with a crack component (0); ivl_n_fractures counts the through-thickness crack components and ivl_n_partial the others (dtivl.fracture.cracks); 0 of 0 fractured lesions carry diffuse damage (ivl_diffuse: a crack component covering at least 50% of its calcium region); a through-thickness diffuse component counts as one fracture, so damage of a whole deposit counts as a single fracture; the 2D model counts the fractures of one cross-section; OCT counts them over the lesion length"
+  },
+  {
+   "id": "C11",
+   "set": "holdout",
+   "reason": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); maximum attainable cross-sectional score 3 (dtivl.geometry.fujino); the full score reaches 4 only with the calcium length criterion, which a cross-section cannot meet, so the published top-score group has no 2D counterpart: direction only"
+  }
+ ],
+ "checks": [
+  {
+   "id": "C1",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "larger calcium arc, more calcium fracture (plain balloon angioplasty, OCT; published arc cutoff)",
+   "source_rows": "fracture_angle_cutoff_balloon",
+   "source_status": "fracture_angle_cutoff_balloon: VERIFIED",
+   "published": "fracture_angle_cutoff_balloon = 225 deg",
+   "model_quantity": "Spearman rho of ca_arc_total_deg and the fracture indicator (<protocol>_fracture) under balloon_10atm, ivl; core Youden cut of ca_arc_total_deg for balloon_10atm_fracture (descriptive)",
+   "model_value": 0.7471121183331126,
+   "ci_lo": 0.502488225672758,
+   "ci_hi": 0.9356870225035894,
+   "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+   "model_values": "rho balloon_10atm 0.7471 [0.5025, 0.9357] (n 24); rho ivl 0.6991 [0.4271, 0.9077] (n 22); Youden cut ca_arc_total_deg (balloon_10atm) 161.5 [134, 161.5] (n 24)",
+   "criterion": "rho > 0 under every protocol: agrees if the point estimate lies on the expected side of 0 and its 95 % interval excludes 0, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "agrees",
+   "n_lesions": 24,
+   "note": "balloon_10atm: agrees; excluded: ivl status not run 2; ivl: agrees; Youden cut descriptive, not part of the agreement: 161.5 (fracture when ca_arc_total_deg >= cut; AUC 0.909; 6 distinct values of ca_arc_total_deg in the core set) next to the published fracture_angle_cutoff_balloon = 225 deg",
+   "quantities": [
+    {
+     "name": "rho balloon_10atm",
+     "value": 0.7471121183331126,
+     "ci_lo": 0.502488225672758,
+     "ci_hi": 0.9356870225035894,
+     "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+     "n": 24,
+     "n_boot": 2000,
+     "n_boot_valid": 2000,
+     "n_fractured": 11,
+     "agreement": "agrees"
+    },
+    {
+     "name": "rho ivl",
+     "value": 0.6990961591735584,
+     "ci_lo": 0.4271195976198659,
+     "ci_hi": 0.907713425025669,
+     "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+     "n": 22,
+     "n_boot": 2000,
+     "n_boot_valid": 2000,
+     "n_fractured": 9,
+     "agreement": "agrees"
+    },
+    {
+     "name": "Youden cut ca_arc_total_deg (balloon_10atm)",
+     "value": 161.5,
+     "ci_lo": 134.0,
+     "ci_hi": 161.5,
+     "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+     "n": 24,
+     "rule": "fracture when ca_arc_total_deg >= cut",
+     "auc": 0.9090909090909091,
+     "auc_ci_lo": 0.7622377622377622,
+     "auc_ci_hi": 1.0,
+     "sens": 0.8181818181818182,
+     "spec": 1.0,
+     "n_levels": 6,
+     "descriptive": true
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "fracture_angle_cutoff_balloon",
+     "status": "VERIFIED",
+     "unit": "deg",
+     "value_cell": "225",
+     "range_cell": "",
+     "source": "Fujino A, Mintz GS, Lee T, et al. Predictors of calcium fracture derived from balloon angioplasty and its effect on stent expansion assessed by optical coherence tomography. JACC Cardiovasc Interv 2018;11:1015-1017. doi:10.1016/j.jcin.2018.02.004",
+     "value": 225.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: direction of the published plain-balloon predictor: Spearman rho of the total calcium arc (cohort descriptor) and the through-thickness fracture indicator under the plain balloon (protocol balloon_10atm, load loads.poba_pressure_atm) and under IVL, per consistency.direction_rule. The core Youden cut of the arc for plain-balloon fracture (dtivl.stats.roc, direction +1) is shown next to the published cutoff, descriptively; it is not part of the agreement (the core arc takes a few design levels)"
+  },
+  {
+   "id": "C1",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "larger calcium arc, more calcium fracture (plain balloon angioplasty, OCT; published arc cutoff)",
+   "source_rows": "fracture_angle_cutoff_balloon",
+   "source_status": "fracture_angle_cutoff_balloon: VERIFIED",
+   "published": "fracture_angle_cutoff_balloon = 225 deg",
+   "model_quantity": "Spearman rho of ca_arc_total_deg and the fracture indicator (<protocol>_fracture) under balloon_10atm, ivl; core Youden cut of ca_arc_total_deg for balloon_10atm_fracture (descriptive)",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "rho > 0 under every protocol: agrees if the point estimate lies on the expected side of 0 and its 95 % interval excludes 0, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; balloon_10atm: fewer than 5 lesions (0); ivl: fewer than 5 lesions (0); Youden cut derived on the core set only",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "fracture_angle_cutoff_balloon",
+     "status": "VERIFIED",
+     "unit": "deg",
+     "value_cell": "225",
+     "range_cell": "",
+     "source": "Fujino A, Mintz GS, Lee T, et al. Predictors of calcium fracture derived from balloon angioplasty and its effect on stent expansion assessed by optical coherence tomography. JACC Cardiovasc Interv 2018;11:1015-1017. doi:10.1016/j.jcin.2018.02.004",
+     "value": 225.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: direction of the published plain-balloon predictor: Spearman rho of the total calcium arc (cohort descriptor) and the through-thickness fracture indicator under the plain balloon (protocol balloon_10atm, load loads.poba_pressure_atm) and under IVL, per consistency.direction_rule. The core Youden cut of the arc for plain-balloon fracture (dtivl.stats.roc, direction +1) is shown next to the published cutoff, descriptively; it is not part of the agreement (the core arc takes a few design levels)"
+  },
+  {
+   "id": "C2",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "thinner calcium, more calcium fracture (plain balloon angioplasty, OCT; published thickness cutoff)",
+   "source_rows": "fracture_thickness_cutoff_balloon",
+   "source_status": "fracture_thickness_cutoff_balloon: SECONDARY",
+   "published": "fracture_thickness_cutoff_balloon = 0.24 mm [status SECONDARY]",
+   "model_quantity": "Spearman rho of ca_thickness_max and the fracture indicator (<protocol>_fracture) under balloon_10atm, ivl; core Youden cut of ca_thickness_max for balloon_10atm_fracture (descriptive)",
+   "model_value": -0.16087022800627934,
+   "ci_lo": -0.5473309500114587,
+   "ci_hi": 0.2673490800567839,
+   "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+   "model_values": "rho balloon_10atm -0.1609 [-0.5473, 0.2673] (n 24); rho ivl -0.3367 [-0.6857, 0.08188] (n 22); Youden cut ca_thickness_max (balloon_10atm) 0.3 [0.3, 0.95] (n 24)",
+   "criterion": "rho < 0 under every protocol: agrees if the point estimate lies on the expected side of 0 and its 95 % interval excludes 0, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "partial",
+   "n_lesions": 24,
+   "note": "balloon_10atm: partial; excluded: ivl status not run 2; ivl: partial; Youden cut descriptive, not part of the agreement: 0.3 (fracture when ca_thickness_max <= cut; AUC 0.591; 6 distinct values of ca_thickness_max in the core set) next to the published fracture_thickness_cutoff_balloon = 0.24 mm [status SECONDARY]",
+   "quantities": [
+    {
+     "name": "rho balloon_10atm",
+     "value": -0.16087022800627934,
+     "ci_lo": -0.5473309500114587,
+     "ci_hi": 0.2673490800567839,
+     "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+     "n": 24,
+     "n_boot": 2000,
+     "n_boot_valid": 2000,
+     "n_fractured": 11,
+     "agreement": "partial"
+    },
+    {
+     "name": "rho ivl",
+     "value": -0.3367367976125541,
+     "ci_lo": -0.6856772793886472,
+     "ci_hi": 0.08188178591905934,
+     "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+     "n": 22,
+     "n_boot": 2000,
+     "n_boot_valid": 2000,
+     "n_fractured": 9,
+     "agreement": "partial"
+    },
+    {
+     "name": "Youden cut ca_thickness_max (balloon_10atm)",
+     "value": 0.30000000000000004,
+     "ci_lo": 0.30000000000000004,
+     "ci_hi": 0.9500000000000001,
+     "ci_method": "percentile bootstrap, 2000 resamples, stratified by outcome, 95 %",
+     "n": 24,
+     "rule": "fracture when ca_thickness_max <= cut",
+     "auc": 0.5909090909090909,
+     "auc_ci_lo": 0.3531468531468531,
+     "auc_ci_hi": 0.8041958041958042,
+     "sens": 0.36363636363636365,
+     "spec": 0.8461538461538461,
+     "n_levels": 6,
+     "descriptive": true
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "fracture_thickness_cutoff_balloon",
+     "status": "SECONDARY",
+     "unit": "mm",
+     "value_cell": "0.24",
+     "range_cell": "",
+     "source": "Fujino A, Mintz GS, Lee T, et al. Predictors of calcium fracture derived from balloon angioplasty and its effect on stent expansion assessed by optical coherence tomography. JACC Cardiovasc Interv 2018;11:1015-1017. doi:10.1016/j.jcin.2018.02.004",
+     "value": 0.24,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: as C1 for the maximum calcium thickness (cohort descriptor ca_thickness_max; the descriptor behind the published cutoff is not stated in the parameter row), expected sign -1; the core Youden cut (direction -1) is descriptive"
+  },
+  {
+   "id": "C2",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "thinner calcium, more calcium fracture (plain balloon angioplasty, OCT; published thickness cutoff)",
+   "source_rows": "fracture_thickness_cutoff_balloon",
+   "source_status": "fracture_thickness_cutoff_balloon: SECONDARY",
+   "published": "fracture_thickness_cutoff_balloon = 0.24 mm [status SECONDARY]",
+   "model_quantity": "Spearman rho of ca_thickness_max and the fracture indicator (<protocol>_fracture) under balloon_10atm, ivl; core Youden cut of ca_thickness_max for balloon_10atm_fracture (descriptive)",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "rho < 0 under every protocol: agrees if the point estimate lies on the expected side of 0 and its 95 % interval excludes 0, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; balloon_10atm: fewer than 5 lesions (0); ivl: fewer than 5 lesions (0); Youden cut derived on the core set only",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "fracture_thickness_cutoff_balloon",
+     "status": "SECONDARY",
+     "unit": "mm",
+     "value_cell": "0.24",
+     "range_cell": "",
+     "source": "Fujino A, Mintz GS, Lee T, et al. Predictors of calcium fracture derived from balloon angioplasty and its effect on stent expansion assessed by optical coherence tomography. JACC Cardiovasc Interv 2018;11:1015-1017. doi:10.1016/j.jcin.2018.02.004",
+     "value": 0.24,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: as C1 for the maximum calcium thickness (cohort descriptor ca_thickness_max; the descriptor behind the published cutoff is not stated in the parameter row), expected sign -1; the core Youden cut (direction -1) is descriptive"
+  },
+  {
+   "id": "C3",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "calcified nodules fracture less often than sheet calcium under IVL (OCT)",
+   "source_rows": "nodular_calcium_odds_ratio_for_fracture; fracture_rate_calcified_nodule_sites_IVL",
+   "source_status": "nodular_calcium_odds_ratio_for_fracture: VERIFIED; fracture_rate_calcified_nodule_sites_IVL: VERIFIED",
+   "published": "nodular_calcium_odds_ratio_for_fracture = 0.24 OR (95% CI 0.08-0.70); fracture_rate_calcified_nodule_sites_IVL = 23.1 % (155 patients (Disrupt CAD III/IV OCT))",
+   "model_quantity": "odds ratio of ivl_fracture, nodule vs superficial_sheet + deep_sheet lesions (Haldane-Anscombe correction 0.5, Woolf interval); nodule fracture proportion (descriptive)",
+   "model_value": 0.42857142857142855,
+   "ci_lo": 0.058000905035097965,
+   "ci_hi": 3.166734541066371,
+   "ci_method": "Woolf (log), 95 %, Haldane-Anscombe correction 0.5",
+   "model_values": "odds ratio 0.4286 [0.058, 3.167] (n 16); nodule fracture % 40 [11.76, 76.93] (n 5); superficial_sheet+deep_sheet fracture % 63.64 [35.38, 84.83] (n 11)",
+   "criterion": "odds ratio < 1: agrees if the point estimate lies on the expected side of 1 and its 95 % interval excludes 1, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "partial",
+   "n_lesions": 16,
+   "note": "2x2 table: 2 of 5 nodule and 7 of 11 superficial_sheet+deep_sheet lesions fractured; fragmented lesions are in neither group; excluded: ivl status not run 2",
+   "quantities": [
+    {
+     "name": "odds ratio",
+     "value": 0.42857142857142855,
+     "ci_lo": 0.058000905035097965,
+     "ci_hi": 3.166734541066371,
+     "ci_method": "Woolf (log), 95 %, Haldane-Anscombe correction 0.5",
+     "n": 16,
+     "table": {
+      "exposed_event": 2,
+      "exposed_no_event": 3,
+      "reference_event": 7,
+      "reference_no_event": 4
+     },
+     "correction": 0.5,
+     "log_or": -0.8472978603872037,
+     "se_log_or": 1.0204263036936283
+    },
+    {
+     "name": "nodule fracture %",
+     "value": 40.0,
+     "ci_lo": 11.762077423264783,
+     "ci_hi": 76.9275718723987,
+     "ci_method": "Wilson score, 95 %",
+     "n": 5,
+     "k": 2,
+     "unit": "%"
+    },
+    {
+     "name": "superficial_sheet+deep_sheet fracture %",
+     "value": 63.63636363636363,
+     "ci_lo": 35.38011745078489,
+     "ci_hi": 84.83352890463243,
+     "ci_method": "Wilson score, 95 %",
+     "n": 11,
+     "k": 7,
+     "unit": "%"
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "nodular_calcium_odds_ratio_for_fracture",
+     "status": "VERIFIED",
+     "unit": "OR",
+     "value_cell": "0.24",
+     "range_cell": "95% CI 0.08-0.70",
+     "source": "Emori H, Shiono Y, Kuriyama N, Honda Y, Ebihara S, Kadooka K, et al. Calcium fracture after intravascular lithotripsy as assessed with optical coherence tomography. Circ J 2023;87:799-805. doi:10.1253/circj.CJ-22-0695",
+     "value": 0.24,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "fracture_rate_calcified_nodule_sites_IVL",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "23.1",
+     "range_cell": "155 patients (Disrupt CAD III/IV OCT)",
+     "source": "[Authors to be confirmed]. Outcomes of coronary intravascular lithotripsy for the treatment of calcified nodules: a pooled analysis of the Disrupt CAD studies. EuroIntervention 2024. doi:10.4244/EIJ-D-24-00282",
+     "value": 23.1,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: odds ratio of IVL fracture, nodule lesions vs sheet lesions (superficial + deep; fragmented lesions are in neither group), consistency.odds_ratio; agrees per consistency.direction_rule with an odds ratio below 1. The nodule fracture proportion (Wilson interval) is shown next to the published nodule-site rate, descriptively"
+  },
+  {
+   "id": "C3",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "calcified nodules fracture less often than sheet calcium under IVL (OCT)",
+   "source_rows": "nodular_calcium_odds_ratio_for_fracture; fracture_rate_calcified_nodule_sites_IVL",
+   "source_status": "nodular_calcium_odds_ratio_for_fracture: VERIFIED; fracture_rate_calcified_nodule_sites_IVL: VERIFIED",
+   "published": "nodular_calcium_odds_ratio_for_fracture = 0.24 OR (95% CI 0.08-0.70); fracture_rate_calcified_nodule_sites_IVL = 23.1 % (155 patients (Disrupt CAD III/IV OCT))",
+   "model_quantity": "odds ratio of ivl_fracture, nodule vs superficial_sheet + deep_sheet lesions (Haldane-Anscombe correction 0.5, Woolf interval); nodule fracture proportion (descriptive)",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "odds ratio < 1: agrees if the point estimate lies on the expected side of 1 and its 95 % interval excludes 1, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; fewer than 2 lesions in a morphology group (0 nodule, 0 superficial_sheet+deep_sheet)",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "nodular_calcium_odds_ratio_for_fracture",
+     "status": "VERIFIED",
+     "unit": "OR",
+     "value_cell": "0.24",
+     "range_cell": "95% CI 0.08-0.70",
+     "source": "Emori H, Shiono Y, Kuriyama N, Honda Y, Ebihara S, Kadooka K, et al. Calcium fracture after intravascular lithotripsy as assessed with optical coherence tomography. Circ J 2023;87:799-805. doi:10.1253/circj.CJ-22-0695",
+     "value": 0.24,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "fracture_rate_calcified_nodule_sites_IVL",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "23.1",
+     "range_cell": "155 patients (Disrupt CAD III/IV OCT)",
+     "source": "[Authors to be confirmed]. Outcomes of coronary intravascular lithotripsy for the treatment of calcified nodules: a pooled analysis of the Disrupt CAD studies. EuroIntervention 2024. doi:10.4244/EIJ-D-24-00282",
+     "value": 23.1,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: odds ratio of IVL fracture, nodule lesions vs sheet lesions (superficial + deep; fragmented lesions are in neither group), consistency.odds_ratio; agrees per consistency.direction_rule with an odds ratio below 1. The nodule fracture proportion (Wilson interval) is shown next to the published nodule-site rate, descriptively"
+  },
+  {
+   "id": "C4",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "lesion-level calcium fracture rate after IVL (OCT, Disrupt CAD trials)",
+   "source_rows": "fracture_rate_DisruptCAD_III_OCT; fracture_rate_DisruptCAD_II_OCT",
+   "source_status": "fracture_rate_DisruptCAD_III_OCT: VERIFIED; fracture_rate_DisruptCAD_II_OCT: VERIFIED",
+   "published": "fracture_rate_DisruptCAD_III_OCT = 67.4 % of lesions (n=100); fracture_rate_DisruptCAD_II_OCT = 78.7 % of lesions (n=47)",
+   "model_quantity": "proportion of lesions with ivl_fracture (%), Wilson interval",
+   "model_value": 40.90909090909091,
+   "ci_lo": 23.25581619647187,
+   "ci_hi": 61.26518152368487,
+   "ci_method": "Wilson score, 95 %",
+   "model_values": "ivl fracture % 40.91 [23.26, 61.27] (n 22)",
+   "criterion": "agrees if the proportion lies within [67.4, 78.7] % (published rates) or its 95 % Wilson interval overlaps that range; disagrees otherwise",
+   "agreement": "disagrees",
+   "n_lesions": 22,
+   "note": "proportion and Wilson interval outside the published range; excluded: ivl status not run 2; Neither set is a clinical case mix: the core set is a designed factorial of arc, thickness and morphology and the hold-out set a Latin hypercube over the same ranges, so the model fracture proportion follows from the design. OCT misses part of the calcium fractures (context row: an ex vivo study of laser, not electrohydraulic, IVL), whereas the model registers every through-thickness damage band of its cross-section.; context, not compared: laser_IVL_OCT_modification_rate (range cell, status VERIFIED): 'n=19 ex vivo; microfractures missed by OCT in 57%'",
+   "quantities": [
+    {
+     "name": "ivl fracture %",
+     "value": 40.90909090909091,
+     "ci_lo": 23.25581619647187,
+     "ci_hi": 61.26518152368487,
+     "ci_method": "Wilson score, 95 %",
+     "n": 22,
+     "k": 9,
+     "unit": "%",
+     "in_published_range": false,
+     "ci_overlaps_published_range": false
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "fracture_rate_DisruptCAD_III_OCT",
+     "status": "VERIFIED",
+     "unit": "% of lesions",
+     "value_cell": "67.4",
+     "range_cell": "n=100",
+     "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+     "value": 67.4,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "fracture_rate_DisruptCAD_II_OCT",
+     "status": "VERIFIED",
+     "unit": "% of lesions",
+     "value_cell": "78.7",
+     "range_cell": "n=47",
+     "source": "Ali ZA, et al. Safety and effectiveness of coronary intravascular lithotripsy for treatment of severely calcified coronary stenoses: the Disrupt CAD II study. Circ Cardiovasc Interv 2019;12:e008434. doi:10.1161/CIRCINTERVENTIONS.119.008434",
+     "value": 78.7,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: model IVL fracture proportion with a Wilson interval; agrees if the proportion lies within the range spanned by the published rates or its interval overlaps that range, disagrees otherwise (the row note says which condition held). The caveat and its context literature row (verbatim cell, not compared) are copied into the row note",
+   "details": {
+    "context_rows": [
+     {
+      "row": "laser_IVL_OCT_modification_rate",
+      "cell": "range"
+     }
+    ]
+   }
+  },
+  {
+   "id": "C4",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "lesion-level calcium fracture rate after IVL (OCT, Disrupt CAD trials)",
+   "source_rows": "fracture_rate_DisruptCAD_III_OCT; fracture_rate_DisruptCAD_II_OCT",
+   "source_status": "fracture_rate_DisruptCAD_III_OCT: VERIFIED; fracture_rate_DisruptCAD_II_OCT: VERIFIED",
+   "published": "fracture_rate_DisruptCAD_III_OCT = 67.4 % of lesions (n=100); fracture_rate_DisruptCAD_II_OCT = 78.7 % of lesions (n=47)",
+   "model_quantity": "proportion of lesions with ivl_fracture (%), Wilson interval",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "agrees if the proportion lies within [67.4, 78.7] % (published rates) or its 95 % Wilson interval overlaps that range; disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); Neither set is a clinical case mix: the core set is a designed factorial of arc, thickness and morphology and the hold-out set a Latin hypercube over the same ranges, so the model fracture proportion follows from the design. OCT misses part of the calcium fractures (context row: an ex vivo study of laser, not electrohydraulic, IVL), whereas the model registers every through-thickness damage band of its cross-section.; context, not compared: laser_IVL_OCT_modification_rate (range cell, status VERIFIED): 'n=19 ex vivo; microfractures missed by OCT in 57%'",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "fracture_rate_DisruptCAD_III_OCT",
+     "status": "VERIFIED",
+     "unit": "% of lesions",
+     "value_cell": "67.4",
+     "range_cell": "n=100",
+     "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+     "value": 67.4,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "fracture_rate_DisruptCAD_II_OCT",
+     "status": "VERIFIED",
+     "unit": "% of lesions",
+     "value_cell": "78.7",
+     "range_cell": "n=47",
+     "source": "Ali ZA, et al. Safety and effectiveness of coronary intravascular lithotripsy for treatment of severely calcified coronary stenoses: the Disrupt CAD II study. Circ Cardiovasc Interv 2019;12:e008434. doi:10.1161/CIRCINTERVENTIONS.119.008434",
+     "value": 78.7,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: model IVL fracture proportion with a Wilson interval; agrees if the proportion lies within the range spanned by the published rates or its interval overlaps that range, disagrees otherwise (the row note says which condition held). The caveat and its context literature row (verbatim cell, not compared) are copied into the row note"
+  },
+  {
+   "id": "C5",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "a plain balloon (IVL catheter balloon inflated without lithotripsy pulses) does not fracture calcium (human cadaver coronary lesions, histology)",
+   "source_rows": "calcium_fracture_rate_POBA_10atm_cadaver_histology",
+   "source_status": "calcium_fracture_rate_POBA_10atm_cadaver_histology: VERIFIED",
+   "published": "calcium_fracture_rate_POBA_10atm_cadaver_histology = 0 % of lesions (0 of 7 lesions (POBA) vs IVL 62.5 % of 8 lesions, P = 0.01)",
+   "model_quantity": "proportion of lesions with balloon_10atm_fracture (%), Wilson interval",
+   "model_value": 45.833333333333336,
+   "ci_lo": 27.891333731210988,
+   "ci_hi": 64.9251346410805,
+   "ci_method": "Wilson score, 95 %",
+   "model_values": "balloon_10atm fracture % 45.83 [27.89, 64.93] (n 24)",
+   "criterion": "agrees only if no lesion fractures under balloon_10atm (10 atm = 1.01325 MPa (loads.poba_pressure_atm)); disagrees otherwise",
+   "agreement": "disagrees",
+   "n_lesions": 24,
+   "note": "11 of 24 lesions fractured; decision D8: Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis.",
+   "quantities": [
+    {
+     "name": "balloon_10atm fracture %",
+     "value": 45.833333333333336,
+     "ci_lo": 27.891333731210988,
+     "ci_hi": 64.9251346410805,
+     "ci_method": "Wilson score, 95 %",
+     "n": 24,
+     "k": 11,
+     "unit": "%"
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "calcium_fracture_rate_POBA_10atm_cadaver_histology",
+     "status": "VERIFIED",
+     "unit": "% of lesions",
+     "value_cell": "0",
+     "range_cell": "0 of 7 lesions (POBA) vs IVL 62.5 % of 8 lesions, P = 0.01",
+     "source": "Kawai K, et al. Histology, OCT, and Micro-CT Evaluation of Coronary Calcification Treated With Intravascular Lithotripsy: Atherosclerotic Cadaver Study. JACC Cardiovasc Interv. 2023;16(17):2097-2108. doi:10.1016/j.jcin.2023.06.021",
+     "value": 0.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: agrees only if no lesion fractures under the plain balloon (load loads.poba_pressure_atm, the inflation pressure of the same cadaver study), the published proportion being zero, disagrees otherwise; disagreement is expected at the calibrated calcium modulus (decision D8, materials.calcium.E)"
+  },
+  {
+   "id": "C5",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "a plain balloon (IVL catheter balloon inflated without lithotripsy pulses) does not fracture calcium (human cadaver coronary lesions, histology)",
+   "source_rows": "calcium_fracture_rate_POBA_10atm_cadaver_histology",
+   "source_status": "calcium_fracture_rate_POBA_10atm_cadaver_histology: VERIFIED",
+   "published": "calcium_fracture_rate_POBA_10atm_cadaver_histology = 0 % of lesions (0 of 7 lesions (POBA) vs IVL 62.5 % of 8 lesions, P = 0.01)",
+   "model_quantity": "proportion of lesions with balloon_10atm_fracture (%), Wilson interval",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "agrees only if no lesion fractures under balloon_10atm (10 atm = 1.01325 MPa (loads.poba_pressure_atm)); disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); decision D8: Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis.",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "calcium_fracture_rate_POBA_10atm_cadaver_histology",
+     "status": "VERIFIED",
+     "unit": "% of lesions",
+     "value_cell": "0",
+     "range_cell": "0 of 7 lesions (POBA) vs IVL 62.5 % of 8 lesions, P = 0.01",
+     "source": "Kawai K, et al. Histology, OCT, and Micro-CT Evaluation of Coronary Calcification Treated With Intravascular Lithotripsy: Atherosclerotic Cadaver Study. JACC Cardiovasc Interv. 2023;16(17):2097-2108. doi:10.1016/j.jcin.2023.06.021",
+     "value": 0.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: agrees only if no lesion fractures under the plain balloon (load loads.poba_pressure_atm, the inflation pressure of the same cadaver study), the published proportion being zero, disagrees otherwise; disagreement is expected at the calibrated calcium modulus (decision D8, materials.calcium.E)"
+  },
+  {
+   "id": "C6",
+   "set": "core",
+   "kind": "model_internal",
+   "observation": "the IVL balloon inflated alone (no pulses) does not fracture calcium; model-internal surrogate of decision D8, calibrated on the pilot lesions only, not a published observation",
+   "source_rows": null,
+   "source_status": null,
+   "published": "none (model-internal criterion)",
+   "model_quantity": "proportion of lesions with balloon_only_fracture (%), Wilson interval",
+   "model_value": 0.0,
+   "ci_lo": 1.3877787807814457e-15,
+   "ci_hi": 13.797620467498017,
+   "ci_method": "Wilson score, 95 %",
+   "model_values": "balloon_only fracture % 0 [1.388e-15, 13.8] (n 24)",
+   "criterion": "agrees only if no lesion fractures under balloon_only (4 atm = 0.4053 MPa (loads.ivl_balloon_pressure_atm)); disagrees otherwise",
+   "agreement": "agrees",
+   "n_lesions": 24,
+   "note": "0 of 24 lesions fractured; model-internal criterion, not a published observation; decision D8: Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis.",
+   "quantities": [
+    {
+     "name": "balloon_only fracture %",
+     "value": 0.0,
+     "ci_lo": 1.3877787807814457e-15,
+     "ci_hi": 13.797620467498017,
+     "ci_method": "Wilson score, 95 %",
+     "n": 24,
+     "k": 0,
+     "unit": "%"
+    }
+   ],
+   "published_rows": [],
+   "basis": "DESIGN: the D8 calibration surrogate applied to the cohort lesions, which were not used for the calibration; agrees only if no lesion fractures under the IVL balloon alone"
+  },
+  {
+   "id": "C6",
+   "set": "holdout",
+   "kind": "model_internal",
+   "observation": "the IVL balloon inflated alone (no pulses) does not fracture calcium; model-internal surrogate of decision D8, calibrated on the pilot lesions only, not a published observation",
+   "source_rows": null,
+   "source_status": null,
+   "published": "none (model-internal criterion)",
+   "model_quantity": "proportion of lesions with balloon_only_fracture (%), Wilson interval",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "agrees only if no lesion fractures under balloon_only (4 atm = 0.4053 MPa (loads.ivl_balloon_pressure_atm)); disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); model-internal criterion, not a published observation; decision D8: Calcium modulus baseline 365 MPa (PI, 2026-10-13, Checkpoint 2 option c): calibrated to the model-internal surrogate 'IVL balloon alone does not fracture, IVL does'; the full modulus sweep, including the tissue-level 8.95 MPa, is reported as sensitivity analysis.",
+   "quantities": [],
+   "published_rows": [],
+   "basis": "DESIGN: the D8 calibration surrogate applied to the cohort lesions, which were not used for the calibration; agrees only if no lesion fractures under the IVL balloon alone"
+  },
+  {
+   "id": "C7",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "stent expansion after IVL (OCT, Disrupt CAD III)",
+   "source_rows": "stent_expansion_maxCa_site_DisruptCAD_III; stent_expansion_MSA_site_DisruptCAD_III",
+   "source_status": "stent_expansion_maxCa_site_DisruptCAD_III: VERIFIED; stent_expansion_MSA_site_DisruptCAD_III: VERIFIED",
+   "published": "stent_expansion_maxCa_site_DisruptCAD_III = 101.7 SD 28.9 %; stent_expansion_MSA_site_DisruptCAD_III = 78.4 SD 25.8 %",
+   "model_quantity": "<protocol>_stent_expansion_pct (mean, SD, range) for stent_post_ivl",
+   "model_value": 82.08255332552014,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": "mean stent_post_ivl 82.08 SD 1.053 (range 80.29-83.3) (n 21)",
+   "criterion": "agrees if the model mean lies within published mean +/- 1 SD for every protocol and published row (stent_expansion_maxCa_site_DisruptCAD_III: [72.8, 130.6]; stent_expansion_MSA_site_DisruptCAD_III: [52.6, 104.2]), partial if for some, disagrees if for none",
+   "agreement": "agrees",
+   "n_lesions": 21,
+   "note": "Model expansion (dtivl.metrics.outcomes.stent_metrics, run by dtivl.solvers.nonlinear.run_stent): stent area after recoil of the single modelled cross-section, msa = pi R_final^2 of the rigid cylinder (the in-stent minimum lumen area of that section), divided by one reference lumen area pi (D_ref/2)^2 with D_ref = geometry.reference_diameter_mm (cohort mean reference lumen diameter, not lesion-specific proximal and distal reference segments). The modelled section is the calcium site by construction (maximum-calcium-site definition) and, being the only section, also the minimum-stent-area section of the modelled segment (MSA-site definition), so both published definitions are shown.; the deployment target (geometry.stent_target_diameter_mm 3.21 mm, reference geometry.reference_diameter_mm 3.37 mm) caps the model expansion at 90.73 % before recoil; expansion includes the calibrated stent recoil (C8); excluded: stent_post_ivl status not run 3",
+   "quantities": [
+    {
+     "name": "mean stent_post_ivl",
+     "value": 82.08255332552014,
+     "stat": "mean",
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": 21,
+     "mean": 82.08255332552014,
+     "sd": 1.053260482358879,
+     "median": 82.2925557969629,
+     "q1": 81.2270059043378,
+     "q3": 83.13976133026115,
+     "min": 80.28903172719936,
+     "max": 83.30357686257405,
+     "n_limited": 0,
+     "within_published_sd": {
+      "stent_expansion_maxCa_site_DisruptCAD_III": true,
+      "stent_expansion_MSA_site_DisruptCAD_III": true
+     }
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "stent_expansion_maxCa_site_DisruptCAD_III",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "101.7",
+     "range_cell": "SD 28.9",
+     "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+     "value": 101.7,
+     "sd": 28.9,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "stent_expansion_MSA_site_DisruptCAD_III",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "78.4",
+     "range_cell": "SD 25.8",
+     "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+     "value": 78.4,
+     "sd": 25.8,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: agrees if the model mean lies within published mean +/- 1 SD for every published site definition, partial if for some, disagrees if for none; the row note states the model definition and the expansion cap set by the deployment target (geometry.stent_target_diameter_mm vs geometry.reference_diameter_mm)"
+  },
+  {
+   "id": "C7",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "stent expansion after IVL (OCT, Disrupt CAD III)",
+   "source_rows": "stent_expansion_maxCa_site_DisruptCAD_III; stent_expansion_MSA_site_DisruptCAD_III",
+   "source_status": "stent_expansion_maxCa_site_DisruptCAD_III: VERIFIED; stent_expansion_MSA_site_DisruptCAD_III: VERIFIED",
+   "published": "stent_expansion_maxCa_site_DisruptCAD_III = 101.7 SD 28.9 %; stent_expansion_MSA_site_DisruptCAD_III = 78.4 SD 25.8 %",
+   "model_quantity": "<protocol>_stent_expansion_pct (mean, SD, range) for stent_post_ivl",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "agrees if the model mean lies within published mean +/- 1 SD for every protocol and published row (stent_expansion_maxCa_site_DisruptCAD_III: [72.8, 130.6]; stent_expansion_MSA_site_DisruptCAD_III: [52.6, 104.2]), partial if for some, disagrees if for none",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; Model expansion (dtivl.metrics.outcomes.stent_metrics, run by dtivl.solvers.nonlinear.run_stent): stent area after recoil of the single modelled cross-section, msa = pi R_final^2 of the rigid cylinder (the in-stent minimum lumen area of that section), divided by one reference lumen area pi (D_ref/2)^2 with D_ref = geometry.reference_diameter_mm (cohort mean reference lumen diameter, not lesion-specific proximal and distal reference segments). The modelled section is the calcium site by construction (maximum-calcium-site definition) and, being the only section, also the minimum-stent-area section of the modelled segment (MSA-site definition), so both published definitions are shown.; the deployment target (geometry.stent_target_diameter_mm 3.21 mm, reference geometry.reference_diameter_mm 3.37 mm) caps the model expansion at 90.73 % before recoil; expansion includes the calibrated stent recoil (C8); stent_post_ivl: fewer than 5 lesions (0)",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "stent_expansion_maxCa_site_DisruptCAD_III",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "101.7",
+     "range_cell": "SD 28.9",
+     "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+     "value": 101.7,
+     "sd": 28.9,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "stent_expansion_MSA_site_DisruptCAD_III",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "78.4",
+     "range_cell": "SD 25.8",
+     "source": "Hill JM, et al. Intravascular lithotripsy for treatment of severely calcified coronary artery disease (Disrupt CAD III). J Am Coll Cardiol 2020. doi:10.1016/j.jacc.2020.09.603",
+     "value": 78.4,
+     "sd": 25.8,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: agrees if the model mean lies within published mean +/- 1 SD for every published site definition, partial if for some, disagrees if for none; the row note states the model definition and the expansion cap set by the deployment target (geometry.stent_target_diameter_mm vs geometry.reference_diameter_mm)"
+  },
+  {
+   "id": "C8",
+   "set": "core",
+   "kind": "calibration_target",
+   "observation": "acute stent recoil (clinical QCA, cobalt-chromium everolimus-eluting stent)",
+   "source_rows": "acute_recoil_EES_CoCr_clinical",
+   "source_status": "acute_recoil_EES_CoCr_clinical: VERIFIED",
+   "published": "acute_recoil_EES_CoCr_clinical = 4.3 SD 7.1 %",
+   "model_quantity": "<protocol>_acute_recoil_pct (mean, SD, range) for stent_no_ivl, stent_post_ivl",
+   "model_value": 4.947548817301345,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": "mean stent_no_ivl 4.948 SD 0.6012 (range 4.18-5.93) (n 20); mean stent_post_ivl 4.887 SD 0.6108 (range 4.18-5.93) (n 21)",
+   "criterion": "agrees if the model mean lies within published mean +/- 1 SD for every protocol and published row (acute_recoil_EES_CoCr_clinical: [-2.8, 11.4]), partial if for some, disagrees if for none",
+   "agreement": "agrees",
+   "n_lesions": 21,
+   "note": "calibration target, not an independent check: K_s = 6.068 MPa/mm was identified on the calcium-free version of P-A90-T0.2-SUP for a recoil of 4.3 % (results/calibration_stent.json, reached_target True); agreement is expected by construction; excluded: stent_no_ivl status not run 4; excluded: stent_post_ivl status not run 3",
+   "quantities": [
+    {
+     "name": "mean stent_no_ivl",
+     "value": 4.947548817301345,
+     "stat": "mean",
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": 20,
+     "mean": 4.947548817301345,
+     "sd": 0.6011506048545135,
+     "median": 5.090091059154529,
+     "q1": 4.31726719582073,
+     "q3": 5.39349347761107,
+     "min": 4.179883803784882,
+     "max": 5.929602605369253,
+     "n_limited": 0,
+     "within_published_sd": {
+      "acute_recoil_EES_CoCr_clinical": true
+     }
+    },
+    {
+     "name": "mean stent_post_ivl",
+     "value": 4.886586488497077,
+     "stat": "mean",
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": 21,
+     "mean": 4.886586488497077,
+     "sd": 0.6108163822965954,
+     "median": 4.763123404313008,
+     "q1": 4.274144749324789,
+     "q3": 5.381710859418582,
+     "min": 4.179883803784882,
+     "max": 5.929602605369253,
+     "n_limited": 0,
+     "within_published_sd": {
+      "acute_recoil_EES_CoCr_clinical": true
+     }
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "acute_recoil_EES_CoCr_clinical",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "4.3",
+     "range_cell": "SD 7.1",
+     "source": "[Authors to be confirmed]. Comparison of in vivo acute stent recoil between the bioabsorbable everolimus-eluting coronary stent and the everolimus-eluting cobalt chromium coronary stent (ABSORB and SPIRIT trials, n=54). DOI not confirmed",
+     "value": 4.3,
+     "sd": 7.1,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: calibration target, not an independent check: the stent radial stiffness (results/calibration_stent.json) was identified so that a calcium-free lesion shows the published recoil; the cohort recoil is reported per stent protocol against published mean +/- 1 SD (agrees if every protocol mean lies inside, partial if some, disagrees if none)"
+  },
+  {
+   "id": "C8",
+   "set": "holdout",
+   "kind": "calibration_target",
+   "observation": "acute stent recoil (clinical QCA, cobalt-chromium everolimus-eluting stent)",
+   "source_rows": "acute_recoil_EES_CoCr_clinical",
+   "source_status": "acute_recoil_EES_CoCr_clinical: VERIFIED",
+   "published": "acute_recoil_EES_CoCr_clinical = 4.3 SD 7.1 %",
+   "model_quantity": "<protocol>_acute_recoil_pct (mean, SD, range) for stent_no_ivl, stent_post_ivl",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "agrees if the model mean lies within published mean +/- 1 SD for every protocol and published row (acute_recoil_EES_CoCr_clinical: [-2.8, 11.4]), partial if for some, disagrees if for none",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; calibration target, not an independent check: K_s = 6.068 MPa/mm was identified on the calcium-free version of P-A90-T0.2-SUP for a recoil of 4.3 % (results/calibration_stent.json, reached_target True); agreement is expected by construction; stent_no_ivl: fewer than 5 lesions (0); stent_post_ivl: fewer than 5 lesions (0)",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "acute_recoil_EES_CoCr_clinical",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "4.3",
+     "range_cell": "SD 7.1",
+     "source": "[Authors to be confirmed]. Comparison of in vivo acute stent recoil between the bioabsorbable everolimus-eluting coronary stent and the everolimus-eluting cobalt chromium coronary stent (ABSORB and SPIRIT trials, n=54). DOI not confirmed",
+     "value": 4.3,
+     "sd": 7.1,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: calibration target, not an independent check: the stent radial stiffness (results/calibration_stent.json) was identified so that a calcium-free lesion shows the published recoil; the cohort recoil is reported per stent protocol against published mean +/- 1 SD (agrees if every protocol mean lies inside, partial if some, disagrees if none)"
+  },
+  {
+   "id": "C9",
+   "set": "core",
+   "kind": "model_vs_model",
+   "observation": "calcium stress magnitude under post-dilation balloon loading in an earlier FE study (in silico)",
+   "source_rows": "insilico_postdilation_calcium_stress",
+   "source_status": "insilico_postdilation_calcium_stress: VERIFIED",
+   "published": "insilico_postdilation_calcium_stress: not read (literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand))",
+   "model_quantity": "median over lesions of <column> x p / pred_p_lumen_MPa with p = 10 atm = 1.01325 MPa (loads.poba_pressure_atm), for pred_sigma1_p99, pred_sigma1_peak_nl (MPa)",
+   "model_value": 4.804976050622943,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": "median pred_sigma1_p99 at target load 4.805 (IQR 3.221-8.396) (range 1.95-13.35) (n 24); median pred_sigma1_peak_nl at target load 4.739 (IQR 3.195-7.87) (range 1.938-11.1) (n 24)",
+   "criterion": "agrees if the median of every scaled stress lies within a factor 3 of the published value, partial if some, disagrees if none",
+   "agreement": "not computed",
+   "n_lesions": 24,
+   "note": "published value not read: literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand); model vs model: the published value is itself a finite-element result (other geometry, materials and balloon model), not a measurement; the predictor model is linear elastic, so scaling its stresses from pred_p_lumen_MPa to the target load is exact for that model (the damage model is nonlinear)",
+   "quantities": [
+    {
+     "name": "median pred_sigma1_p99 at target load",
+     "value": 4.804976050622943,
+     "stat": "median",
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": 24,
+     "mean": 5.979860744092172,
+     "sd": 3.4617456600717653,
+     "median": 4.804976050622943,
+     "q1": 3.2207764833238506,
+     "q3": 8.395938108337049,
+     "min": 1.950450611538815,
+     "max": 13.347239996337317,
+     "unit": "MPa"
+    },
+    {
+     "name": "median pred_sigma1_peak_nl at target load",
+     "value": 4.73913990121455,
+     "stat": "median",
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": 24,
+     "mean": 5.394058159106784,
+     "sd": 2.8089041621396356,
+     "median": 4.73913990121455,
+     "q1": 3.1948355307236063,
+     "q3": 7.870063359774691,
+     "min": 1.9375286146657489,
+     "max": 11.102728661002024,
+     "unit": "MPa"
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "insilico_postdilation_calcium_stress",
+     "status": "VERIFIED",
+     "unit": "MPa",
+     "value_cell": "1.5 (10 atm); 8.4 (20 atm)",
+     "range_cell": "",
+     "source": "Dong P, et al. Load-sharing characteristics of stenting and post-dilation in heavily calcified coronary artery. Sci Rep 2023;13:16878. doi:10.1038/s41598-023-43160-4",
+     "value": null,
+     "sd": null,
+     "alt": null,
+     "ok": false,
+     "reason": "literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand)"
+    }
+   ],
+   "basis": "DESIGN: the pre-treatment linear-elastic predictor stresses scaled from their load (pred_p_lumen_MPa) to the study's plain-balloon load (loads.poba_pressure_atm, the load of the published value, converted to MPa by dtivl.params); exact for the linear model. Agrees if the cohort median of every scaled stress lies within a factor 'factor' of the published value, partial if some, disagrees if none; not computed while the published row has no plain-number value"
+  },
+  {
+   "id": "C9",
+   "set": "holdout",
+   "kind": "model_vs_model",
+   "observation": "calcium stress magnitude under post-dilation balloon loading in an earlier FE study (in silico)",
+   "source_rows": "insilico_postdilation_calcium_stress",
+   "source_status": "insilico_postdilation_calcium_stress: VERIFIED",
+   "published": "insilico_postdilation_calcium_stress: not read (literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand))",
+   "model_quantity": "median over lesions of <column> x p / pred_p_lumen_MPa with p = 10 atm = 1.01325 MPa (loads.poba_pressure_atm), for pred_sigma1_p99, pred_sigma1_peak_nl (MPa)",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "agrees if the median of every scaled stress lies within a factor 3 of the published value, partial if some, disagrees if none",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; published value not read: literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand); model vs model: the published value is itself a finite-element result (other geometry, materials and balloon model), not a measurement; the predictor model is linear elastic, so scaling its stresses from pred_p_lumen_MPa to the target load is exact for that model (the damage model is nonlinear); pred_sigma1_p99: fewer than 5 lesions (0); pred_sigma1_peak_nl: fewer than 5 lesions (0)",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "insilico_postdilation_calcium_stress",
+     "status": "VERIFIED",
+     "unit": "MPa",
+     "value_cell": "1.5 (10 atm); 8.4 (20 atm)",
+     "range_cell": "",
+     "source": "Dong P, et al. Load-sharing characteristics of stenting and post-dilation in heavily calcified coronary artery. Sci Rep 2023;13:16878. doi:10.1038/s41598-023-43160-4",
+     "value": null,
+     "sd": null,
+     "alt": null,
+     "ok": false,
+     "reason": "literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand)"
+    }
+   ],
+   "basis": "DESIGN: the pre-treatment linear-elastic predictor stresses scaled from their load (pred_p_lumen_MPa) to the study's plain-balloon load (loads.poba_pressure_atm, the load of the published value, converted to MPa by dtivl.params); exact for the linear model. Agrees if the cohort median of every scaled stress lies within a factor 'factor' of the published value, partial if some, disagrees if none; not computed while the published row has no plain-number value"
+  },
+  {
+   "id": "C10",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "number of fractures per lesion and fraction of full-thickness fractures after IVL (pooled OCT analysis)",
+   "source_rows": "fractures_per_lesion_pooled_IVL_OCT; full_thickness_fracture_fraction_pooled_IVL_OCT",
+   "source_status": "fractures_per_lesion_pooled_IVL_OCT: VERIFIED; full_thickness_fracture_fraction_pooled_IVL_OCT: VERIFIED",
+   "published": "fractures_per_lesion_pooled_IVL_OCT = 3.1 SD 2.7 count; full_thickness_fracture_fraction_pooled_IVL_OCT = 72 % of fractures",
+   "model_quantity": "ivl_n_fractures over the lesions with ivl_fracture (mean, SD, range); full-thickness fraction sum ivl_n_fractures / sum (ivl_n_fractures + ivl_n_partial) over the lesions with any crack component (%, lesion-level bootstrap)",
+   "model_value": 1.0,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": "fractures per fractured lesion 1 SD 0 (range 1-1) (n 9); full-thickness fraction % 100 [100, 100] (n 9)",
+   "criterion": "count: agrees if the mean lies within published mean +/- 1 SD ([0.4, 5.8]); fraction: agrees if the published fraction lies inside the 95 % interval; both: agrees, one: partial, none: disagrees (a part that cannot be computed is left out and named in the note)",
+   "agreement": "partial",
+   "n_lesions": 9,
+   "note": "excluded: ivl status not run 2; ivl_n_fractures counts the through-thickness crack components and ivl_n_partial the others (dtivl.fracture.cracks); 9 of 9 fractured lesions carry diffuse damage (ivl_diffuse: a crack component covering at least 50% of its calcium region); a through-thickness diffuse component counts as one fracture, so damage of a whole deposit counts as a single fracture; the 2D model counts the fractures of one cross-section; OCT counts them over the lesion length",
+   "quantities": [
+    {
+     "name": "fractures per fractured lesion",
+     "value": 1.0,
+     "stat": "mean",
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": 9,
+     "mean": 1.0,
+     "sd": 0.0,
+     "median": 1.0,
+     "q1": 1.0,
+     "q3": 1.0,
+     "min": 1.0,
+     "max": 1.0
+    },
+    {
+     "name": "full-thickness fraction %",
+     "value": 100.0,
+     "ci_lo": 100.0,
+     "ci_hi": 100.0,
+     "ci_method": "lesion-level percentile bootstrap, 2000 resamples, 95 %",
+     "n": 9,
+     "n_components": 9,
+     "n_full_thickness": 9
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "fractures_per_lesion_pooled_IVL_OCT",
+     "status": "VERIFIED",
+     "unit": "count",
+     "value_cell": "3.1",
+     "range_cell": "SD 2.7",
+     "source": "[Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies (N=262). J Am Coll Cardiol 2021 (abstract supplement). doi:10.1016/j.jacc.2021.09.970",
+     "value": 3.1,
+     "sd": 2.7,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "full_thickness_fracture_fraction_pooled_IVL_OCT",
+     "status": "VERIFIED",
+     "unit": "% of fractures",
+     "value_cell": "72",
+     "range_cell": "",
+     "source": "[Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies (N=262). J Am Coll Cardiol 2021 (abstract supplement). doi:10.1016/j.jacc.2021.09.970",
+     "value": 72.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: count = ivl_n_fractures over the lesions with IVL fracture (agrees if the mean lies within published mean +/- 1 SD); full-thickness fraction = sum n_fractures / sum (n_fractures + n_partial) over the IVL lesions with any crack component, percentile interval from a lesion-level bootstrap (fractures are nested in lesions; agrees if the published fraction lies inside). Both agree: agrees; one: partial; none: disagrees. Diffuse damage (ivl_diffuse) counts as one through-thickness fracture, as in dtivl.fracture.cracks"
+  },
+  {
+   "id": "C10",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "number of fractures per lesion and fraction of full-thickness fractures after IVL (pooled OCT analysis)",
+   "source_rows": "fractures_per_lesion_pooled_IVL_OCT; full_thickness_fracture_fraction_pooled_IVL_OCT",
+   "source_status": "fractures_per_lesion_pooled_IVL_OCT: VERIFIED; full_thickness_fracture_fraction_pooled_IVL_OCT: VERIFIED",
+   "published": "fractures_per_lesion_pooled_IVL_OCT = 3.1 SD 2.7 count; full_thickness_fracture_fraction_pooled_IVL_OCT = 72 % of fractures",
+   "model_quantity": "ivl_n_fractures over the lesions with ivl_fracture (mean, SD, range); full-thickness fraction sum ivl_n_fractures / sum (ivl_n_fractures + ivl_n_partial) over the lesions with any crack component (%, lesion-level bootstrap)",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "count: agrees if the mean lies within published mean +/- 1 SD ([0.4, 5.8]); fraction: agrees if the published fraction lies inside the 95 % interval; both: agrees, one: partial, none: disagrees (a part that cannot be computed is left out and named in the note)",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; count: fewer than 5 fractured lesions (0); fraction: fewer than 5 lesions with a crack component (0); ivl_n_fractures counts the through-thickness crack components and ivl_n_partial the others (dtivl.fracture.cracks); 0 of 0 fractured lesions carry diffuse damage (ivl_diffuse: a crack component covering at least 50% of its calcium region); a through-thickness diffuse component counts as one fracture, so damage of a whole deposit counts as a single fracture; the 2D model counts the fractures of one cross-section; OCT counts them over the lesion length",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "fractures_per_lesion_pooled_IVL_OCT",
+     "status": "VERIFIED",
+     "unit": "count",
+     "value_cell": "3.1",
+     "range_cell": "SD 2.7",
+     "source": "[Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies (N=262). J Am Coll Cardiol 2021 (abstract supplement). doi:10.1016/j.jacc.2021.09.970",
+     "value": 3.1,
+     "sd": 2.7,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "full_thickness_fracture_fraction_pooled_IVL_OCT",
+     "status": "VERIFIED",
+     "unit": "% of fractures",
+     "value_cell": "72",
+     "range_cell": "",
+     "source": "[Authors to be confirmed]. TCT-120 abstract: pooled OCT analysis of the Disrupt CAD studies (N=262). J Am Coll Cardiol 2021 (abstract supplement). doi:10.1016/j.jacc.2021.09.970",
+     "value": 72.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: count = ivl_n_fractures over the lesions with IVL fracture (agrees if the mean lies within published mean +/- 1 SD); full-thickness fraction = sum n_fractures / sum (n_fractures + n_partial) over the IVL lesions with any crack component, percentile interval from a lesion-level bootstrap (fractures are nested in lesions; agrees if the published fraction lies inside). Both agree: agrees; one: partial; none: disagrees. Diffuse damage (ivl_diffuse) counts as one through-thickness fracture, as in dtivl.fracture.cracks"
+  },
+  {
+   "id": "C11",
+   "set": "core",
+   "kind": "published_observation",
+   "observation": "higher OCT calcium (Fujino) score, lower stent expansion",
+   "source_rows": "fujino_score4_stent_expansion",
+   "source_status": "fujino_score4_stent_expansion: VERIFIED",
+   "published": "fujino_score4_stent_expansion = 78 % (96 (score 0-3))",
+   "model_quantity": "Spearman rho of fujino_score and stent_no_ivl_stent_expansion_pct",
+   "model_value": -0.624422396902092,
+   "ci_lo": -0.8544226254106854,
+   "ci_hi": -0.20331792014935945,
+   "ci_method": "percentile bootstrap, 2000 resamples, 95 %",
+   "model_values": "rho -0.6244 [-0.8544, -0.2033] (n 20); mean stent_no_ivl_stent_expansion_pct by score 0: 82.35, 1: 81.1 (n 20)",
+   "criterion": "rho < 0: agrees if the point estimate lies on the expected side of 0 and its 95 % interval excludes 0, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "agrees",
+   "n_lesions": 20,
+   "note": "cross-sectional scores in this set: 0, 1; maximum attainable cross-sectional score 3 (cohort.csv fujino_max); the full score reaches 4 only with the calcium length criterion, which a cross-section cannot meet, so the published top-score group has no 2D counterpart: direction only; excluded: stent_no_ivl status not run 4",
+   "quantities": [
+    {
+     "name": "rho",
+     "value": -0.624422396902092,
+     "ci_lo": -0.8544226254106854,
+     "ci_hi": -0.20331792014935945,
+     "ci_method": "percentile bootstrap, 2000 resamples, 95 %",
+     "n": 20,
+     "n_boot": 2000,
+     "n_boot_valid": 1999
+    },
+    {
+     "name": "mean stent_no_ivl_stent_expansion_pct by score 0: 82.35, 1: 81.1",
+     "value": null,
+     "by_score": {
+      "0": 82.35322138349257,
+      "1": 81.1000220357148
+     },
+     "n": 20
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "fujino_score4_stent_expansion",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "78",
+     "range_cell": "96 (score 0-3)",
+     "source": "Fujino A, Mintz GS, Matsumura M, et al. A new optical coherence tomography-based calcium scoring system to predict stent underexpansion. EuroIntervention 2018;13:e2182-e2189. doi:10.4244/EIJ-D-17-00962",
+     "value": 78.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: direction only: Spearman rho of the cross-sectional Fujino score and stent expansion without IVL, expected sign -1, per consistency.direction_rule; the published top-score group needs the calcium length criterion and does not exist in 2D"
+  },
+  {
+   "id": "C11",
+   "set": "holdout",
+   "kind": "published_observation",
+   "observation": "higher OCT calcium (Fujino) score, lower stent expansion",
+   "source_rows": "fujino_score4_stent_expansion",
+   "source_status": "fujino_score4_stent_expansion: VERIFIED",
+   "published": "fujino_score4_stent_expansion = 78 % (96 (score 0-3))",
+   "model_quantity": "Spearman rho of fujino_score and stent_no_ivl_stent_expansion_pct",
+   "model_value": null,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": null,
+   "criterion": "rho < 0: agrees if the point estimate lies on the expected side of 0 and its 95 % interval excludes 0, partial if only the point estimate does, disagrees otherwise",
+   "agreement": "not computed",
+   "n_lesions": 0,
+   "note": "no 'holdout' rows in cohort_outcomes.csv; fewer than 5 lesions (0); maximum attainable cross-sectional score 3 (dtivl.geometry.fujino); the full score reaches 4 only with the calcium length criterion, which a cross-section cannot meet, so the published top-score group has no 2D counterpart: direction only",
+   "quantities": [],
+   "published_rows": [
+    {
+     "row": "fujino_score4_stent_expansion",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "78",
+     "range_cell": "96 (score 0-3)",
+     "source": "Fujino A, Mintz GS, Matsumura M, et al. A new optical coherence tomography-based calcium scoring system to predict stent underexpansion. EuroIntervention 2018;13:e2182-e2189. doi:10.4244/EIJ-D-17-00962",
+     "value": 78.0,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: direction only: Spearman rho of the cross-sectional Fujino score and stent expansion without IVL, expected sign -1, per consistency.direction_rule; the published top-score group needs the calcium length criterion and does not exist in 2D"
+  },
+  {
+   "id": "C12",
+   "set": "cohort",
+   "kind": "geometry_plausibility",
+   "observation": "implied plaque burden of the constructed lesions vs CTA plaque burden of calcified plaques and calcified nodules",
+   "source_rows": "plaque_burden_calcified_plaque_CTA; plaque_burden_calcified_nodule_CTA",
+   "source_status": "plaque_burden_calcified_plaque_CTA: VERIFIED; plaque_burden_calcified_nodule_CTA: VERIFIED",
+   "published": "plaque_burden_calcified_plaque_CTA = 77.05 % (CN 85.40; P=0.005); plaque_burden_calcified_nodule_CTA = 85.4 % (P=0.005 vs calcified plaque without CN)",
+   "model_quantity": "implied plaque burden (%) of the reference geometry and range over the lesions grown outward (D11), copied from results/cohort_summary.json",
+   "model_value": 80.58117809838276,
+   "ci_lo": null,
+   "ci_hi": null,
+   "ci_method": null,
+   "model_values": "implied plaque burden, reference geometry % 80.58; implied plaque burden, grown lesions % (range 79.91-86.05) (n 23)",
+   "criterion": "agrees if the reference geometry lies within the CTA range [77.05, 85.4] % and no grown lesion exceeds its upper value, partial if the reference lies within the range but some grown lesions exceed it, disagrees if the reference lies outside",
+   "agreement": "partial",
+   "n_lesions": 72,
+   "note": "values copied from results/cohort_summary.json, not recomputed; the reference geometry is that of every lesion not grown outward; n lesions = the core + holdout sets of cohort_summary.json n_per_set; grown lesions per set: {'core': 16, 'holdout': 7, 'pilot': 0, 'example3d': 0}; above the upper CTA value: 5; maximum outward growth 0.6142 mm",
+   "quantities": [
+    {
+     "name": "implied plaque burden, reference geometry %",
+     "value": 80.58117809838276,
+     "ci_lo": null,
+     "ci_hi": null,
+     "ci_method": null,
+     "n": null,
+     "within_range": true
+    },
+    {
+     "name": "implied plaque burden, grown lesions %",
+     "value": null,
+     "min": 79.91368509834311,
+     "max": 86.05380886482772,
+     "n": 23
+    }
+   ],
+   "published_rows": [
+    {
+     "row": "plaque_burden_calcified_plaque_CTA",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "77.05",
+     "range_cell": "CN 85.40; P=0.005",
+     "source": "[Authors to be confirmed]. Serum marker and CT characteristics of coronary calcified nodule assessed by intravascular ultrasound. BMC Cardiovasc Disord 2022. doi:10.1186/s12872-022-02931-z",
+     "value": 77.05,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    },
+    {
+     "row": "plaque_burden_calcified_nodule_CTA",
+     "status": "VERIFIED",
+     "unit": "%",
+     "value_cell": "85.40",
+     "range_cell": "P=0.005 vs calcified plaque without CN",
+     "source": "[Authors to be confirmed]. Serum marker and CT characteristics of coronary calcified nodule assessed by intravascular ultrasound. BMC Cardiovasc Disord 2022. doi:10.1186/s12872-022-02931-z",
+     "value": 85.4,
+     "sd": null,
+     "alt": null,
+     "ok": true,
+     "reason": null
+    }
+   ],
+   "basis": "DESIGN: values copied from results/cohort_summary.json (plaque_burden_check, plaque_growth), not recomputed: agrees if the reference geometry lies within the CTA range and no grown lesion (D11) exceeds the nodule value, partial if the reference lies within the range but some grown lesions exceed it, disagrees if the reference lies outside; not computed if the CTA values stored there differ from the literature table. One cohort-level row; n lesions = the consistency.sets entries of n_per_set"
+  }
+ ]
+}

@@ -1,47 +1,47 @@
 {
- "n_lesions": 21,
- "n_complete": 18,
+ "n_lesions": 24,
+ "n_complete": 20,
  "n_error": 0,
  "by_set": {
-  "core": 21
+  "core": 24
  },
  "ca_E_MPa": [
   365.006198
  ],
  "physiological": {
-  "n_run": 21,
-  "n_ok": 21,
+  "n_run": 24,
+  "n_ok": 24,
   "n_fracture": 0,
   "n_unconverged_runs": 0
  },
  "balloon_only": {
-  "n_run": 21,
-  "n_ok": 21,
+  "n_run": 24,
+  "n_ok": 24,
   "n_fracture": 0,
   "n_unconverged_runs": 0
  },
  "balloon_10atm": {
-  "n_run": 20,
-  "n_ok": 20,
-  "n_fracture": 8,
-  "n_unconverged_runs": 3
+  "n_run": 24,
+  "n_ok": 24,
+  "n_fracture": 11,
+  "n_unconverged_runs": 6
  },
  "ivl": {
-  "n_run": 20,
-  "n_ok": 20,
-  "n_fracture": 8,
-  "n_unconverged_runs": 4
+  "n_run": 22,
+  "n_ok": 22,
+  "n_fracture": 9,
+  "n_unconverged_runs": 5
  },
  "stent_no_ivl": {
-  "n_run": 18,
-  "n_ok": 18,
-  "n_fracture": 5,
-  "n_unconverged_runs": 4
- },
- "stent_post_ivl": {
   "n_run": 20,
   "n_ok": 20,
-  "n_fracture": 8,
+  "n_fracture": 7,
+  "n_unconverged_runs": 6
+ },
+ "stent_post_ivl": {
+  "n_run": 21,
+  "n_ok": 21,
+  "n_fracture": 9,
   "n_unconverged_runs": 0
  },
  "ivl_erosion": {
