@@ -425,53 +425,61 @@ id,label,value,scale,printed,source,key
 423,agreement_counts.core.partial,3,1.0,3,results/consistency.json,agreement_counts.core.partial
 424,agreement_counts.core.disagrees,3,1.0,3,results/consistency.json,agreement_counts.core.disagrees
 425,agreement_counts.core.not computed,1,1.0,1,results/consistency.json,agreement_counts.core.not computed
-426,checks.6.model_value,50.0,1.0,50.0,results/consistency.json,checks.6.model_value
-427,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-428,checks.6.ci_lo[lo],33.630882869327486,1.0,33.6,results/consistency.json,checks.6.ci_lo[lo]
-429,checks.6.ci_lo[hi],66.36911713067252,1.0,66.4,results/consistency.json,checks.6.ci_lo[hi]
-430,fracture_rate_DisruptCAD_III_OCT.value,67.4,1.0,67.4,params/literature_parameters.csv,fracture_rate_DisruptCAD_III_OCT.value
-431,fracture_rate_DisruptCAD_II_OCT.value,78.7,1.0,78.7,params/literature_parameters.csv,fracture_rate_DisruptCAD_II_OCT.value
-432,checks.8.model_value,53.125,1.0,53.1,results/consistency.json,checks.8.model_value
-433,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-434,checks.8.ci_lo[lo],36.44951711897464,1.0,36.4,results/consistency.json,checks.8.ci_lo[lo]
-435,checks.8.ci_lo[hi],69.13061289193116,1.0,69.1,results/consistency.json,checks.8.ci_lo[hi]
-436,checks.12.quantities.0.sd,1.2194818184562726,1.0,1.2,results/consistency.json,checks.12.quantities.0.sd
-437,checks.12.published_rows.0.sd,28.9,1.0,28.9,results/consistency.json,checks.12.published_rows.0.sd
-438,checks.12.quantities.0.mean,82.11034127383189,1.0,82.1,results/consistency.json,checks.12.quantities.0.mean
-439,checks.12.quantities.0.min,79.1167368126472,1.0,79.1,results/consistency.json,checks.12.quantities.0.min
-440,checks.12.quantities.0.max,83.40604344440523,1.0,83.4,results/consistency.json,checks.12.quantities.0.max
-441,stent_expansion_maxCa_site_DisruptCAD_III.value,101.7,1.0,101.7,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.value
-442,stent_expansion_MSA_site_DisruptCAD_III.value,78.4,1.0,78.4,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.value
-443,checks.18.quantities.1.value,100.0,1.0,100,results/consistency.json,checks.18.quantities.1.value
-444,fractures_per_lesion_pooled_IVL_OCT.value,3.1,1.0,3.1,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.value
-445,full_thickness_fracture_fraction_pooled_IVL_OCT.value,72.0,1.0,72,params/literature_parameters.csv,full_thickness_fracture_fraction_pooled_IVL_OCT.value
-446,checks.20.quantities.0.value,0.07466058750949045,1.0,0.07,results/consistency.json,checks.20.quantities.0.value
-447,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-448,checks.20.quantities.0.ci_lo[lo],-0.3586848376143098,1.0,−0.36,results/consistency.json,checks.20.quantities.0.ci_lo[lo]
-449,checks.20.quantities.0.ci_lo[hi],0.46681196294339516,1.0,0.47,results/consistency.json,checks.20.quantities.0.ci_lo[hi]
-450,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
-451,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
-452,lesions.*.ca_E_MPa,365.006198,1.0,365,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
-453,len(lesions),3,1.0,3,results/pilot_nonlinear.json,len(lesions)
-454,lesions.*.ca_E_MPa,121.078487,1.0,121.1,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
-455,pilot balloon_only fracture at E=121.078 [events],1,1.0,1,results/pilot_nonlinear.json,pilot balloon_only fracture at E=121.078 [events]
-456,pilot balloon_only fracture at E=121.078 [n],3,1.0,3,results/pilot_nonlinear.json,pilot balloon_only fracture at E=121.078 [n]
-457,lesions.*.ca_E_MPa,1100.356701,1.0,1100,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
-458,pilot ivl fracture at E=1100.36 [events],0,1.0,0,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [events]
-459,pilot ivl fracture at E=1100.36 [n],3,1.0,3,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [n]
-460,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
-461,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
-462,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
-463,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
-464,checks.8.model_value,53.125,1.0,53,results/consistency.json,checks.8.model_value
-465,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]",12,1.0,12,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]"
-466,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]",14,1.0,14,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]"
-467,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm),2.5,1.0,2.5,results/cohort_outcomes.csv + params/study_config.yaml,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm)
-468,core IVL runs with unconverged_steps > 0 [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [events]
-469,core IVL runs with unconverged_steps > 0 [n],32,1.0,32,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [n]
-470,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
-471,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
-472,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
-473,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
-474,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
-475,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells
+426,agreement_counts_by_kind.core.published_observation.agrees,2,1.0,2,results/consistency.json,agreement_counts_by_kind.core.published_observation.agrees
+427,agreement_counts_by_kind.core.published_observation.partial,3,1.0,3,results/consistency.json,agreement_counts_by_kind.core.published_observation.partial
+428,agreement_counts_by_kind.core.published_observation.disagrees,3,1.0,3,results/consistency.json,agreement_counts_by_kind.core.published_observation.disagrees
+429,count(core checks | kind == published_observation),8,1.0,8,results/consistency.json,count(core checks | kind == published_observation)
+430,checks.6.model_value,50.0,1.0,50.0,results/consistency.json,checks.6.model_value
+431,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+432,checks.6.ci_lo[lo],33.630882869327486,1.0,33.6,results/consistency.json,checks.6.ci_lo[lo]
+433,checks.6.ci_lo[hi],66.36911713067252,1.0,66.4,results/consistency.json,checks.6.ci_lo[hi]
+434,fracture_rate_DisruptCAD_III_OCT.value,67.4,1.0,67.4,params/literature_parameters.csv,fracture_rate_DisruptCAD_III_OCT.value
+435,fracture_rate_DisruptCAD_II_OCT.value,78.7,1.0,78.7,params/literature_parameters.csv,fracture_rate_DisruptCAD_II_OCT.value
+436,checks.8.model_value,53.125,1.0,53.1,results/consistency.json,checks.8.model_value
+437,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+438,checks.8.ci_lo[lo],36.44951711897464,1.0,36.4,results/consistency.json,checks.8.ci_lo[lo]
+439,checks.8.ci_lo[hi],69.13061289193116,1.0,69.1,results/consistency.json,checks.8.ci_lo[hi]
+440,checks.12.quantities.0.sd,1.2194818184562726,1.0,1.2,results/consistency.json,checks.12.quantities.0.sd
+441,checks.12.published_rows.0.sd,28.9,1.0,28.9,results/consistency.json,checks.12.published_rows.0.sd
+442,checks.12.quantities.0.mean,82.11034127383189,1.0,82.1,results/consistency.json,checks.12.quantities.0.mean
+443,checks.12.quantities.0.min,79.1167368126472,1.0,79.1,results/consistency.json,checks.12.quantities.0.min
+444,checks.12.quantities.0.max,83.40604344440523,1.0,83.4,results/consistency.json,checks.12.quantities.0.max
+445,stent_expansion_maxCa_site_DisruptCAD_III.value,101.7,1.0,101.7,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.value
+446,stent_expansion_MSA_site_DisruptCAD_III.value,78.4,1.0,78.4,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.value
+447,checks.18.quantities.1.value,100.0,1.0,100,results/consistency.json,checks.18.quantities.1.value
+448,fractures_per_lesion_pooled_IVL_OCT.value,3.1,1.0,3.1,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.value
+449,full_thickness_fracture_fraction_pooled_IVL_OCT.value,72.0,1.0,72,params/literature_parameters.csv,full_thickness_fracture_fraction_pooled_IVL_OCT.value
+450,checks.20.quantities.0.value,0.07466058750949045,1.0,0.07,results/consistency.json,checks.20.quantities.0.value
+451,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+452,checks.20.quantities.0.ci_lo[lo],-0.3586848376143098,1.0,−0.36,results/consistency.json,checks.20.quantities.0.ci_lo[lo]
+453,checks.20.quantities.0.ci_lo[hi],0.46681196294339516,1.0,0.47,results/consistency.json,checks.20.quantities.0.ci_lo[hi]
+454,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
+455,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
+456,lesions.*.ca_E_MPa,365.006198,1.0,365,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
+457,len(lesions),3,1.0,3,results/pilot_nonlinear.json,len(lesions)
+458,lesions.*.ca_E_MPa,121.078487,1.0,121.1,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
+459,pilot balloon_only fracture at E=121.078 [events],1,1.0,1,results/pilot_nonlinear.json,pilot balloon_only fracture at E=121.078 [events]
+460,pilot balloon_only fracture at E=121.078 [n],3,1.0,3,results/pilot_nonlinear.json,pilot balloon_only fracture at E=121.078 [n]
+461,lesions.*.ca_E_MPa,1100.356701,1.0,1100,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
+462,pilot ivl fracture at E=1100.36 [events],0,1.0,0,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [events]
+463,pilot ivl fracture at E=1100.36 [n],3,1.0,3,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [n]
+464,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
+465,outcomes.ivl_fracture.post_hoc.fujino_arc_tolerance.core.arc_cutoff_deg,180.0,1.0,180,results/metrics_summary.json,outcomes.ivl_fracture.post_hoc.fujino_arc_tolerance.core.arc_cutoff_deg
+466,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc,0.880859375,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc
+467,outcomes.ivl_fracture.univariable.ca_thickness_max.auc,0.541015625,1.0,0.54,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_thickness_max.auc
+468,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
+469,sigma_crit (MPa),7.300123960000006,1.0,7.3,src/materials/constitutive.py MaterialSet.baseline().sigma_crit,sigma_crit (MPa)
+470,calcification_fracture_stress.value,0.179,1.0,0.179,params/literature_parameters.csv,calcification_fracture_stress.value
+471,min(by_h.ell_mm) x 1000,20.0,1.0,20,results/diag_ell.json,min(by_h.ell_mm) x 1000
+472,count(predictor quantities in max_rel_change_default_vs_fine),7,1.0,7,results/verification_mesh_convergence.json,count(predictor quantities in max_rel_change_default_vs_fine)
+473,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
+474,core IVL runs with unconverged steps | ivl_fracture [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged steps | ivl_fracture [events]
+475,core IVL runs with unconverged steps | ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core IVL runs with unconverged steps | ivl_fracture [n]
+476,core IVL runs with unconverged steps | no ivl_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core IVL runs with unconverged steps | no ivl_fracture [events]
+477,core IVL runs with unconverged steps | no ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core IVL runs with unconverged steps | no ivl_fracture [n]
+478,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
+479,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
+480,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
+481,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
+482,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
+483,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells

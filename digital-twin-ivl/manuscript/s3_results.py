@@ -613,6 +613,38 @@ def s34(ctx: Ctx) -> list:
 
 
 # ------------------------------------------------------------------ 3.5
+KIND_WORDS = {"model_internal": "the model-internal criterion", "calibration_target": "the calibration target",
+              "model_vs_model": "the comparison with an earlier model", "geometry_plausibility": "the geometry check"}
+
+
+def _tally_text(ctx: Ctx, cons: dict, core_checks: list) -> str:
+    """Agreement counts by kind of check: published observations separately from checks that agree by
+    construction (model-internal criterion, calibration target) and from model-to-model comparisons."""
+    pub = [c for c in core_checks if c["kind"] == "published_observation"]
+    ids = lambda cs, lab: _and([c["id"] for c in cs if c["agreement"] == lab])  # noqa: E731
+    k = "agreement_counts_by_kind.core.published_observation"
+    parts = []
+    for lab, word in (("agrees", "agreed"), ("partial", "were inconclusive (point estimate on the expected side, "
+                                                        "interval including no effect, or only one of two criteria met)"),
+                      ("disagrees", "disagreed"), ("not computed", "could not be computed")):
+        n = sum(c["agreement"] == lab for c in pub)
+        if n:
+            parts.append(f"{ctx.v(CONS, f'{k}.{lab}', fmt='d')} {word} ({ids(pub, lab)})")
+    txt = (f"Of the {ctx.count(len(pub), src=CONS, key='count(core checks | kind == published_observation)')} "
+           f"comparisons with published observations on the core set ({ctx.tab('table2_verification_consistency')}), "
+           + _and(parts) + ".")
+    other = [c for c in core_checks if c["kind"] != "published_observation"]
+    for c in other:
+        what = KIND_WORDS.get(c["kind"], c["kind"])
+        if c["agreement"] == "agrees" and c["kind"] in ("model_internal", "calibration_target"):
+            txt += f" {what[0].upper() + what[1:]} ({c['id']}) agreed, as expected by construction."
+        elif c["agreement"] == "not computed":
+            txt += f" {what[0].upper() + what[1:]} ({c['id']}) could not be computed."
+        else:
+            txt += f" {what[0].upper() + what[1:]} ({c['id']}): {c['agreement']}."
+    return txt
+
+
 def s35(ctx: Ctx) -> list:
     cons = ctx.data(CONS)
     core_checks = [c for c in cons["checks"] if c["set"] == "core"]
@@ -625,17 +657,14 @@ def s35(ctx: Ctx) -> list:
     i4 = next(i for i, c in enumerate(cons["checks"]) if c["id"] == "C4" and c["set"] == "core")
     i5 = next(i for i, c in enumerate(cons["checks"]) if c["id"] == "C5" and c["set"] == "core")
     paras = [Heading("3.5. Consistency with Published Observations", 2)]
-    paras.append(Para(
-        f"Of the checks against published observations and model-internal criteria on the core set "
-        f"({ctx.tab('table2_verification_consistency')}), {counts}. The checks that agreed were {ids('agrees')}; "
-        f"partial agreement (point estimate on the expected side, interval including the null value) was found for "
-        f"{ids('partial')}; and {ids('disagrees')} disagreed."))
+    paras.append(Para(_tally_text(ctx, cons, core_checks)))
     from dtivl import params as P
     c4, c5 = cons["checks"][i4], cons["checks"][i5]
     pub = sorted(P.lit(r).value for r in ("fracture_rate_DisruptCAD_III_OCT", "fracture_rate_DisruptCAD_II_OCT"))
     rel4 = ("below" if c4["model_value"] < pub[0] else "above" if c4["model_value"] > pub[-1] else "within the range of")
-    why5 = ("This disagreement follows from the calibration of the calcium modulus (decision D8), which was chosen so "
-            "that the IVL balloon alone does not fracture calcium, at a lower pressure than the plain balloon."
+    why5 = ("In the model the plain balloon is a larger static load than the equivalent IVL load (Section 3.2), so "
+            "this disagreement follows from the quasi-static representation of IVL (decision D14) together with the "
+            "calcium modulus calibrated so that the IVL balloon alone does not fracture calcium (decision D8)."
             if c5["agreement"] == "disagrees" else "")
     paras.append(Para(
         "The proportion of core lesions with through-thickness damage under IVL was "
@@ -652,8 +681,8 @@ def s35(ctx: Ctx) -> list:
     if by_id.get("C6", {}).get("agreement") == "agrees":
         paras.append(Para(
             "The IVL balloon inflated without pulses produced no through-thickness damage in any core lesion (check "
-            "C6). This model-internal criterion was used for the calibration on the pilot lesions, three of which "
-            "share the geometry of core lesions, so it is not independent of the calibration."))
+            "C6). This model-internal criterion set the calcium modulus on the three pilot lesions, all of which share "
+            "the geometry of core lesions, so it is not independent of the calibration."))
     paras += tables_ms.table2b(ctx)
     return paras
 
@@ -683,7 +712,10 @@ def _stent_and_pattern_checks(ctx: Ctx, cons: dict) -> list:
             "deviation of the expansion reported at the site of maximum calcium "
             f"({ctx.lit('stent_expansion_maxCa_site_DisruptCAD_III', fmt='g')}%) and at the minimum stent area "
             f"({ctx.lit('stent_expansion_MSA_site_DisruptCAD_III', fmt='g')}%) in Disrupt CAD III "
-            f"{ctx.cite('hill2020disruptcad3')} (check C7).{spread}"))
+            f"{ctx.cite('hill2020disruptcad3')} (check C7).{spread}"
+            + (" Because every stent was expanded to its target diameter, this agreement mainly reflects the stent "
+               "model and the wide clinical spread." if _stent_target_sentence(ctx, ctx.data(OUT)[ctx.data(OUT)["set"] == "core"]).startswith("Every")
+               else "")))
     c10 = cons["checks"][i10]
     if c10["agreement"] != "not computed":
         q = c10["quantities"]
@@ -697,7 +729,7 @@ def _stent_and_pattern_checks(ctx: Ctx, cons: dict) -> list:
             "thickness, whereas a pooled OCT analysis of the Disrupt CAD studies reported a mean of "
             f"{ctx.lit('fractures_per_lesion_pooled_IVL_OCT', fmt='g')} fractures per lesion, "
             f"{ctx.lit('full_thickness_fracture_fraction_pooled_IVL_OCT', fmt='g')}% of them full thickness "
-            f"{ctx.cite('tct120pooledoct2021')} (check C10, {c10['agreement'].replace('agrees', 'agreement').replace('partial', 'partial agreement').replace('disagrees', 'disagreement')}). "
+            f"{ctx.cite('tct120pooledoct2021')} (check C10, {'one of its two criteria met' if c10['agreement'] == 'partial' else c10['agreement']}). "
             "The phase field spreads damage over the deposit, so it does not resolve separate cracks "
             "(Section 3.2)."))
     c11 = cons["checks"][i11]
