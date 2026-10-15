@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from build_manuscript import Ctx, Heading, Para
 
+import tables_ms
+
 CFG = "params/study_config.yaml"
 LIT = "params/literature_parameters.csv"
 CS = "results/cohort_summary.json"
@@ -97,6 +99,7 @@ def s21(ctx: Ctx) -> list:
             "decision D15) and one provisional input (the lipid modulus) were used and are flagged in "
             f"{ctx.tab('table1_parameters')}. Decisions taken during the study are numbered D1–D15 and recorded "
             "in the configuration file."),
+        tables_ms.table1(ctx),
     ]
 
 

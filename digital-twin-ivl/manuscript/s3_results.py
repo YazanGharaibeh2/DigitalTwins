@@ -6,6 +6,7 @@ import math
 
 from build_manuscript import BuildError, Ctx, Figure, Heading, Para
 
+import tables_ms
 from s2_methods import _atm_mpa, _const
 from s2_statistics import GEOMETRY_WORDS
 
@@ -177,6 +178,7 @@ def s31(ctx: Ctx) -> list:
                "sample radius, with the tolerance. (c) Pre-treatment predictors at the default and the coarse mesh "
                "relative to the finest mesh, with the acceptance band; the raw cell peaks are marked as excluded. "
                "(d) Damage onset of the AT1 phase field in homogeneous tension against the analytical onset."),
+        *tables_ms.table2(ctx),
     ]
 
 
@@ -358,7 +360,8 @@ def s33(ctx: Ctx) -> list:
                     + _and([f"{ctx.v(MS, f'{comp}.core.loocv_selection_frequency.{p}', fmt='.0f', scale=100.0)}% for "
                             f"{pname(ctx, p)}" for p in freq]) + ".")
         paras.append(Para(
-            f"The rule of Section 2.10 selected {_and([pname(ctx, p) for p in sel])} for {name}. {freq_txt} "
+            f"The rule of Section 2.10 selected {_and([pname(ctx, p) for p in sel])} for {name} "
+            f"({ctx.tab('table4_models')}). {freq_txt} "
             f"{conf_txt} {name} had an apparent AUC of {ctx.v(MS, f'{comp}.core.apparent_auc', fmt='.2f')} and a "
             f"leave-one-out AUC of {_vci(ctx, MS, f'{comp}.core.loocv_auc', f'{comp}.core.loocv_auc_ci')}, with a "
             f"leave-one-out log-loss of {ctx.v(MS, f'{comp}.core.loocv_log_loss', fmt='.3f')} and Brier score of "
@@ -390,6 +393,8 @@ def s33(ctx: Ctx) -> list:
         "core-fit models, unchanged. (c) AUC with its bootstrap interval for every candidate on the core set "
         "(filled) and on the hold-out set (open). (d) Difference in AUC, geometry + mechanics minus geometry, with "
         "its paired bootstrap interval."))
+    paras.append(tables_ms.table3(ctx))
+    paras += tables_ms.table4(ctx)
     return paras
 
 
@@ -521,6 +526,7 @@ def s35(ctx: Ctx) -> list:
             "The IVL balloon inflated without pulses produced no through-thickness damage in any core lesion (check "
             "C6). This model-internal criterion was used for the calibration on the pilot lesions, three of which "
             "share the geometry of core lesions, so it is not independent of the calibration."))
+    paras += tables_ms.table2b(ctx)
     return paras
 
 

@@ -28,7 +28,7 @@ def _read(name: str) -> dict:
 
 
 def _pct(x: float, nd: int = 2) -> str:
-    return f"{100.0 * x:.{nd}f} %"
+    return f"{100.0 * x:.{nd}f}%"
 
 
 def verification_rows() -> list[dict]:
@@ -51,7 +51,7 @@ def verification_rows() -> list[dict]:
                  "Quantity": f"largest change, default vs finest mesh ({worst}); cell-level peaks "
                              f"({', '.join(MESH_DEPENDENT)}) excluded as mesh-dependent",
                  "Result": _pct(ch[worst], 4), "Acceptance": f"≤ {_pct(acc, 0)}",
-                 "Met": "yes" if ch[worst] <= acc else "no (at the limit)" if ch[worst] <= acc * 1.01 else "no",
+                 "Met": "yes" if ch[worst] <= acc else "no (marginally above)" if ch[worst] <= acc * 1.01 else "no",
                  "Source": "results/verification_mesh_convergence.json"})
     pf = _read("verification_phasefield")
     e = max(max(c["rel_err_psi"], c["rel_err_strain"]) for c in pf["cases"])

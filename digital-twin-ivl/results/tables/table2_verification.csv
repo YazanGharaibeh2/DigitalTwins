@@ -1,8 +1,8 @@
 Check,Quantity,Result,Acceptance,Met,Source
-Linear elasticity: thick cylinder under lumen pressure vs Lamé solution,"largest relative error of u_r and σθθ (calcium, fibrous)",0.573 %,≤ 1 %,yes,results/verification_lame.json
-"Mesh convergence of the predictors (2 lesions, 3 mesh levels)","largest change, default vs finest mesh (sed_peak_nl); cell-level peaks (sigma1_peak, sed_peak) excluded as mesh-dependent",2.0002 %,≤ 2 %,no (at the limit),results/verification_mesh_convergence.json
-"AT1 phase field: damage onset vs the analytical onset (uniform strain, 2D and 3D)",largest relative error of the onset energy and strain,0.74 %,≤ 5 %,yes,results/verification_phasefield.json
-Hyperelastic solver: small-load thick cylinder vs Lamé solution,largest relative error of u_r,0.137 %,≤ 1 %,yes,results/verification_nonlinear.json
-Penalty contact: rigid cylinder in a thick cylinder vs Lamé solution,largest relative error of the contact pressure,0.73 %,≤ 10 %,yes,results/verification_nonlinear.json
+Linear elasticity: thick cylinder under lumen pressure vs Lamé solution,"largest relative error of u_r and σθθ (calcium, fibrous)",0.573%,≤ 1%,yes,results/verification_lame.json
+"Mesh convergence of the predictors (2 lesions, 3 mesh levels)","largest change, default vs finest mesh (sed_peak_nl); cell-level peaks (sigma1_peak, sed_peak) excluded as mesh-dependent",2.0002%,≤ 2%,no (marginally above),results/verification_mesh_convergence.json
+"AT1 phase field: damage onset vs the analytical onset (uniform strain, 2D and 3D)",largest relative error of the onset energy and strain,0.74%,≤ 5%,yes,results/verification_phasefield.json
+Hyperelastic solver: small-load thick cylinder vs Lamé solution,largest relative error of u_r,0.137%,≤ 1%,yes,results/verification_nonlinear.json
+Penalty contact: rigid cylinder in a thick cylinder vs Lamé solution,largest relative error of the contact pressure,0.73%,≤ 10%,yes,results/verification_nonlinear.json
 Penalty contact: penetration,largest penetration / penalty penetration p/k_pen,1.20,≤ 1.5,yes,results/verification_nonlinear.json
-Elastic foundation (rigid-body constraint): sensitivity of the predictors,change of the peak σ1 when the foundation stiffness is raised from 0.0001 to 0.001 MPa/mm,0.038 %,≤ 0.1 %,yes,results/verification_foundation_linear.json
+Elastic foundation (rigid-body constraint): sensitivity of the predictors,change of the peak σ1 when the foundation stiffness is raised from 0.0001 to 0.001 MPa/mm,0.038%,≤ 0.1%,yes,results/verification_foundation_linear.json

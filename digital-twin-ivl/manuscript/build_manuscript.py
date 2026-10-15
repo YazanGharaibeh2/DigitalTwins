@@ -66,6 +66,8 @@ class Table:
     rename: dict = field(default_factory=dict)
     formats: dict = field(default_factory=dict)   # column -> format spec
     note: str | None = None
+    file: str | None = None         # csv basename when it differs from ``name`` (multi-part tables)
+    prepare: object = None          # callable (ctx, DataFrame) -> DataFrame: column selection, citations
 
 
 class BuildError(RuntimeError):
@@ -183,6 +185,27 @@ class Ctx:
             nums.append(self.cite_order.index(k) + 1)
         return "[" + _compress(sorted(set(nums))) + "]"
 
+    def lit_keys(self, row: str) -> list[str]:
+        """Bibliography keys of a literature parameter row: DOI in its source cell, else the bib title in it."""
+        import csv as _csv
+        if not hasattr(self, "_lit_rows"):
+            with open(ROOT / "params" / "literature_parameters.csv", newline="") as f:
+                self._lit_rows = {r["parameter"]: r for r in _csv.DictReader(f)}
+        row = re.sub(r"\s*\[[^\]]*\]$", "", row.strip())          # 'row [value+sd]' -> 'row'
+        keys = [k for k, e in self.bib.items() if row in [x.strip() for x in e.get("lit", "").split(";")]]
+        if keys:
+            return keys
+        src = self._lit_rows[row]["source"].lower()
+        keys = [k for k, e in self.bib.items() if e.get("doi") and e["doi"].lower() in src]
+        if not keys:
+            norm = lambda x: re.sub(r"[^a-z0-9 ]", "", x.lower())  # noqa: E731
+            keys = [k for k, e in self.bib.items() if e.get("title") and norm(_clean(e["title"]))[:60] in norm(src)]
+        return keys
+
+    def cite_lit(self, *rows: str) -> str:
+        keys = list(dict.fromkeys(k for r in rows for k in self.lit_keys(r)))
+        return self.cite(*keys) if keys else ""
+
     def fig(self, name: str) -> str:
         self.figures.setdefault(name, len(self.figures) + 1)
         return f"Figure {self.figures[name]}"
@@ -276,8 +299,8 @@ def lint(text: str) -> list[str]:
     """Lines with digits that are neither ledger numbers nor allowed patterns."""
     bad = []
     for ln, line in enumerate(text.splitlines(), 1):
-        if line.startswith("#") or line.startswith("!["):          # headings, image lines
-            continue
+        if line.startswith("#") or line.startswith("![") or line.startswith("|"):
+            continue                    # headings, image lines, table rows (cells copied from results/tables/*.csv)
         rest = _ALLOWED_RE.sub(" ", _MARKED_RE.sub(" ", line))
         if re.search(r"\d", rest):
             bad.append(f"{ln}: {line[:160]}")
@@ -290,7 +313,14 @@ def strip_marks(text: str) -> str:
 
 # ------------------------------------------------------------------ rendering
 def _table_rows(ctx: Ctx, t: Table):
-    df = ctx.data(f"results/tables/{t.name}.csv")
+    rel = f"results/tables/{t.file or t.name}.csv"
+    df = ctx.data(rel)
+    if t.prepare is not None:
+        df = t.prepare(ctx, df.copy())
+    if not any(e["key"] == "all cells" and e["source"] == rel for e in ctx.ledger):
+        # table cells are copied from the pipeline's table file (rule 1); one ledger row per table file
+        ctx.ledger.append({"id": len(ctx.ledger), "label": f"table {t.name}", "value": f"{len(df)} rows",
+                           "scale": 1.0, "printed": "table cells", "source": rel, "key": "all cells"})
     cols = t.columns or list(df.columns)
     rows = []
     for _, r in df.iterrows():

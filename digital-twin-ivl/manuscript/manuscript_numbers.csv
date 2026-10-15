@@ -1,393 +1,426 @@
 id,label,value,scale,printed,source,key
-0,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-1,ivl_balloon_inflation_pressure.value,0.4053,1.0,0.405,params/literature_parameters.csv,ivl_balloon_inflation_pressure.value
-2,ivl_peak_positive_pressure.value,5.0,1.0,5,params/literature_parameters.csv,ivl_peak_positive_pressure.value
-3,fracture_rate_DisruptCAD_II_OCT.value,78.7,1.0,78.7,params/literature_parameters.csv,fracture_rate_DisruptCAD_II_OCT.value
-4,fracture_rate_DisruptCAD_III_OCT.value,67.4,1.0,67.4,params/literature_parameters.csv,fracture_rate_DisruptCAD_III_OCT.value
-5,multiple_fracture_fraction_DisruptCAD_III.value,67.7,1.0,67.7,params/literature_parameters.csv,multiple_fracture_fraction_DisruptCAD_III.value
-6,stent_expansion_maxCa_site_DisruptCAD_III.value,101.7,1.0,101.7,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.value
-7,stent_expansion_maxCa_site_DisruptCAD_III.sd,28.9,1.0,28.9,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.sd
-8,stent_expansion_MSA_site_DisruptCAD_III.value,78.4,1.0,78.4,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.value
-9,stent_expansion_MSA_site_DisruptCAD_III.sd,25.8,1.0,25.8,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.sd
-10,fractures_per_lesion_pooled_IVL_OCT.value,3.1,1.0,3.1,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.value
-11,fractures_per_lesion_pooled_IVL_OCT.sd,2.7,1.0,2.7,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.sd
-12,full_thickness_fracture_fraction_pooled_IVL_OCT.value,72.0,1.0,72,params/literature_parameters.csv,full_thickness_fracture_fraction_pooled_IVL_OCT.value
-13,fracture_rate_calcified_nodule_sites_IVL.value,23.1,1.0,23.1,params/literature_parameters.csv,fracture_rate_calcified_nodule_sites_IVL.value
-14,nodular_calcium_odds_ratio_for_fracture.value,0.24,1.0,0.24,params/literature_parameters.csv,nodular_calcium_odds_ratio_for_fracture.value
-15,fujino_angle_threshold.notes[points],2,1.0,2,params/literature_parameters.csv,fujino_angle_threshold.notes[points]
-16,fujino_angle_threshold.value,180.0,1.0,180,params/literature_parameters.csv,fujino_angle_threshold.value
-17,fujino_thickness_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_thickness_threshold.notes[points]
-18,fujino_thickness_threshold.value,0.5,1.0,0.5,params/literature_parameters.csv,fujino_thickness_threshold.value
-19,fujino_length_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_length_threshold.notes[points]
-20,fujino_length_threshold.value,5.0,1.0,5,params/literature_parameters.csv,fujino_length_threshold.value
-21,sum of fujino_*_threshold.notes[points],4,1.0,4,params/literature_parameters.csv,sum of fujino_*_threshold.notes[points]
-22,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
-23,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
-24,sato_min_thickness_threshold.value,0.3,1.0,0.30,params/literature_parameters.csv,sato_min_thickness_threshold.value
-25,fracture_angle_cutoff_balloon.value,225.0,1.0,225,params/literature_parameters.csv,fracture_angle_cutoff_balloon.value
-26,fracture_angle_cutoff_cutting_balloon.value,198.0,1.0,198,params/literature_parameters.csv,fracture_angle_cutoff_cutting_balloon.value
-27,fracture_thickness_cutoff_cutting_balloon.value,0.445,1.0,0.445,params/literature_parameters.csv,fracture_thickness_cutoff_cutting_balloon.value
-28,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
-29,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
-30,len(design.core_factorial.arc_deg),4,1.0,4,params/study_config.yaml,len(design.core_factorial.arc_deg)
-31,len(design.core_factorial.thickness_mm),3,1.0,3,params/study_config.yaml,len(design.core_factorial.thickness_mm)
-32,len(design.core_factorial.morphology),4,1.0,4,params/study_config.yaml,len(design.core_factorial.morphology)
-33,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
-34,metrics.composite.value.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.value.max_predictors
-35,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
-36,design.core_factorial.arc_deg[0],90,1.0,90,params/study_config.yaml,design.core_factorial.arc_deg[0]
-37,design.core_factorial.arc_deg[1],180,1.0,180,params/study_config.yaml,design.core_factorial.arc_deg[1]
-38,design.core_factorial.arc_deg[2],270,1.0,270,params/study_config.yaml,design.core_factorial.arc_deg[2]
-39,design.core_factorial.arc_deg[3],360,1.0,360,params/study_config.yaml,design.core_factorial.arc_deg[3]
-40,design.core_factorial.thickness_mm[0],0.2,1.0,0.2,params/study_config.yaml,design.core_factorial.thickness_mm[0]
-41,design.core_factorial.thickness_mm[1],0.4,1.0,0.4,params/study_config.yaml,design.core_factorial.thickness_mm[1]
-42,design.core_factorial.thickness_mm[2],0.8,1.0,0.8,params/study_config.yaml,design.core_factorial.thickness_mm[2]
-43,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
-44,geometry.lumen_area_mm2,2.2,1.0,2.2,params/study_config.yaml,geometry.lumen_area_mm2
-45,geometry.reference_diameter_mm,3.37,1.0,3.37,params/study_config.yaml,geometry.reference_diameter_mm
-46,core_geometry.plaque_thickness_mm,0.8481716128115996,1.0,0.848,results/cohort_summary.json,core_geometry.plaque_thickness_mm
-47,geometry.wall_thickness_mm,0.567,1.0,0.567,params/study_config.yaml,geometry.wall_thickness_mm
-48,media_thickness_main_branches.value,0.214,1.0,0.214,params/literature_parameters.csv,media_thickness_main_branches.value
-49,plaque_burden_check.implied_plaque_burden_pct,80.58117809838276,1.0,80.6,results/cohort_summary.json,plaque_burden_check.implied_plaque_burden_pct
-50,geometry.depth_superficial_mm,0.16,1.0,0.16,params/study_config.yaml,geometry.depth_superficial_mm
-51,geometry.depth_deep_mm,0.33999999999999997,1.0,0.34,params/study_config.yaml,geometry.depth_deep_mm
-52,geometry.nodule_height_mm,0.3,1.0,0.3,params/study_config.yaml,geometry.nodule_height_mm
-53,geometry.nodule_base_arc_deg,60.0,1.0,60,params/study_config.yaml,geometry.nodule_base_arc_deg
-54,geometry.fragment_pitch_deg,45.0,1.0,45,params/study_config.yaml,geometry.fragment_pitch_deg
-55,geometry.fragment_fill,0.6,100.0,60,params/study_config.yaml,geometry.fragment_fill
-56,geometry.calcium_iel_clearance_mm,0.05,1.0,0.05,params/study_config.yaml,geometry.calcium_iel_clearance_mm
-57,plaque_growth.n_grown.core,16,1.0,16,results/cohort_summary.json,plaque_growth.n_grown.core
-58,len(design.pilot_2d),3,1.0,3,params/study_config.yaml,len(design.pilot_2d)
-59,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
-60,design.seed + HOLDOUT_SEED_OFFSET,20261010,1.0,20261010,params/study_config.yaml + src/geometry/cohort.py,design.seed + HOLDOUT_SEED_OFFSET
-61,design.holdout_lhs.ranges.arc_deg[lower],60,1.0,60,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[lower]
-62,design.holdout_lhs.ranges.arc_deg[upper],360,1.0,360,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[upper]
-63,design.holdout_lhs.ranges.thickness_mm[lower],0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[lower]
-64,design.holdout_lhs.ranges.thickness_mm[upper],0.8,1.0,0.8,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[upper]
-65,calcium_depth_ex_vivo_FDOCT value -/+ sd[lower],0.16,1.0,0.16,params/literature_parameters.csv,calcium_depth_ex_vivo_FDOCT value -/+ sd[lower]
-66,calcium_depth_ex_vivo_FDOCT value -/+ sd[upper],0.33999999999999997,1.0,0.34,params/literature_parameters.csv,calcium_depth_ex_vivo_FDOCT value -/+ sd[upper]
-67,pre_procedure_MLA_IVL_lesions value -/+ sd[lower],1.4000000000000001,1.0,1.4,params/literature_parameters.csv,pre_procedure_MLA_IVL_lesions value -/+ sd[lower]
-68,pre_procedure_MLA_IVL_lesions value -/+ sd[upper],3.0,1.0,3,params/literature_parameters.csv,pre_procedure_MLA_IVL_lesions value -/+ sd[upper]
-69,design.holdout_lhs.ranges.ecc_index[lower],0.0,1.0,0,params/study_config.yaml,design.holdout_lhs.ranges.ecc_index[lower]
-70,1 - 1 / eccentric_plaque_threshold_max_over_min,0.6666666666666667,1.0,0.667,params/literature_parameters.csv,1 - 1 / eccentric_plaque_threshold_max_over_min
-71,eccentric_plaque_threshold_max_over_min.value,3.0,1.0,3,params/literature_parameters.csv,eccentric_plaque_threshold_max_over_min.value
-72,design.holdout_lhs.ranges.lipid_fraction x 100,50.0,1.0,50,params/study_config.yaml,design.holdout_lhs.ranges.lipid_fraction x 100
-73,count(set == holdout and lipid_arc_deg > 0),8,1.0,8,cohort/cohort.csv,count(set == holdout and lipid_arc_deg > 0)
-74,design.holdout_lhs.ranges.lipid_arc_deg[0],90,1.0,90,params/study_config.yaml,design.holdout_lhs.ranges.lipid_arc_deg[0]
-75,lipid_arc_high_risk_threshold.value,180.0,1.0,180,params/literature_parameters.csv,lipid_arc_high_risk_threshold.value
-76,min_cap_thickness_OCT_culprit_AMI / _SAP[lower],0.047,1.0,0.047,params/literature_parameters.csv,min_cap_thickness_OCT_culprit_AMI / _SAP[lower]
-77,min_cap_thickness_OCT_culprit_AMI / _SAP[upper],0.1026,1.0,0.1,params/literature_parameters.csv,min_cap_thickness_OCT_culprit_AMI / _SAP[upper]
-78,design.holdout_lhs.ranges.lipid_thickness_mm,0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.lipid_thickness_mm
-79,plaque_growth.n_grown.holdout,7,1.0,7,results/cohort_summary.json,plaque_growth.n_grown.holdout
-80,discretisation.polar_n_theta,360,1.0,360,params/study_config.yaml,discretisation.polar_n_theta
-81,discretisation.polar_dr_mm x 1000,10.0,1.0,10,params/study_config.yaml,discretisation.polar_dr_mm x 1000
-82,fujino_angle_threshold.notes[points],2,1.0,2,params/literature_parameters.csv,fujino_angle_threshold.notes[points]
-83,fujino_angle_threshold.value,180.0,1.0,180,params/literature_parameters.csv,fujino_angle_threshold.value
-84,fujino_thickness_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_thickness_threshold.notes[points]
-85,fujino_thickness_threshold.value,0.5,1.0,0.5,params/literature_parameters.csv,fujino_thickness_threshold.value
-86,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
-87,discretisation.h_calcium_mm x 1000,40.0,1.0,40,params/study_config.yaml,discretisation.h_calcium_mm x 1000
-88,discretisation.h_soft_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.h_soft_mm
-89,geometry.margin_3d_mm,2.0,1.0,2,params/study_config.yaml,geometry.margin_3d_mm
-90,discretisation.example3d.h_calcium_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.example3d.h_calcium_mm
-91,discretisation.example3d.h_soft_mm,0.4,1.0,0.4,params/study_config.yaml,discretisation.example3d.h_soft_mm
-92,design.length_series_3d.h_axial_ca_mm,0.5,1.0,0.5,params/study_config.yaml,design.length_series_3d.h_axial_ca_mm
-93,design.length_series_3d.h_axial_margin_mm,1.0,1.0,1,params/study_config.yaml,design.length_series_3d.h_axial_margin_mm
-94,fracture.ell_over_h x discretisation.example3d.h_calcium_mm,0.3,1.0,0.3,params/study_config.yaml,fracture.ell_over_h x discretisation.example3d.h_calcium_mm
-95,fibrous_E,2.312,1.0,2.31,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),fibrous_E
-96,lipid_E x 1000,5.5,1.0,5.5,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),lipid_E x 1000
-97,k_over_mu,50.0,1.0,50,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_over_mu
-98,ca_nu,0.3,1.0,0.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_nu
-99,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
-100,N_E_SWEEP,9,1.0,9,src/drivers/stage_pilot.py,N_E_SWEEP
-101,min,1.466,1.0,1.47,src/drivers/stage_pilot.py e_sweep(),min
-102,max / 1000,10.0,1.0,10,src/drivers/stage_pilot.py e_sweep(),max / 1000
-103,ca_E,365.006198,1.0,365,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_E
-104,sigma_crit = ca_E x eps_f,7.300123960000006,1.0,7.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit = ca_E x eps_f
-105,sigma_crit / sigma_c,40.782815418994446,1.0,41,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit / sigma_c
-106,sigma_c,0.179,1.0,0.18,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_c
-107,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
-108,loads.perivascular_k_MPa_per_mm,0.0001,1.0,0.0001,params/study_config.yaml,loads.perivascular_k_MPa_per_mm
-109,loads.contact_penalty_MPa_per_mm,1000.0,1.0,1000,params/study_config.yaml,loads.contact_penalty_MPa_per_mm
-110,len(COHORT_PROTOCOLS),6,1.0,6,src/drivers/stage_cohort_runs.py,len(COHORT_PROTOCOLS)
-111,loads.physiological_pressure,0.01599864,1000.0,16,params/study_config.yaml,loads.physiological_pressure
-112,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-113,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
-114,geometry.ivl_balloon_diameter_mm,3.19,1.0,3.19,params/study_config.yaml,geometry.ivl_balloon_diameter_mm
-115,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
-116,loads.poba_pressure_atm,1.01325,1.0,1.01,params/study_config.yaml,loads.poba_pressure_atm
-117,geometry.stent_target_diameter_mm,3.21,1.0,3.21,params/study_config.yaml,geometry.stent_target_diameter_mm
-118,"stent_rated_burst_pressure.value [atm, as tabulated]",16.0,1.0,16,params/literature_parameters.csv,"stent_rated_burst_pressure.value [atm, as tabulated]"
-119,loads.balloon_rated_pressure_atm,1.6212,1.0,1.62,params/study_config.yaml,loads.balloon_rated_pressure_atm
-120,K_s_MPa_per_mm,6.068239979987641,1.0,6.07,results/calibration_stent.json,K_s_MPa_per_mm
-121,loads.stent_recoil_target_pct,4.3,1.0,4.3,params/study_config.yaml,loads.stent_recoil_target_pct
-122,MAX_HALVINGS,6,1.0,6,src/solvers/nonlinear.py,MAX_HALVINGS
-123,loads.ivl_peak_pressure_MPa,5.0,1.0,5,params/study_config.yaml,loads.ivl_peak_pressure_MPa
-124,loads.ivl_pulse_scale,1.0,1.0,1,params/study_config.yaml,loads.ivl_pulse_scale
-125,ivl_pulse_duration upper bound (us),2.0,1.0,2,src/solvers/transient.py default_pulse_width_us(),ivl_pulse_duration upper bound (us)
-126,k_floor = mu_fibrous / mu_Ca,0.005489587147595048,1.0,0.0055,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_floor = mu_fibrous / mu_Ca
-127,eps_f = calcification_fracture_stretch - 1,0.020000000000000018,1.0,0.02,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),eps_f = calcification_fracture_stretch - 1
-128,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
-129,fracture.ell_over_h,2.0,1.0,2,params/study_config.yaml,fracture.ell_over_h
-130,STAGGER_TOL,0.001,1.0,0.001,src/solvers/nonlinear.py,STAGGER_TOL
-131,STAGGER_MAX_IT,100,1.0,100,src/solvers/nonlinear.py,STAGGER_MAX_IT
-132,size of design.erosion_subset,8,1.0,8,params/study_config.yaml,size of design.erosion_subset
-133,design.erosion_subset.arc_deg[0],180,1.0,180,params/study_config.yaml,design.erosion_subset.arc_deg[0]
-134,design.erosion_subset.arc_deg[1],360,1.0,360,params/study_config.yaml,design.erosion_subset.arc_deg[1]
-135,fracture.d_crack,0.9,1.0,0.9,params/study_config.yaml,fracture.d_crack
-136,MIN_PIECE_CELLS,3,1.0,3,src/fracture/cracks.py,MIN_PIECE_CELLS
-137,DIFFUSE_REGION_FRAC,0.5,100.0,50,src/fracture/cracks.py,DIFFUSE_REGION_FRAC
-138,100 x (stent_target_diameter_mm / reference_diameter_mm)^2,90.72986466377266,1.0,90.7,params/study_config.yaml,100 x (stent_target_diameter_mm / reference_diameter_mm)^2
-139,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-140,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
-141,SIGMA1_PERCENTILE,95.0,1.0,95,src/metrics/predictors.py,SIGMA1_PERCENTILE
-142,SIGMA1_PERCENTILE_HIGH,99.0,1.0,99,src/metrics/predictors.py,SIGMA1_PERCENTILE_HIGH
-143,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
-144,EDGE_MIN_WINDOW_DEG,10.0,1.0,10,src/metrics/predictors.py,EDGE_MIN_WINDOW_DEG
-145,HIGH_STRESS_PERCENTILE,90.0,1.0,90,src/metrics/predictors.py,HIGH_STRESS_PERCENTILE
-146,design.lengths_3d_mm[0],1,1.0,1,params/study_config.yaml,design.lengths_3d_mm[0]
-147,design.lengths_3d_mm[1],3,1.0,3,params/study_config.yaml,design.lengths_3d_mm[1]
-148,design.lengths_3d_mm[2],5,1.0,5,params/study_config.yaml,design.lengths_3d_mm[2]
-149,len(GCI_LESIONS),2,1.0,2,src/drivers/stage_verification.py,len(GCI_LESIONS)
-150,len(GCI_FACTORS),3,1.0,3,src/drivers/stage_verification.py,len(GCI_FACTORS)
-151,len(pilot_ids()),3,1.0,3,src/drivers/stage_pilot.py,len(pilot_ids())
-152,n_oat_runs(),39,1.0,39,src/drivers/stage_sensitivity.py,n_oat_runs()
-153,len(morris_inputs()),8,1.0,8,src/drivers/stage_sensitivity.py,len(morris_inputs())
-154,log10_ca_E[lower],121.07848700000004,1.0,121.1,src/drivers/stage_sensitivity.py morris_inputs(),log10_ca_E[lower]
-155,log10_ca_E[upper],1100.3567009999997,1.0,1100,src/drivers/stage_sensitivity.py morris_inputs(),log10_ca_E[upper]
-156,eps_f[lower],0.014999999999999902,1.0,0.015,src/drivers/stage_sensitivity.py morris_inputs(),eps_f[lower]
-157,eps_f[upper],0.02499999999999991,1.0,0.025,src/drivers/stage_sensitivity.py morris_inputs(),eps_f[upper]
-158,ivl_pulse_scale[lower],0.5,1.0,0.5,src/drivers/stage_sensitivity.py morris_inputs(),ivl_pulse_scale[lower]
-159,ivl_pulse_scale[upper],1.0,1.0,1,src/drivers/stage_sensitivity.py morris_inputs(),ivl_pulse_scale[upper]
-160,ell_over_h[lower],1.5,1.0,1.5,src/drivers/stage_sensitivity.py morris_inputs(),ell_over_h[lower]
-161,ell_over_h[upper],3.0,1.0,3,src/drivers/stage_sensitivity.py morris_inputs(),ell_over_h[upper]
-162,log10_k_perivascular[lower],0.0001,1.0,0.0001,src/drivers/stage_sensitivity.py morris_inputs(),log10_k_perivascular[lower]
-163,log10_k_perivascular[upper],0.1,1.0,0.1,src/drivers/stage_sensitivity.py morris_inputs(),log10_k_perivascular[upper]
-164,rho_calcium[lower],1450.0,1.0,1450,src/drivers/stage_sensitivity.py morris_inputs(),rho_calcium[lower]
-165,rho_calcium[upper],2050.0,1.0,2050,src/drivers/stage_sensitivity.py morris_inputs(),rho_calcium[upper]
-166,k_over_mu_soft[lower],20.0,1.0,20,src/drivers/stage_sensitivity.py morris_inputs(),k_over_mu_soft[lower]
-167,k_over_mu_soft[upper],200.0,1.0,200,src/drivers/stage_sensitivity.py morris_inputs(),k_over_mu_soft[upper]
-168,fibrous_E[lower],0.927,1.0,0.927,src/drivers/stage_sensitivity.py morris_inputs(),fibrous_E[lower]
-169,fibrous_E[upper],4.492,1.0,4.49,src/drivers/stage_sensitivity.py morris_inputs(),fibrous_E[upper]
-170,len(design.sensitivity.morris_lesions),4,1.0,4,params/study_config.yaml,len(design.sensitivity.morris_lesions)
-171,design.sensitivity.morris_trajectories,6,1.0,6,params/study_config.yaml,design.sensitivity.morris_trajectories
-172,n_morris_runs(),216,1.0,216,src/drivers/stage_sensitivity.py,n_morris_runs()
-173,number of design.sensitivity.sobol.inputs set true,5,1.0,5,params/study_config.yaml,number of design.sensitivity.sobol.inputs set true
-174,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-175,metrics.bootstrap_n,2000.0,1.0,2000,params/study_config.yaml,metrics.bootstrap_n
-176,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
-177,len(metrics.candidates.geometry),8,1.0,8,params/study_config.yaml,len(metrics.candidates.geometry)
-178,metrics.min_per_class,2.0,1.0,2,params/study_config.yaml,metrics.min_per_class
-179,metrics.composite.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.max_predictors
-180,metrics.composite.min_discrimination,0.6,1.0,0.60,params/study_config.yaml,metrics.composite.min_discrimination
-181,metrics.composite.max_abs_spearman,0.8,1.0,0.80,params/study_config.yaml,metrics.composite.max_abs_spearman
-182,metrics.logistic_C,1.0,1.0,1.0,params/study_config.yaml,metrics.logistic_C
-183,len(metrics.incremental.geometry_model),4,1.0,4,params/study_config.yaml,len(metrics.incremental.geometry_model)
-184,metrics.min_rows_continuous,5.0,1.0,5,params/study_config.yaml,metrics.min_rows_continuous
-185,design.seed + metrics.seed_offset,20261509,1.0,20261509,params/study_config.yaml,design.seed + metrics.seed_offset
-186,python,'3.12.15',1.0,3.12.15,environment.lock.txt,python
-187,fenics-dolfinx,'0.11.0',1.0,0.11.0,environment.lock.txt,fenics-dolfinx
-188,petsc,'3.25.6',1.0,3.25.6,environment.lock.txt,petsc
-189,mumps-mpi,'5.8.2',1.0,5.8.2,environment.lock.txt,mumps-mpi
-190,gmsh,'4.15.2',1.0,4.15.2,requirements.txt,gmsh
-191,scikit-learn,'1.9.1',1.0,1.9.1,requirements.txt,scikit-learn
-192,scipy,'1.18.1',1.0,1.18.1,requirements.txt,scipy
-193,SALib,'1.6.0',1.0,1.6.0,requirements.txt,SALib
-194,max_rel_change_default_vs_fine.sed_peak_nl,0.020002435922501127,100.0,2.0,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sed_peak_nl
-195,cases.1.max_rel_err_hoop,0.0057338391473332005,100.0,0.57,results/verification_lame.json,cases.1.max_rel_err_hoop
-196,cases.1.max_rel_err_ur,0.00017574123957756093,100.0,0.018,results/verification_lame.json,cases.1.max_rel_err_ur
-197,tolerance_rel,0.01,100.0,1,results/verification_lame.json,tolerance_rel
-198,lame.max_rel_err_ur_lumen,0.0013696783618955455,100.0,0.14,results/verification_nonlinear.json,lame.max_rel_err_ur_lumen
-199,cases.1.rel_err_psi,0.005654289001104873,100.0,0.57,results/verification_phasefield.json,cases.1.rel_err_psi
-200,cases.0.rel_err_strain,0.007395508545233964,100.0,0.74,results/verification_phasefield.json,cases.0.rel_err_strain
-201,tolerance_rel,0.05,100.0,5,results/verification_phasefield.json,tolerance_rel
-202,max_rel_change_default_vs_fine.sigma1_p95,0.014976651640978505,100.0,1.5,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sigma1_p95
-203,SIGMA1_PERCENTILE,95.0,1.0,95,src/metrics/predictors.py,SIGMA1_PERCENTILE
-204,rel_change_accept,0.02,100.0,2,results/verification_mesh_convergence.json,rel_change_accept
-205,max_rel_change_default_vs_fine.sigma1_peak,0.08505451717655614,100.0,8.5,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sigma1_peak
-206,max_rel_change_default_vs_fine.sed_peak,0.15432361916634066,100.0,15.4,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sed_peak
-207,count(set == core),34,1.0,34,results/cohort_outcomes.csv,count(set == core)
-208,count(set == holdout),0,1.0,0,results/cohort_outcomes.csv,count(set == holdout)
-209,count(core balloon_10atm_status == not run),2,1.0,2,results/cohort_outcomes.csv,count(core balloon_10atm_status == not run)
-210,count(core ivl_status == not run),2,1.0,2,results/cohort_outcomes.csv,count(core ivl_status == not run)
-211,count(core stent_no_ivl_status == not run),4,1.0,4,results/cohort_outcomes.csv,count(core stent_no_ivl_status == not run)
-212,count(core stent_post_ivl_status == not run),2,1.0,2,results/cohort_outcomes.csv,count(core stent_post_ivl_status == not run)
-213,core IVL runs with unconverged_steps > 0 [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [events]
-214,core IVL runs with unconverged_steps > 0 [n],32,1.0,32,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [n]
-215,core physiological_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core physiological_fracture [events]
-216,core physiological_fracture [n],34,1.0,34,results/cohort_outcomes.csv,core physiological_fracture [n]
-217,core balloon_only_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core balloon_only_fracture [events]
-218,core balloon_only_fracture [n],34,1.0,34,results/cohort_outcomes.csv,core balloon_only_fracture [n]
-219,core balloon_10atm_fracture [events],17,1.0,17,results/cohort_outcomes.csv,core balloon_10atm_fracture [events]
-220,core balloon_10atm_fracture [n],32,1.0,32,results/cohort_outcomes.csv,core balloon_10atm_fracture [n]
-221,core ivl_fracture [events],16,1.0,16,results/cohort_outcomes.csv,core ivl_fracture [events]
-222,core ivl_fracture [n],32,1.0,32,results/cohort_outcomes.csv,core ivl_fracture [n]
-223,core stent_no_ivl_fracture [events],13,1.0,13,results/cohort_outcomes.csv,core stent_no_ivl_fracture [events]
-224,core stent_no_ivl_fracture [n],30,1.0,30,results/cohort_outcomes.csv,core stent_no_ivl_fracture [n]
-225,core stent_post_ivl_fracture [events],17,1.0,17,results/cohort_outcomes.csv,core stent_post_ivl_fracture [events]
-226,core stent_post_ivl_fracture [n],32,1.0,32,results/cohort_outcomes.csv,core stent_post_ivl_fracture [n]
-227,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
-228,loads.poba_pressure_atm,1.01325,1.0,1.01,params/study_config.yaml,loads.poba_pressure_atm
-229,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
-230,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
-231,core ivl_fracture | ca_arc_deg == 90 [events],2,1.0,2,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 90 [events]
-232,core ivl_fracture | ca_arc_deg == 90 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 90 [n]
-233,ca_arc_deg level,90.0,1.0,90,results/cohort_outcomes.csv,ca_arc_deg level
-234,core ivl_fracture | ca_arc_deg == 180 [events],9,1.0,9,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 180 [events]
-235,core ivl_fracture | ca_arc_deg == 180 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 180 [n]
-236,ca_arc_deg level,180.0,1.0,180,results/cohort_outcomes.csv,ca_arc_deg level
-237,core ivl_fracture | ca_arc_deg == 270 [events],5,1.0,5,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 270 [events]
-238,core ivl_fracture | ca_arc_deg == 270 [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 270 [n]
-239,ca_arc_deg level,270.0,1.0,270,results/cohort_outcomes.csv,ca_arc_deg level
-240,core ivl_fracture | ca_thickness == 0.2 [events],7,1.0,7,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.2 [events]
-241,core ivl_fracture | ca_thickness == 0.2 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.2 [n]
-242,ca_thickness level,0.2,1.0,0.2,results/cohort_outcomes.csv,ca_thickness level
-243,core ivl_fracture | ca_thickness == 0.4 [events],6,1.0,6,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.4 [events]
-244,core ivl_fracture | ca_thickness == 0.4 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.4 [n]
-245,ca_thickness level,0.4,1.0,0.4,results/cohort_outcomes.csv,ca_thickness level
-246,core ivl_fracture | ca_thickness == 0.8 [events],3,1.0,3,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.8 [events]
-247,core ivl_fracture | ca_thickness == 0.8 [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.8 [n]
-248,ca_thickness level,0.8,1.0,0.8,results/cohort_outcomes.csv,ca_thickness level
-249,core ivl_fracture | morphology == superficial_sheet [events],6,1.0,6,results/cohort_outcomes.csv,core ivl_fracture | morphology == superficial_sheet [events]
-250,core ivl_fracture | morphology == superficial_sheet [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == superficial_sheet [n]
-251,core ivl_fracture | morphology == deep_sheet [events],5,1.0,5,results/cohort_outcomes.csv,core ivl_fracture | morphology == deep_sheet [events]
-252,core ivl_fracture | morphology == deep_sheet [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == deep_sheet [n]
-253,core ivl_fracture | morphology == nodule [events],5,1.0,5,results/cohort_outcomes.csv,core ivl_fracture | morphology == nodule [events]
-254,core ivl_fracture | morphology == nodule [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == nodule [n]
-255,core ivl_fracture | morphology == fragmented [events],0,1.0,0,results/cohort_outcomes.csv,core ivl_fracture | morphology == fragmented [events]
-256,core ivl_fracture | morphology == fragmented [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == fragmented [n]
-257,core ivl_diffuse | ivl_fracture [events],16,1.0,16,results/cohort_outcomes.csv,core ivl_diffuse | ivl_fracture [events]
-258,core ivl_diffuse | ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core ivl_diffuse | ivl_fracture [n]
-259,count(ivl_erosion_status == ok),4,1.0,4,results/cohort_outcomes.csv,count(ivl_erosion_status == ok)
-260,count(ivl_erosion_fracture == 1),4,1.0,4,results/cohort_outcomes.csv,count(ivl_erosion_fracture == 1)
-261,median(ivl_erosion_n_fractures | ivl_erosion_fracture == 1),2.5,1.0,2.5,results/cohort_outcomes.csv,median(ivl_erosion_n_fractures | ivl_erosion_fracture == 1)
-262,"count(core, both stent runs ok or limited)",30,1.0,30,results/cohort_outcomes.csv,"count(core, both stent runs ok or limited)"
-263,median(stent_no_ivl_stent_expansion_pct | both),82.17555576195011,1.0,82.2,results/cohort_outcomes.csv,median(stent_no_ivl_stent_expansion_pct | both)
-264,q25(stent_no_ivl_stent_expansion_pct | both),81.16633084184507,1.0,81.2,results/cohort_outcomes.csv,q25(stent_no_ivl_stent_expansion_pct | both)
-265,q75(stent_no_ivl_stent_expansion_pct | both),83.12162341994983,1.0,83.1,results/cohort_outcomes.csv,q75(stent_no_ivl_stent_expansion_pct | both)
-266,median(stent_post_ivl_stent_expansion_pct | both),82.37404537474366,1.0,82.4,results/cohort_outcomes.csv,median(stent_post_ivl_stent_expansion_pct | both)
-267,q25(stent_post_ivl_stent_expansion_pct | both),81.16633084184507,1.0,81.2,results/cohort_outcomes.csv,q25(stent_post_ivl_stent_expansion_pct | both)
-268,q75(stent_post_ivl_stent_expansion_pct | both),83.14743664040812,1.0,83.1,results/cohort_outcomes.csv,q75(stent_post_ivl_stent_expansion_pct | both)
-269,median(post_ivl - no_ivl expansion | both),0.0,1.0,0.0,results/cohort_outcomes.csv,median(post_ivl - no_ivl expansion | both)
-270,"count(both, ivl_fracture == 1)",14,1.0,14,results/cohort_outcomes.csv,"count(both, ivl_fracture == 1)"
-271,"count(both, ivl_fracture == 1 and stent_no_ivl_fracture == 1)",12,1.0,12,results/cohort_outcomes.csv,"count(both, ivl_fracture == 1 and stent_no_ivl_fracture == 1)"
-272,"min(stent_*_stent_expansion_pct | core, ok or limited)",79.1167368126472,1.0,79.1,results/cohort_outcomes.csv,"min(stent_*_stent_expansion_pct | core, ok or limited)"
-273,"max(stent_*_stent_expansion_pct | core, ok or limited)",83.40604344440523,1.0,83.4,results/cohort_outcomes.csv,"max(stent_*_stent_expansion_pct | core, ok or limited)"
-274,outcomes.ivl_fracture.core.n,32,1.0,32,results/metrics_summary.json,outcomes.ivl_fracture.core.n
-275,outcomes.ivl_fracture.core.n_pos,16,1.0,16,results/metrics_summary.json,outcomes.ivl_fracture.core.n_pos
-276,outcomes.ivl_fracture.holdout.n,0,1.0,0,results/metrics_summary.json,outcomes.ivl_fracture.holdout.n
-277,outcomes.ivl_fracture.holdout.n_pos,0,1.0,0,results/metrics_summary.json,outcomes.ivl_fracture.holdout.n_pos
-278,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
-279,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-280,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo],0.89453125,1.0,0.89,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo]
-281,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi]
-282,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc
-283,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-284,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[lo],0.89453125,1.0,0.89,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[lo]
-285,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[hi]
-286,SIGMA1_PERCENTILE_HIGH,99.0,1.0,99,src/metrics/predictors.py,SIGMA1_PERCENTILE_HIGH
-287,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc,0.9453125,1.0,0.95,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc
-288,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-289,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[lo],0.8515625,1.0,0.85,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[lo]
-290,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[hi]
-291,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc,0.880859375,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc
-292,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-293,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[lo],0.734375,1.0,0.73,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[lo]
-294,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[hi]
-295,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
+0,count(set == core),34,1.0,34,results/cohort_outcomes.csv,count(set == core)
+1,count(set == holdout),0,1.0,0,results/cohort_outcomes.csv,count(set == holdout)
+2,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
+3,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+4,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo],0.89453125,1.0,0.89,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo]
+5,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi]
+6,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
+7,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+8,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[lo],0.4335449218750001,1.0,0.43,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[lo]
+9,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[hi],0.78125,1.0,0.78,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[hi]
+10,outcomes.ivl_fracture.composite.core.loocv_auc,0.953125,1.0,0.95,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc
+11,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+12,outcomes.ivl_fracture.composite.core.loocv_auc_ci[lo],0.8514648437500002,1.0,0.85,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc_ci[lo]
+13,outcomes.ivl_fracture.composite.core.loocv_auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc_ci[hi]
+14,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
+15,outcomes.ivl_fracture.incremental_value.core.loocv.auc_a,0.921875,1.0,0.92,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_a
+16,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+17,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
+18,ivl_balloon_inflation_pressure.value,0.4053,1.0,0.405,params/literature_parameters.csv,ivl_balloon_inflation_pressure.value
+19,ivl_peak_positive_pressure.value,5.0,1.0,5,params/literature_parameters.csv,ivl_peak_positive_pressure.value
+20,fracture_rate_DisruptCAD_II_OCT.value,78.7,1.0,78.7,params/literature_parameters.csv,fracture_rate_DisruptCAD_II_OCT.value
+21,fracture_rate_DisruptCAD_III_OCT.value,67.4,1.0,67.4,params/literature_parameters.csv,fracture_rate_DisruptCAD_III_OCT.value
+22,multiple_fracture_fraction_DisruptCAD_III.value,67.7,1.0,67.7,params/literature_parameters.csv,multiple_fracture_fraction_DisruptCAD_III.value
+23,stent_expansion_maxCa_site_DisruptCAD_III.value,101.7,1.0,101.7,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.value
+24,stent_expansion_maxCa_site_DisruptCAD_III.sd,28.9,1.0,28.9,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.sd
+25,stent_expansion_MSA_site_DisruptCAD_III.value,78.4,1.0,78.4,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.value
+26,stent_expansion_MSA_site_DisruptCAD_III.sd,25.8,1.0,25.8,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.sd
+27,fractures_per_lesion_pooled_IVL_OCT.value,3.1,1.0,3.1,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.value
+28,fractures_per_lesion_pooled_IVL_OCT.sd,2.7,1.0,2.7,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.sd
+29,full_thickness_fracture_fraction_pooled_IVL_OCT.value,72.0,1.0,72,params/literature_parameters.csv,full_thickness_fracture_fraction_pooled_IVL_OCT.value
+30,fracture_rate_calcified_nodule_sites_IVL.value,23.1,1.0,23.1,params/literature_parameters.csv,fracture_rate_calcified_nodule_sites_IVL.value
+31,nodular_calcium_odds_ratio_for_fracture.value,0.24,1.0,0.24,params/literature_parameters.csv,nodular_calcium_odds_ratio_for_fracture.value
+32,fujino_angle_threshold.notes[points],2,1.0,2,params/literature_parameters.csv,fujino_angle_threshold.notes[points]
+33,fujino_angle_threshold.value,180.0,1.0,180,params/literature_parameters.csv,fujino_angle_threshold.value
+34,fujino_thickness_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_thickness_threshold.notes[points]
+35,fujino_thickness_threshold.value,0.5,1.0,0.5,params/literature_parameters.csv,fujino_thickness_threshold.value
+36,fujino_length_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_length_threshold.notes[points]
+37,fujino_length_threshold.value,5.0,1.0,5,params/literature_parameters.csv,fujino_length_threshold.value
+38,sum of fujino_*_threshold.notes[points],4,1.0,4,params/literature_parameters.csv,sum of fujino_*_threshold.notes[points]
+39,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
+40,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
+41,sato_min_thickness_threshold.value,0.3,1.0,0.30,params/literature_parameters.csv,sato_min_thickness_threshold.value
+42,fracture_angle_cutoff_balloon.value,225.0,1.0,225,params/literature_parameters.csv,fracture_angle_cutoff_balloon.value
+43,fracture_angle_cutoff_cutting_balloon.value,198.0,1.0,198,params/literature_parameters.csv,fracture_angle_cutoff_cutting_balloon.value
+44,fracture_thickness_cutoff_cutting_balloon.value,0.445,1.0,0.445,params/literature_parameters.csv,fracture_thickness_cutoff_cutting_balloon.value
+45,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
+46,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
+47,len(design.core_factorial.arc_deg),4,1.0,4,params/study_config.yaml,len(design.core_factorial.arc_deg)
+48,len(design.core_factorial.thickness_mm),3,1.0,3,params/study_config.yaml,len(design.core_factorial.thickness_mm)
+49,len(design.core_factorial.morphology),4,1.0,4,params/study_config.yaml,len(design.core_factorial.morphology)
+50,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
+51,metrics.composite.value.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.value.max_predictors
+52,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
+53,design.core_factorial.arc_deg[0],90,1.0,90,params/study_config.yaml,design.core_factorial.arc_deg[0]
+54,design.core_factorial.arc_deg[1],180,1.0,180,params/study_config.yaml,design.core_factorial.arc_deg[1]
+55,design.core_factorial.arc_deg[2],270,1.0,270,params/study_config.yaml,design.core_factorial.arc_deg[2]
+56,design.core_factorial.arc_deg[3],360,1.0,360,params/study_config.yaml,design.core_factorial.arc_deg[3]
+57,design.core_factorial.thickness_mm[0],0.2,1.0,0.2,params/study_config.yaml,design.core_factorial.thickness_mm[0]
+58,design.core_factorial.thickness_mm[1],0.4,1.0,0.4,params/study_config.yaml,design.core_factorial.thickness_mm[1]
+59,design.core_factorial.thickness_mm[2],0.8,1.0,0.8,params/study_config.yaml,design.core_factorial.thickness_mm[2]
+60,n_per_set.core,48,1.0,48,results/cohort_summary.json,n_per_set.core
+61,geometry.lumen_area_mm2,2.2,1.0,2.2,params/study_config.yaml,geometry.lumen_area_mm2
+62,geometry.reference_diameter_mm,3.37,1.0,3.37,params/study_config.yaml,geometry.reference_diameter_mm
+63,core_geometry.plaque_thickness_mm,0.8481716128115996,1.0,0.848,results/cohort_summary.json,core_geometry.plaque_thickness_mm
+64,geometry.wall_thickness_mm,0.567,1.0,0.567,params/study_config.yaml,geometry.wall_thickness_mm
+65,media_thickness_main_branches.value,0.214,1.0,0.214,params/literature_parameters.csv,media_thickness_main_branches.value
+66,plaque_burden_check.implied_plaque_burden_pct,80.58117809838276,1.0,80.6,results/cohort_summary.json,plaque_burden_check.implied_plaque_burden_pct
+67,geometry.depth_superficial_mm,0.16,1.0,0.16,params/study_config.yaml,geometry.depth_superficial_mm
+68,geometry.depth_deep_mm,0.33999999999999997,1.0,0.34,params/study_config.yaml,geometry.depth_deep_mm
+69,geometry.nodule_height_mm,0.3,1.0,0.3,params/study_config.yaml,geometry.nodule_height_mm
+70,geometry.nodule_base_arc_deg,60.0,1.0,60,params/study_config.yaml,geometry.nodule_base_arc_deg
+71,geometry.fragment_pitch_deg,45.0,1.0,45,params/study_config.yaml,geometry.fragment_pitch_deg
+72,geometry.fragment_fill,0.6,100.0,60,params/study_config.yaml,geometry.fragment_fill
+73,geometry.calcium_iel_clearance_mm,0.05,1.0,0.05,params/study_config.yaml,geometry.calcium_iel_clearance_mm
+74,plaque_growth.n_grown.core,16,1.0,16,results/cohort_summary.json,plaque_growth.n_grown.core
+75,len(design.pilot_2d),3,1.0,3,params/study_config.yaml,len(design.pilot_2d)
+76,n_per_set.holdout,24,1.0,24,results/cohort_summary.json,n_per_set.holdout
+77,design.seed + HOLDOUT_SEED_OFFSET,20261010,1.0,20261010,params/study_config.yaml + src/geometry/cohort.py,design.seed + HOLDOUT_SEED_OFFSET
+78,design.holdout_lhs.ranges.arc_deg[lower],60,1.0,60,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[lower]
+79,design.holdout_lhs.ranges.arc_deg[upper],360,1.0,360,params/study_config.yaml,design.holdout_lhs.ranges.arc_deg[upper]
+80,design.holdout_lhs.ranges.thickness_mm[lower],0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[lower]
+81,design.holdout_lhs.ranges.thickness_mm[upper],0.8,1.0,0.8,params/study_config.yaml,design.holdout_lhs.ranges.thickness_mm[upper]
+82,calcium_depth_ex_vivo_FDOCT value -/+ sd[lower],0.16,1.0,0.16,params/literature_parameters.csv,calcium_depth_ex_vivo_FDOCT value -/+ sd[lower]
+83,calcium_depth_ex_vivo_FDOCT value -/+ sd[upper],0.33999999999999997,1.0,0.34,params/literature_parameters.csv,calcium_depth_ex_vivo_FDOCT value -/+ sd[upper]
+84,pre_procedure_MLA_IVL_lesions value -/+ sd[lower],1.4000000000000001,1.0,1.4,params/literature_parameters.csv,pre_procedure_MLA_IVL_lesions value -/+ sd[lower]
+85,pre_procedure_MLA_IVL_lesions value -/+ sd[upper],3.0,1.0,3,params/literature_parameters.csv,pre_procedure_MLA_IVL_lesions value -/+ sd[upper]
+86,design.holdout_lhs.ranges.ecc_index[lower],0.0,1.0,0,params/study_config.yaml,design.holdout_lhs.ranges.ecc_index[lower]
+87,1 - 1 / eccentric_plaque_threshold_max_over_min,0.6666666666666667,1.0,0.667,params/literature_parameters.csv,1 - 1 / eccentric_plaque_threshold_max_over_min
+88,eccentric_plaque_threshold_max_over_min.value,3.0,1.0,3,params/literature_parameters.csv,eccentric_plaque_threshold_max_over_min.value
+89,design.holdout_lhs.ranges.lipid_fraction x 100,50.0,1.0,50,params/study_config.yaml,design.holdout_lhs.ranges.lipid_fraction x 100
+90,count(set == holdout and lipid_arc_deg > 0),8,1.0,8,cohort/cohort.csv,count(set == holdout and lipid_arc_deg > 0)
+91,design.holdout_lhs.ranges.lipid_arc_deg[0],90,1.0,90,params/study_config.yaml,design.holdout_lhs.ranges.lipid_arc_deg[0]
+92,lipid_arc_high_risk_threshold.value,180.0,1.0,180,params/literature_parameters.csv,lipid_arc_high_risk_threshold.value
+93,min_cap_thickness_OCT_culprit_AMI / _SAP[lower],0.047,1.0,0.047,params/literature_parameters.csv,min_cap_thickness_OCT_culprit_AMI / _SAP[lower]
+94,min_cap_thickness_OCT_culprit_AMI / _SAP[upper],0.1026,1.0,0.1,params/literature_parameters.csv,min_cap_thickness_OCT_culprit_AMI / _SAP[upper]
+95,design.holdout_lhs.ranges.lipid_thickness_mm,0.2,1.0,0.2,params/study_config.yaml,design.holdout_lhs.ranges.lipid_thickness_mm
+96,plaque_growth.n_grown.holdout,7,1.0,7,results/cohort_summary.json,plaque_growth.n_grown.holdout
+97,discretisation.polar_n_theta,360,1.0,360,params/study_config.yaml,discretisation.polar_n_theta
+98,discretisation.polar_dr_mm x 1000,10.0,1.0,10,params/study_config.yaml,discretisation.polar_dr_mm x 1000
+99,fujino_angle_threshold.notes[points],2,1.0,2,params/literature_parameters.csv,fujino_angle_threshold.notes[points]
+100,fujino_angle_threshold.value,180.0,1.0,180,params/literature_parameters.csv,fujino_angle_threshold.value
+101,fujino_thickness_threshold.notes[points],1,1.0,1,params/literature_parameters.csv,fujino_thickness_threshold.notes[points]
+102,fujino_thickness_threshold.value,0.5,1.0,0.5,params/literature_parameters.csv,fujino_thickness_threshold.value
+103,sum of the cross-sectional fujino_*_threshold points,3,1.0,3,params/literature_parameters.csv,sum of the cross-sectional fujino_*_threshold points
+104,discretisation.h_calcium_mm x 1000,40.0,1.0,40,params/study_config.yaml,discretisation.h_calcium_mm x 1000
+105,discretisation.h_soft_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.h_soft_mm
+106,geometry.margin_3d_mm,2.0,1.0,2,params/study_config.yaml,geometry.margin_3d_mm
+107,discretisation.example3d.h_calcium_mm,0.15,1.0,0.15,params/study_config.yaml,discretisation.example3d.h_calcium_mm
+108,discretisation.example3d.h_soft_mm,0.4,1.0,0.4,params/study_config.yaml,discretisation.example3d.h_soft_mm
+109,design.length_series_3d.h_axial_ca_mm,0.5,1.0,0.5,params/study_config.yaml,design.length_series_3d.h_axial_ca_mm
+110,design.length_series_3d.h_axial_margin_mm,1.0,1.0,1,params/study_config.yaml,design.length_series_3d.h_axial_margin_mm
+111,fracture.ell_over_h x discretisation.example3d.h_calcium_mm,0.3,1.0,0.3,params/study_config.yaml,fracture.ell_over_h x discretisation.example3d.h_calcium_mm
+112,fibrous_E,2.312,1.0,2.31,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),fibrous_E
+113,lipid_E x 1000,5.5,1.0,5.5,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),lipid_E x 1000
+114,k_over_mu,50.0,1.0,50,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_over_mu
+115,ca_nu,0.3,1.0,0.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_nu
+116,calcified_tissue_tangential_modulus.value,1.466,1.0,1.5,params/literature_parameters.csv,calcified_tissue_tangential_modulus.value
+117,N_E_SWEEP,9,1.0,9,src/drivers/stage_pilot.py,N_E_SWEEP
+118,min,1.466,1.0,1.47,src/drivers/stage_pilot.py e_sweep(),min
+119,max / 1000,10.0,1.0,10,src/drivers/stage_pilot.py e_sweep(),max / 1000
+120,ca_E,365.006198,1.0,365,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),ca_E
+121,sigma_crit = ca_E x eps_f,7.300123960000006,1.0,7.3,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit = ca_E x eps_f
+122,sigma_crit / sigma_c,40.782815418994446,1.0,41,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_crit / sigma_c
+123,sigma_c,0.179,1.0,0.18,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),sigma_c
+124,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
+125,loads.perivascular_k_MPa_per_mm,0.0001,1.0,0.0001,params/study_config.yaml,loads.perivascular_k_MPa_per_mm
+126,loads.contact_penalty_MPa_per_mm,1000.0,1.0,1000,params/study_config.yaml,loads.contact_penalty_MPa_per_mm
+127,len(COHORT_PROTOCOLS),6,1.0,6,src/drivers/stage_cohort_runs.py,len(COHORT_PROTOCOLS)
+128,loads.physiological_pressure,0.01599864,1000.0,16,params/study_config.yaml,loads.physiological_pressure
+129,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
+130,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
+131,geometry.ivl_balloon_diameter_mm,3.19,1.0,3.19,params/study_config.yaml,geometry.ivl_balloon_diameter_mm
+132,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
+133,loads.poba_pressure_atm,1.01325,1.0,1.01,params/study_config.yaml,loads.poba_pressure_atm
+134,geometry.stent_target_diameter_mm,3.21,1.0,3.21,params/study_config.yaml,geometry.stent_target_diameter_mm
+135,"stent_rated_burst_pressure.value [atm, as tabulated]",16.0,1.0,16,params/literature_parameters.csv,"stent_rated_burst_pressure.value [atm, as tabulated]"
+136,loads.balloon_rated_pressure_atm,1.6212,1.0,1.62,params/study_config.yaml,loads.balloon_rated_pressure_atm
+137,K_s_MPa_per_mm,6.068239979987641,1.0,6.07,results/calibration_stent.json,K_s_MPa_per_mm
+138,loads.stent_recoil_target_pct,4.3,1.0,4.3,params/study_config.yaml,loads.stent_recoil_target_pct
+139,MAX_HALVINGS,6,1.0,6,src/solvers/nonlinear.py,MAX_HALVINGS
+140,loads.ivl_peak_pressure_MPa,5.0,1.0,5,params/study_config.yaml,loads.ivl_peak_pressure_MPa
+141,loads.ivl_pulse_scale,1.0,1.0,1,params/study_config.yaml,loads.ivl_pulse_scale
+142,ivl_pulse_duration upper bound (us),2.0,1.0,2,src/solvers/transient.py default_pulse_width_us(),ivl_pulse_duration upper bound (us)
+143,k_floor = mu_fibrous / mu_Ca,0.005489587147595048,1.0,0.0055,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),k_floor = mu_fibrous / mu_Ca
+144,eps_f = calcification_fracture_stretch - 1,0.020000000000000018,1.0,0.02,params/study_config.yaml + params/literature_parameters.csv (MaterialSet.baseline),eps_f = calcification_fracture_stretch - 1
+145,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
+146,fracture.ell_over_h,2.0,1.0,2,params/study_config.yaml,fracture.ell_over_h
+147,STAGGER_TOL,0.001,1.0,0.001,src/solvers/nonlinear.py,STAGGER_TOL
+148,STAGGER_MAX_IT,100,1.0,100,src/solvers/nonlinear.py,STAGGER_MAX_IT
+149,size of design.erosion_subset,8,1.0,8,params/study_config.yaml,size of design.erosion_subset
+150,design.erosion_subset.arc_deg[0],180,1.0,180,params/study_config.yaml,design.erosion_subset.arc_deg[0]
+151,design.erosion_subset.arc_deg[1],360,1.0,360,params/study_config.yaml,design.erosion_subset.arc_deg[1]
+152,fracture.d_crack,0.9,1.0,0.9,params/study_config.yaml,fracture.d_crack
+153,MIN_PIECE_CELLS,3,1.0,3,src/fracture/cracks.py,MIN_PIECE_CELLS
+154,DIFFUSE_REGION_FRAC,0.5,100.0,50,src/fracture/cracks.py,DIFFUSE_REGION_FRAC
+155,100 x (stent_target_diameter_mm / reference_diameter_mm)^2,90.72986466377266,1.0,90.7,params/study_config.yaml,100 x (stent_target_diameter_mm / reference_diameter_mm)^2
+156,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
+157,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
+158,SIGMA1_PERCENTILE,95.0,1.0,95,src/metrics/predictors.py,SIGMA1_PERCENTILE
+159,SIGMA1_PERCENTILE_HIGH,99.0,1.0,99,src/metrics/predictors.py,SIGMA1_PERCENTILE_HIGH
+160,fracture.ell_over_h x discretisation.h_calcium_mm x 1000,80.0,1.0,80,params/study_config.yaml,fracture.ell_over_h x discretisation.h_calcium_mm x 1000
+161,EDGE_MIN_WINDOW_DEG,10.0,1.0,10,src/metrics/predictors.py,EDGE_MIN_WINDOW_DEG
+162,HIGH_STRESS_PERCENTILE,90.0,1.0,90,src/metrics/predictors.py,HIGH_STRESS_PERCENTILE
+163,design.lengths_3d_mm[0],1,1.0,1,params/study_config.yaml,design.lengths_3d_mm[0]
+164,design.lengths_3d_mm[1],3,1.0,3,params/study_config.yaml,design.lengths_3d_mm[1]
+165,design.lengths_3d_mm[2],5,1.0,5,params/study_config.yaml,design.lengths_3d_mm[2]
+166,len(GCI_LESIONS),2,1.0,2,src/drivers/stage_verification.py,len(GCI_LESIONS)
+167,len(GCI_FACTORS),3,1.0,3,src/drivers/stage_verification.py,len(GCI_FACTORS)
+168,len(pilot_ids()),3,1.0,3,src/drivers/stage_pilot.py,len(pilot_ids())
+169,n_oat_runs(),39,1.0,39,src/drivers/stage_sensitivity.py,n_oat_runs()
+170,len(morris_inputs()),8,1.0,8,src/drivers/stage_sensitivity.py,len(morris_inputs())
+171,log10_ca_E[lower],121.07848700000004,1.0,121.1,src/drivers/stage_sensitivity.py morris_inputs(),log10_ca_E[lower]
+172,log10_ca_E[upper],1100.3567009999997,1.0,1100,src/drivers/stage_sensitivity.py morris_inputs(),log10_ca_E[upper]
+173,eps_f[lower],0.014999999999999902,1.0,0.015,src/drivers/stage_sensitivity.py morris_inputs(),eps_f[lower]
+174,eps_f[upper],0.02499999999999991,1.0,0.025,src/drivers/stage_sensitivity.py morris_inputs(),eps_f[upper]
+175,ivl_pulse_scale[lower],0.5,1.0,0.5,src/drivers/stage_sensitivity.py morris_inputs(),ivl_pulse_scale[lower]
+176,ivl_pulse_scale[upper],1.0,1.0,1,src/drivers/stage_sensitivity.py morris_inputs(),ivl_pulse_scale[upper]
+177,ell_over_h[lower],1.5,1.0,1.5,src/drivers/stage_sensitivity.py morris_inputs(),ell_over_h[lower]
+178,ell_over_h[upper],3.0,1.0,3,src/drivers/stage_sensitivity.py morris_inputs(),ell_over_h[upper]
+179,log10_k_perivascular[lower],0.0001,1.0,0.0001,src/drivers/stage_sensitivity.py morris_inputs(),log10_k_perivascular[lower]
+180,log10_k_perivascular[upper],0.1,1.0,0.1,src/drivers/stage_sensitivity.py morris_inputs(),log10_k_perivascular[upper]
+181,rho_calcium[lower],1450.0,1.0,1450,src/drivers/stage_sensitivity.py morris_inputs(),rho_calcium[lower]
+182,rho_calcium[upper],2050.0,1.0,2050,src/drivers/stage_sensitivity.py morris_inputs(),rho_calcium[upper]
+183,k_over_mu_soft[lower],20.0,1.0,20,src/drivers/stage_sensitivity.py morris_inputs(),k_over_mu_soft[lower]
+184,k_over_mu_soft[upper],200.0,1.0,200,src/drivers/stage_sensitivity.py morris_inputs(),k_over_mu_soft[upper]
+185,fibrous_E[lower],0.927,1.0,0.927,src/drivers/stage_sensitivity.py morris_inputs(),fibrous_E[lower]
+186,fibrous_E[upper],4.492,1.0,4.49,src/drivers/stage_sensitivity.py morris_inputs(),fibrous_E[upper]
+187,len(design.sensitivity.morris_lesions),4,1.0,4,params/study_config.yaml,len(design.sensitivity.morris_lesions)
+188,design.sensitivity.morris_trajectories,6,1.0,6,params/study_config.yaml,design.sensitivity.morris_trajectories
+189,n_morris_runs(),216,1.0,216,src/drivers/stage_sensitivity.py,n_morris_runs()
+190,number of design.sensitivity.sobol.inputs set true,5,1.0,5,params/study_config.yaml,number of design.sensitivity.sobol.inputs set true
+191,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+192,metrics.bootstrap_n,2000.0,1.0,2000,params/study_config.yaml,metrics.bootstrap_n
+193,len(metrics.candidates.mechanics),12,1.0,12,params/study_config.yaml,len(metrics.candidates.mechanics)
+194,len(metrics.candidates.geometry),8,1.0,8,params/study_config.yaml,len(metrics.candidates.geometry)
+195,metrics.min_per_class,2.0,1.0,2,params/study_config.yaml,metrics.min_per_class
+196,metrics.composite.max_predictors,3,1.0,3,params/study_config.yaml,metrics.composite.max_predictors
+197,metrics.composite.min_discrimination,0.6,1.0,0.60,params/study_config.yaml,metrics.composite.min_discrimination
+198,metrics.composite.max_abs_spearman,0.8,1.0,0.80,params/study_config.yaml,metrics.composite.max_abs_spearman
+199,metrics.logistic_C,1.0,1.0,1.0,params/study_config.yaml,metrics.logistic_C
+200,len(metrics.incremental.geometry_model),4,1.0,4,params/study_config.yaml,len(metrics.incremental.geometry_model)
+201,metrics.min_rows_continuous,5.0,1.0,5,params/study_config.yaml,metrics.min_rows_continuous
+202,design.seed + metrics.seed_offset,20261509,1.0,20261509,params/study_config.yaml,design.seed + metrics.seed_offset
+203,python,'3.12.15',1.0,3.12.15,environment.lock.txt,python
+204,fenics-dolfinx,'0.11.0',1.0,0.11.0,environment.lock.txt,fenics-dolfinx
+205,petsc,'3.25.6',1.0,3.25.6,environment.lock.txt,petsc
+206,mumps-mpi,'5.8.2',1.0,5.8.2,environment.lock.txt,mumps-mpi
+207,gmsh,'4.15.2',1.0,4.15.2,requirements.txt,gmsh
+208,scikit-learn,'1.9.1',1.0,1.9.1,requirements.txt,scikit-learn
+209,scipy,'1.18.1',1.0,1.18.1,requirements.txt,scipy
+210,SALib,'1.6.0',1.0,1.6.0,requirements.txt,SALib
+211,max_rel_change_default_vs_fine.sed_peak_nl,0.020002435922501127,100.0,2.0,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sed_peak_nl
+212,cases.1.max_rel_err_hoop,0.0057338391473332005,100.0,0.57,results/verification_lame.json,cases.1.max_rel_err_hoop
+213,cases.1.max_rel_err_ur,0.00017574123957756093,100.0,0.018,results/verification_lame.json,cases.1.max_rel_err_ur
+214,tolerance_rel,0.01,100.0,1,results/verification_lame.json,tolerance_rel
+215,lame.max_rel_err_ur_lumen,0.0013696783618955455,100.0,0.14,results/verification_nonlinear.json,lame.max_rel_err_ur_lumen
+216,cases.1.rel_err_psi,0.005654289001104873,100.0,0.57,results/verification_phasefield.json,cases.1.rel_err_psi
+217,cases.0.rel_err_strain,0.007395508545233964,100.0,0.74,results/verification_phasefield.json,cases.0.rel_err_strain
+218,tolerance_rel,0.05,100.0,5,results/verification_phasefield.json,tolerance_rel
+219,max_rel_change_default_vs_fine.sigma1_p95,0.014976651640978505,100.0,1.5,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sigma1_p95
+220,SIGMA1_PERCENTILE,95.0,1.0,95,src/metrics/predictors.py,SIGMA1_PERCENTILE
+221,rel_change_accept,0.02,100.0,2,results/verification_mesh_convergence.json,rel_change_accept
+222,max_rel_change_default_vs_fine.sigma1_peak,0.08505451717655614,100.0,8.5,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sigma1_peak
+223,max_rel_change_default_vs_fine.sed_peak,0.15432361916634066,100.0,15.4,results/verification_mesh_convergence.json,max_rel_change_default_vs_fine.sed_peak
+224,count(set == core),34,1.0,34,results/cohort_outcomes.csv,count(set == core)
+225,count(set == holdout),0,1.0,0,results/cohort_outcomes.csv,count(set == holdout)
+226,count(core balloon_10atm_status == not run),2,1.0,2,results/cohort_outcomes.csv,count(core balloon_10atm_status == not run)
+227,count(core ivl_status == not run),2,1.0,2,results/cohort_outcomes.csv,count(core ivl_status == not run)
+228,count(core stent_no_ivl_status == not run),4,1.0,4,results/cohort_outcomes.csv,count(core stent_no_ivl_status == not run)
+229,count(core stent_post_ivl_status == not run),2,1.0,2,results/cohort_outcomes.csv,count(core stent_post_ivl_status == not run)
+230,core IVL runs with unconverged_steps > 0 [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [events]
+231,core IVL runs with unconverged_steps > 0 [n],32,1.0,32,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [n]
+232,core physiological_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core physiological_fracture [events]
+233,core physiological_fracture [n],34,1.0,34,results/cohort_outcomes.csv,core physiological_fracture [n]
+234,core balloon_only_fracture [events],0,1.0,0,results/cohort_outcomes.csv,core balloon_only_fracture [events]
+235,core balloon_only_fracture [n],34,1.0,34,results/cohort_outcomes.csv,core balloon_only_fracture [n]
+236,core balloon_10atm_fracture [events],17,1.0,17,results/cohort_outcomes.csv,core balloon_10atm_fracture [events]
+237,core balloon_10atm_fracture [n],32,1.0,32,results/cohort_outcomes.csv,core balloon_10atm_fracture [n]
+238,core ivl_fracture [events],16,1.0,16,results/cohort_outcomes.csv,core ivl_fracture [events]
+239,core ivl_fracture [n],32,1.0,32,results/cohort_outcomes.csv,core ivl_fracture [n]
+240,core stent_no_ivl_fracture [events],13,1.0,13,results/cohort_outcomes.csv,core stent_no_ivl_fracture [events]
+241,core stent_no_ivl_fracture [n],30,1.0,30,results/cohort_outcomes.csv,core stent_no_ivl_fracture [n]
+242,core stent_post_ivl_fracture [events],17,1.0,17,results/cohort_outcomes.csv,core stent_post_ivl_fracture [events]
+243,core stent_post_ivl_fracture [n],32,1.0,32,results/cohort_outcomes.csv,core stent_post_ivl_fracture [n]
+244,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]",10.0,1.0,10,params/literature_parameters.csv,"poba_pressure_cadaver_IVL_balloon.value [atm, as tabulated]"
+245,loads.poba_pressure_atm,1.01325,1.0,1.01,params/study_config.yaml,loads.poba_pressure_atm
+246,"ivl_balloon_inflation_pressure.value [atm, as tabulated]",4.0,1.0,4,params/literature_parameters.csv,"ivl_balloon_inflation_pressure.value [atm, as tabulated]"
+247,loads.ivl_balloon_pressure_atm,0.4053,1.0,0.405,params/study_config.yaml,loads.ivl_balloon_pressure_atm
+248,core ivl_fracture | ca_arc_deg == 90 [events],2,1.0,2,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 90 [events]
+249,core ivl_fracture | ca_arc_deg == 90 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 90 [n]
+250,ca_arc_deg level,90.0,1.0,90,results/cohort_outcomes.csv,ca_arc_deg level
+251,core ivl_fracture | ca_arc_deg == 180 [events],9,1.0,9,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 180 [events]
+252,core ivl_fracture | ca_arc_deg == 180 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 180 [n]
+253,ca_arc_deg level,180.0,1.0,180,results/cohort_outcomes.csv,ca_arc_deg level
+254,core ivl_fracture | ca_arc_deg == 270 [events],5,1.0,5,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 270 [events]
+255,core ivl_fracture | ca_arc_deg == 270 [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | ca_arc_deg == 270 [n]
+256,ca_arc_deg level,270.0,1.0,270,results/cohort_outcomes.csv,ca_arc_deg level
+257,core ivl_fracture | ca_thickness == 0.2 [events],7,1.0,7,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.2 [events]
+258,core ivl_fracture | ca_thickness == 0.2 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.2 [n]
+259,ca_thickness level,0.2,1.0,0.2,results/cohort_outcomes.csv,ca_thickness level
+260,core ivl_fracture | ca_thickness == 0.4 [events],6,1.0,6,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.4 [events]
+261,core ivl_fracture | ca_thickness == 0.4 [n],12,1.0,12,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.4 [n]
+262,ca_thickness level,0.4,1.0,0.4,results/cohort_outcomes.csv,ca_thickness level
+263,core ivl_fracture | ca_thickness == 0.8 [events],3,1.0,3,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.8 [events]
+264,core ivl_fracture | ca_thickness == 0.8 [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | ca_thickness == 0.8 [n]
+265,ca_thickness level,0.8,1.0,0.8,results/cohort_outcomes.csv,ca_thickness level
+266,core ivl_fracture | morphology == superficial_sheet [events],6,1.0,6,results/cohort_outcomes.csv,core ivl_fracture | morphology == superficial_sheet [events]
+267,core ivl_fracture | morphology == superficial_sheet [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == superficial_sheet [n]
+268,core ivl_fracture | morphology == deep_sheet [events],5,1.0,5,results/cohort_outcomes.csv,core ivl_fracture | morphology == deep_sheet [events]
+269,core ivl_fracture | morphology == deep_sheet [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == deep_sheet [n]
+270,core ivl_fracture | morphology == nodule [events],5,1.0,5,results/cohort_outcomes.csv,core ivl_fracture | morphology == nodule [events]
+271,core ivl_fracture | morphology == nodule [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == nodule [n]
+272,core ivl_fracture | morphology == fragmented [events],0,1.0,0,results/cohort_outcomes.csv,core ivl_fracture | morphology == fragmented [events]
+273,core ivl_fracture | morphology == fragmented [n],8,1.0,8,results/cohort_outcomes.csv,core ivl_fracture | morphology == fragmented [n]
+274,core ivl_diffuse | ivl_fracture [events],16,1.0,16,results/cohort_outcomes.csv,core ivl_diffuse | ivl_fracture [events]
+275,core ivl_diffuse | ivl_fracture [n],16,1.0,16,results/cohort_outcomes.csv,core ivl_diffuse | ivl_fracture [n]
+276,count(ivl_erosion_status == ok),4,1.0,4,results/cohort_outcomes.csv,count(ivl_erosion_status == ok)
+277,count(ivl_erosion_fracture == 1),4,1.0,4,results/cohort_outcomes.csv,count(ivl_erosion_fracture == 1)
+278,median(ivl_erosion_n_fractures | ivl_erosion_fracture == 1),2.5,1.0,2.5,results/cohort_outcomes.csv,median(ivl_erosion_n_fractures | ivl_erosion_fracture == 1)
+279,"count(core, both stent runs ok or limited)",30,1.0,30,results/cohort_outcomes.csv,"count(core, both stent runs ok or limited)"
+280,median(stent_no_ivl_stent_expansion_pct | both),82.17555576195011,1.0,82.2,results/cohort_outcomes.csv,median(stent_no_ivl_stent_expansion_pct | both)
+281,q25(stent_no_ivl_stent_expansion_pct | both),81.16633084184507,1.0,81.2,results/cohort_outcomes.csv,q25(stent_no_ivl_stent_expansion_pct | both)
+282,q75(stent_no_ivl_stent_expansion_pct | both),83.12162341994983,1.0,83.1,results/cohort_outcomes.csv,q75(stent_no_ivl_stent_expansion_pct | both)
+283,median(stent_post_ivl_stent_expansion_pct | both),82.37404537474366,1.0,82.4,results/cohort_outcomes.csv,median(stent_post_ivl_stent_expansion_pct | both)
+284,q25(stent_post_ivl_stent_expansion_pct | both),81.16633084184507,1.0,81.2,results/cohort_outcomes.csv,q25(stent_post_ivl_stent_expansion_pct | both)
+285,q75(stent_post_ivl_stent_expansion_pct | both),83.14743664040812,1.0,83.1,results/cohort_outcomes.csv,q75(stent_post_ivl_stent_expansion_pct | both)
+286,median(post_ivl - no_ivl expansion | both),0.0,1.0,0.0,results/cohort_outcomes.csv,median(post_ivl - no_ivl expansion | both)
+287,"count(both, ivl_fracture == 1)",14,1.0,14,results/cohort_outcomes.csv,"count(both, ivl_fracture == 1)"
+288,"count(both, ivl_fracture == 1 and stent_no_ivl_fracture == 1)",12,1.0,12,results/cohort_outcomes.csv,"count(both, ivl_fracture == 1 and stent_no_ivl_fracture == 1)"
+289,"min(stent_*_stent_expansion_pct | core, ok or limited)",79.1167368126472,1.0,79.1,results/cohort_outcomes.csv,"min(stent_*_stent_expansion_pct | core, ok or limited)"
+290,"max(stent_*_stent_expansion_pct | core, ok or limited)",83.40604344440523,1.0,83.4,results/cohort_outcomes.csv,"max(stent_*_stent_expansion_pct | core, ok or limited)"
+291,outcomes.ivl_fracture.core.n,32,1.0,32,results/metrics_summary.json,outcomes.ivl_fracture.core.n
+292,outcomes.ivl_fracture.core.n_pos,16,1.0,16,results/metrics_summary.json,outcomes.ivl_fracture.core.n_pos
+293,outcomes.ivl_fracture.holdout.n,0,1.0,0,results/metrics_summary.json,outcomes.ivl_fracture.holdout.n
+294,outcomes.ivl_fracture.holdout.n_pos,0,1.0,0,results/metrics_summary.json,outcomes.ivl_fracture.holdout.n_pos
+295,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
 296,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-297,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[lo],0.4335449218750001,1.0,0.43,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[lo]
-298,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[hi],0.78125,1.0,0.78,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[hi]
-299,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_sens,0.9375,1.0,0.94,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_sens
-300,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_spec,0.8125,1.0,0.81,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_spec
-301,outcomes.ivl_fracture.univariable.fujino_score.loocv_sens,0.3125,1.0,0.31,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.loocv_sens
-302,outcomes.ivl_fracture.univariable.fujino_score.loocv_spec,0.9375,1.0,0.94,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.loocv_spec
-303,outcomes.ivl_fracture.composite.core.apparent_auc,0.98828125,1.0,0.99,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.apparent_auc
-304,outcomes.ivl_fracture.composite.core.loocv_auc,0.953125,1.0,0.95,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc
+297,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo],0.89453125,1.0,0.89,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo]
+298,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi]
+299,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc
+300,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+301,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[lo],0.89453125,1.0,0.89,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[lo]
+302,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sed_peak_nl.auc_ci[hi]
+303,SIGMA1_PERCENTILE_HIGH,99.0,1.0,99,src/metrics/predictors.py,SIGMA1_PERCENTILE_HIGH
+304,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc,0.9453125,1.0,0.95,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc
 305,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-306,outcomes.ivl_fracture.composite.core.loocv_auc_ci[lo],0.8514648437500002,1.0,0.85,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc_ci[lo]
-307,outcomes.ivl_fracture.composite.core.loocv_auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc_ci[hi]
-308,outcomes.ivl_fracture.composite.core.loocv_log_loss,0.28418832498327884,1.0,0.284,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_log_loss
-309,outcomes.ivl_fracture.composite.core.loocv_brier,0.08103197385830427,1.0,0.081,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_brier
-310,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_auc,-0.01171875,1.0,−0.01,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_auc
-311,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-312,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[lo],-0.0625,1.0,−0.06,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[lo]
-313,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[hi],0.0234375,1.0,0.02,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[hi]
-314,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_auc,0.349609375,1.0,0.35,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_auc
-315,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-316,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[lo],0.1776855468750001,1.0,0.18,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[lo]
-317,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[hi],0.53515625,1.0,0.54,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[hi]
-318,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_auc,0.337890625,1.0,0.34,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_auc
-319,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-320,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[lo],0.17578125,1.0,0.18,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[lo]
-321,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[hi],0.515625,1.0,0.52,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[hi]
-322,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
-323,outcomes.ivl_fracture.incremental_value.core.loocv.auc_a,0.921875,1.0,0.92,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_a
-324,outcomes.ivl_fracture.incremental_value.core.loocv.delta_auc,0.0390625,1.0,0.04,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_auc
-325,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-326,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[lo],-0.0078125,1.0,−0.01,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[lo]
-327,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[hi],0.1171875,1.0,0.12,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[hi]
-328,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_auc,0.04296875,1.0,0.04,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_auc
-329,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-330,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[lo],0.0,1.0,0.00,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[lo]
-331,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[hi],0.14453125,1.0,0.14,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[hi]
-332,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss,-0.11489954282375714,1.0,−0.115,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss
-333,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-334,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[lo],-0.17903761489285336,1.0,−0.179,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[lo]
-335,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[hi],-0.05206678900739404,1.0,−0.052,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[hi]
-336,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier,-0.03361178544919245,1.0,−0.034,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier
-337,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-338,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[lo],-0.05946570484583664,1.0,−0.059,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[lo]
-339,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[hi],-0.009314442384759196,1.0,−0.009,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[hi]
-340,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-341,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+306,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[lo],0.8515625,1.0,0.85,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[lo]
+307,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_p99.auc_ci[hi]
+308,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc,0.880859375,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc
+309,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+310,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[lo],0.734375,1.0,0.73,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[lo]
+311,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.univariable.ca_arc_total_deg.auc_ci[hi]
+312,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
+313,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+314,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[lo],0.4335449218750001,1.0,0.43,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[lo]
+315,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[hi],0.78125,1.0,0.78,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc_ci[hi]
+316,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_sens,0.9375,1.0,0.94,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_sens
+317,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_spec,0.8125,1.0,0.81,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.loocv_spec
+318,outcomes.ivl_fracture.univariable.fujino_score.loocv_sens,0.3125,1.0,0.31,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.loocv_sens
+319,outcomes.ivl_fracture.univariable.fujino_score.loocv_spec,0.9375,1.0,0.94,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.loocv_spec
+320,outcomes.ivl_fracture.composite.core.apparent_auc,0.98828125,1.0,0.99,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.apparent_auc
+321,outcomes.ivl_fracture.composite.core.loocv_auc,0.953125,1.0,0.95,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc
+322,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+323,outcomes.ivl_fracture.composite.core.loocv_auc_ci[lo],0.8514648437500002,1.0,0.85,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc_ci[lo]
+324,outcomes.ivl_fracture.composite.core.loocv_auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_auc_ci[hi]
+325,outcomes.ivl_fracture.composite.core.loocv_log_loss,0.28418832498327884,1.0,0.284,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_log_loss
+326,outcomes.ivl_fracture.composite.core.loocv_brier,0.08103197385830427,1.0,0.081,results/metrics_summary.json,outcomes.ivl_fracture.composite.core.loocv_brier
+327,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_auc,-0.01171875,1.0,−0.01,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_auc
+328,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+329,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[lo],-0.0625,1.0,−0.06,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[lo]
+330,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[hi],0.0234375,1.0,0.02,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - pred_sigma1_peak_nl.delta_ci_lo[hi]
+331,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_auc,0.349609375,1.0,0.35,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_auc
+332,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+333,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[lo],0.1776855468750001,1.0,0.18,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[lo]
+334,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[hi],0.53515625,1.0,0.54,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.pred_sigma1_peak_nl - fujino_score.delta_ci_lo[hi]
+335,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_auc,0.337890625,1.0,0.34,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_auc
+336,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+337,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[lo],0.17578125,1.0,0.18,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[lo]
+338,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[hi],0.515625,1.0,0.52,results/metrics_summary.json,outcomes.ivl_fracture.fujino_comparison.fujino_score.auc_differences.core.LIFT (LOOCV) - fujino_score.delta_ci_lo[hi]
+339,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
+340,outcomes.ivl_fracture.incremental_value.core.loocv.auc_a,0.921875,1.0,0.92,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_a
+341,outcomes.ivl_fracture.incremental_value.core.loocv.delta_auc,0.0390625,1.0,0.04,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_auc
 342,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-343,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-344,outcomes.ivl_onset.core.n_events,16,1.0,16,results/metrics_summary.json,outcomes.ivl_onset.core.n_events
-345,outcomes.ivl_onset.core.n,32,1.0,32,results/metrics_summary.json,outcomes.ivl_onset.core.n
-346,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index,0.8478964401294499,1.0,0.85,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index
-347,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-348,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[lo],0.7416490963855422,1.0,0.74,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[lo]
-349,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[hi],0.9390853737530767,1.0,0.94,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[hi]
-350,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index,0.8446601941747572,1.0,0.84,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index
-351,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-352,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[lo],0.7478932079001331,1.0,0.75,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[lo]
-353,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[hi],0.9432422043176086,1.0,0.94,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[hi]
-354,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc,0.9882352941176471,1.0,0.99,results/metrics_summary.json,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc
-355,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-356,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo],0.9529411764705882,1.0,0.95,results/metrics_summary.json,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo]
-357,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi]
-358,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman,0.8394428152492668,1.0,0.84,results/metrics_summary.json,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman
+343,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[lo],-0.0078125,1.0,−0.01,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[lo]
+344,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[hi],0.1171875,1.0,0.12,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_ci_lo[hi]
+345,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_auc,0.04296875,1.0,0.04,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_auc
+346,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+347,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[lo],0.0,1.0,0.00,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[lo]
+348,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[hi],0.14453125,1.0,0.14,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.apparent_refit_bootstrap.delta_ci_lo[hi]
+349,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss,-0.11489954282375714,1.0,−0.115,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss
+350,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+351,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[lo],-0.17903761489285336,1.0,−0.179,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[lo]
+352,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[hi],-0.05206678900739404,1.0,−0.052,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_log_loss_ci_lo[hi]
+353,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier,-0.03361178544919245,1.0,−0.034,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier
+354,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+355,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[lo],-0.05946570484583664,1.0,−0.059,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[lo]
+356,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[hi],-0.009314442384759196,1.0,−0.009,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.delta_brier_ci_lo[hi]
+357,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+358,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
 359,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-360,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[lo],0.6780876683340411,1.0,0.68,results/metrics_summary.json,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[lo]
-361,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[hi],0.9113569601792314,1.0,0.91,results/metrics_summary.json,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[hi]
-362,agreement_counts.core.agrees,4,1.0,4,results/consistency.json,agreement_counts.core.agrees
-363,agreement_counts.core.partial,3,1.0,3,results/consistency.json,agreement_counts.core.partial
-364,agreement_counts.core.disagrees,3,1.0,3,results/consistency.json,agreement_counts.core.disagrees
-365,agreement_counts.core.not computed,1,1.0,1,results/consistency.json,agreement_counts.core.not computed
-366,checks.6.model_value,50.0,1.0,50.0,results/consistency.json,checks.6.model_value
-367,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-368,checks.6.ci_lo[lo],33.630882869327486,1.0,33.6,results/consistency.json,checks.6.ci_lo[lo]
-369,checks.6.ci_lo[hi],66.36911713067252,1.0,66.4,results/consistency.json,checks.6.ci_lo[hi]
-370,fracture_rate_DisruptCAD_III_OCT.value,67.4,1.0,67.4,params/literature_parameters.csv,fracture_rate_DisruptCAD_III_OCT.value
-371,fracture_rate_DisruptCAD_II_OCT.value,78.7,1.0,78.7,params/literature_parameters.csv,fracture_rate_DisruptCAD_II_OCT.value
-372,checks.8.model_value,53.125,1.0,53.1,results/consistency.json,checks.8.model_value
-373,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-374,checks.8.ci_lo[lo],36.44951711897464,1.0,36.4,results/consistency.json,checks.8.ci_lo[lo]
-375,checks.8.ci_lo[hi],69.13061289193116,1.0,69.1,results/consistency.json,checks.8.ci_lo[hi]
-376,checks.12.quantities.0.sd,1.2194818184562726,1.0,1.2,results/consistency.json,checks.12.quantities.0.sd
-377,checks.12.published_rows.0.sd,28.9,1.0,28.9,results/consistency.json,checks.12.published_rows.0.sd
-378,checks.12.quantities.0.mean,82.11034127383189,1.0,82.1,results/consistency.json,checks.12.quantities.0.mean
-379,checks.12.quantities.0.min,79.1167368126472,1.0,79.1,results/consistency.json,checks.12.quantities.0.min
-380,checks.12.quantities.0.max,83.40604344440523,1.0,83.4,results/consistency.json,checks.12.quantities.0.max
-381,stent_expansion_maxCa_site_DisruptCAD_III.value,101.7,1.0,101.7,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.value
-382,stent_expansion_MSA_site_DisruptCAD_III.value,78.4,1.0,78.4,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.value
-383,checks.18.quantities.1.value,100.0,1.0,100,results/consistency.json,checks.18.quantities.1.value
-384,fractures_per_lesion_pooled_IVL_OCT.value,3.1,1.0,3.1,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.value
-385,full_thickness_fracture_fraction_pooled_IVL_OCT.value,72.0,1.0,72,params/literature_parameters.csv,full_thickness_fracture_fraction_pooled_IVL_OCT.value
-386,checks.20.quantities.0.value,0.07466058750949045,1.0,0.07,results/consistency.json,checks.20.quantities.0.value
-387,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
-388,checks.20.quantities.0.ci_lo[lo],-0.3586848376143098,1.0,−0.36,results/consistency.json,checks.20.quantities.0.ci_lo[lo]
-389,checks.20.quantities.0.ci_lo[hi],0.46681196294339516,1.0,0.47,results/consistency.json,checks.20.quantities.0.ci_lo[hi]
-390,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
-391,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
+360,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+361,outcomes.ivl_onset.core.n_events,16,1.0,16,results/metrics_summary.json,outcomes.ivl_onset.core.n_events
+362,outcomes.ivl_onset.core.n,32,1.0,32,results/metrics_summary.json,outcomes.ivl_onset.core.n
+363,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index,0.8478964401294499,1.0,0.85,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index
+364,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+365,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[lo],0.7416490963855422,1.0,0.74,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[lo]
+366,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[hi],0.9390853737530767,1.0,0.94,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sigma1_peak_nl.c_index_ci_lo[hi]
+367,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index,0.8446601941747572,1.0,0.84,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index
+368,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+369,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[lo],0.7478932079001331,1.0,0.75,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[lo]
+370,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[hi],0.9432422043176086,1.0,0.94,results/metrics_summary.json,outcomes.ivl_onset.predictors.pred_sed_peak_nl.c_index_ci_lo[hi]
+371,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc,0.9882352941176471,1.0,0.99,results/metrics_summary.json,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc
+372,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+373,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo],0.9529411764705882,1.0,0.95,results/metrics_summary.json,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[lo]
+374,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi],1.0,1.0,1.00,results/metrics_summary.json,outcomes.balloon_10atm_fracture.univariable.pred_sigma1_peak_nl.auc_ci[hi]
+375,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman,0.8394428152492668,1.0,0.84,results/metrics_summary.json,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman
+376,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+377,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[lo],0.6780876683340411,1.0,0.68,results/metrics_summary.json,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[lo]
+378,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[hi],0.9113569601792314,1.0,0.91,results/metrics_summary.json,outcomes.stent_post_ivl_expansion.predictors.pred_sigma1_peak_nl.spearman_ci_lo[hi]
+379,agreement_counts.core.agrees,4,1.0,4,results/consistency.json,agreement_counts.core.agrees
+380,agreement_counts.core.partial,3,1.0,3,results/consistency.json,agreement_counts.core.partial
+381,agreement_counts.core.disagrees,3,1.0,3,results/consistency.json,agreement_counts.core.disagrees
+382,agreement_counts.core.not computed,1,1.0,1,results/consistency.json,agreement_counts.core.not computed
+383,checks.6.model_value,50.0,1.0,50.0,results/consistency.json,checks.6.model_value
+384,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+385,checks.6.ci_lo[lo],33.630882869327486,1.0,33.6,results/consistency.json,checks.6.ci_lo[lo]
+386,checks.6.ci_lo[hi],66.36911713067252,1.0,66.4,results/consistency.json,checks.6.ci_lo[hi]
+387,fracture_rate_DisruptCAD_III_OCT.value,67.4,1.0,67.4,params/literature_parameters.csv,fracture_rate_DisruptCAD_III_OCT.value
+388,fracture_rate_DisruptCAD_II_OCT.value,78.7,1.0,78.7,params/literature_parameters.csv,fracture_rate_DisruptCAD_II_OCT.value
+389,checks.8.model_value,53.125,1.0,53.1,results/consistency.json,checks.8.model_value
+390,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+391,checks.8.ci_lo[lo],36.44951711897464,1.0,36.4,results/consistency.json,checks.8.ci_lo[lo]
+392,checks.8.ci_lo[hi],69.13061289193116,1.0,69.1,results/consistency.json,checks.8.ci_lo[hi]
+393,checks.12.quantities.0.sd,1.2194818184562726,1.0,1.2,results/consistency.json,checks.12.quantities.0.sd
+394,checks.12.published_rows.0.sd,28.9,1.0,28.9,results/consistency.json,checks.12.published_rows.0.sd
+395,checks.12.quantities.0.mean,82.11034127383189,1.0,82.1,results/consistency.json,checks.12.quantities.0.mean
+396,checks.12.quantities.0.min,79.1167368126472,1.0,79.1,results/consistency.json,checks.12.quantities.0.min
+397,checks.12.quantities.0.max,83.40604344440523,1.0,83.4,results/consistency.json,checks.12.quantities.0.max
+398,stent_expansion_maxCa_site_DisruptCAD_III.value,101.7,1.0,101.7,params/literature_parameters.csv,stent_expansion_maxCa_site_DisruptCAD_III.value
+399,stent_expansion_MSA_site_DisruptCAD_III.value,78.4,1.0,78.4,params/literature_parameters.csv,stent_expansion_MSA_site_DisruptCAD_III.value
+400,checks.18.quantities.1.value,100.0,1.0,100,results/consistency.json,checks.18.quantities.1.value
+401,fractures_per_lesion_pooled_IVL_OCT.value,3.1,1.0,3.1,params/literature_parameters.csv,fractures_per_lesion_pooled_IVL_OCT.value
+402,full_thickness_fracture_fraction_pooled_IVL_OCT.value,72.0,1.0,72,params/literature_parameters.csv,full_thickness_fracture_fraction_pooled_IVL_OCT.value
+403,checks.20.quantities.0.value,0.07466058750949045,1.0,0.07,results/consistency.json,checks.20.quantities.0.value
+404,metrics.ci_level,0.95,100.0,95,params/study_config.yaml,metrics.ci_level
+405,checks.20.quantities.0.ci_lo[lo],-0.3586848376143098,1.0,−0.36,results/consistency.json,checks.20.quantities.0.ci_lo[lo]
+406,checks.20.quantities.0.ci_lo[hi],0.46681196294339516,1.0,0.47,results/consistency.json,checks.20.quantities.0.ci_lo[hi]
+407,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
+408,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
+409,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
+410,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
+411,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
+412,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
+413,checks.8.model_value,53.125,1.0,53,results/consistency.json,checks.8.model_value
+414,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]",12,1.0,12,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]"
+415,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]",14,1.0,14,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]"
+416,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm),2.5,1.0,2.5,results/cohort_outcomes.csv + params/study_config.yaml,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm)
+417,core IVL runs with unconverged_steps > 0 [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [events]
+418,core IVL runs with unconverged_steps > 0 [n],32,1.0,32,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [n]
+419,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
+420,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
+421,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
+422,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
+423,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
+424,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells

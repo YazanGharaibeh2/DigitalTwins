@@ -1,5 +1,11 @@
 # In Silico Digital Twins of Calcified Coronary Lesions under Intravascular Lithotripsy and Stenting
 
+[Author names and affiliations to be added.]
+
+**Background/Objectives:** Intravascular lithotripsy (IVL) fractures coronary calcium before stenting, but which lesions fracture is hard to predict from imaging scores. We asked whether mechanics computed before treatment predict calcium fracture under IVL in *in silico* lesions. **Methods:** Calcified coronary cross-sections were generated as a designed core set (34 lesions: calcium arc, thickness and morphology) and a sampled hold-out set (0 lesions). Candidate predictors came from a linear-elastic analysis of the untreated lesion. The outcome, through-thickness calcium damage, came from a separate nonlinear finite element model with a phase-field fracture law under an equivalent IVL load. Thresholds and a composite index were derived on the core set and tested unchanged on the hold-out set, against the optical coherence tomography (OCT) calcium score of Fujino. **Results:** On the core set, the non-local peak $\sigma_1$ had an area under the receiver operating characteristic curve (AUC) of 0.96 (95% CI 0.89–1.00), and the Fujino score 0.62 (95% CI 0.43–0.78). The composite index LIFT had a leave-one-out AUC of 0.95 (95% CI 0.85–1.00). A geometry-only model reached 0.88, and adding mechanics gave 0.92 (not clearly different). On the hold-out set, the non-local peak $\sigma_1$ had an AUC of [pending] (95% CI [pending]–[pending]). The model reproduced the published association of fracture with calcium arc but not the clinical fracture rates. **Conclusions:** In this model, pre-treatment mechanics ranked lesions for calcium fracture under IVL better than the Fujino score, with no clear gain in discrimination over geometry alone. These are *in silico* results; they require comparison with OCT after IVL in patient lesions.
+
+**Keywords:** intravascular lithotripsy; coronary artery calcification; finite element analysis; phase-field fracture; digital twin; in silico; stent expansion; optical coherence tomography
+
 ## 1. Introduction
 
 Severe coronary calcification resists balloon dilation and limits stent expansion, and stent underexpansion is the main mechanical consequence that lesion preparation tries to prevent [1,2]. Plain and cutting balloons and intravascular lithotripsy (IVL) all aim to fracture the calcium so that the vessel wall can expand [3–5]. Whether a given lesion will fracture is therefore a practical question before treatment.
@@ -21,6 +27,70 @@ This study addresses that question with a structured in silico cohort. A full fa
 This is an *in silico* study; no patient data were used. A structured cohort of calcified coronary cross-sections was generated and stored as polar label maps, and every lesion was analysed by two separate finite element models (Figure 1). The predictor model is a cheap pre-treatment analysis: the lesion geometry and one linear-elastic solve of the undamaged lesion under the IVL balloon pressure. The outcome model is a separate nonlinear simulation of the treatment with phase-field damage in the calcium. All predictors were computed from the predictor model and the geometry only, and all outcomes from the outcome model only. The two models share the lesion geometry and the material constants, including the calcium modulus; no quantity computed by the outcome model is used as a predictor. In particular, the IVL load factor of the transient pulse analysis (Section 2.5) is an input of the outcome model and is excluded from the candidate predictors by a check in the code.
 
 Every input of the two-dimensional (2D) main analysis is listed with its value, source and status in Table 1, except the sampling ranges of the hold-out set, which are given in Section 2.2. Inputs with status UNVERIFIED were not used. Most literature values were checked against text attributed to their source in search results rather than against the full primary article. Secondary-source inputs (the tissue densities of the transient model and the physiological pressure, decision D15) and one provisional input (the lipid modulus) were used and are flagged in Table 1. Decisions taken during the study are numbered D1–D15 and recorded in the configuration file.
+
+**Table 1.** Model inputs. Literature values with their status (VERIFIED: value confirmed in the cited source; SECONDARY: from a secondary source; DERIVED: computed from other inputs; DESIGN or ASSUMPTION: study choice), the range used in the sensitivity analysis, and the source or basis.
+
+| Group | Parameter | Symbol | Value | Unit | Sensitivity range | Status | Source |
+|---|---|---|---|---|---|---|---|
+| geometry | lumen area (circular lumen, core set) | $A_L$ | 2.2 | mm² |  | VERIFIED | [9] |
+| geometry | reference vessel diameter (stent-expansion reference) | $D_{ref}$ | 3.37 | mm |  | VERIFIED | [39] |
+| geometry | plaque thickness, lumen to IEL | $t_p$ | 0.848 | mm |  | DERIVED | [9,39] |
+| geometry | wall thickness, media + adventitia | $t_w$ | 0.567 | mm |  | DERIVED | [40,41] |
+| geometry | calcium depth: superficial sheet, nodule, fragmented | $z_s$ | 0.16 | mm |  | VERIFIED | [42] |
+| geometry | calcium depth: deep sheet | $z_d$ | 0.34 | mm |  | VERIFIED | [42] |
+| geometry | minimum fibrous tissue between calcium and IEL | $c_{IEL}$ | 0.05 | mm |  | ASSUMPTION | minimum fibrous tissue between the calcium and the IEL (same 0.05 mm as the hold-out depth rule) |
+| geometry | nodule protrusion height | $h_{nod}$ | 0.3 | mm | 0.2; 0.4 | ASSUMPTION | no verified OCT protrusion height found |
+| geometry | nodule base arc | β_nod | 60 | deg |  | ASSUMPTION | nodule protrusion spans 60 deg at the centre of the calcium arc |
+| geometry | fragment pitch (one deposit per pitch) | Δφ_frag | 45 | deg |  | ASSUMPTION | one deposit per 45 deg of arc (n = arc/45, min 2) |
+| geometry | fraction of the pitch filled by a fragment | $f_{frag}$ | 0.6 | - |  | ASSUMPTION | each deposit fills 60% of its pitch |
+| geometry | calcium-free end segment (3D models) | $L_m$ | 2 | mm |  | ASSUMPTION | calcium-free segment length at each end of 3D models |
+| calcium | Young's modulus (baseline, D8) | $E_{Ca}$ | 365 | MPa | 1.466; 10000 | CALIBRATED | D8, Checkpoint 2: point 6 of the 9 log-spaced pilot sweep points over sens_E (equality checked by … |
+| calcium | Poisson's ratio | ν_Ca | 0.3 | - |  | VERIFIED | [35] |
+| calcium | density (transient model) | ρ_Ca | 2050 | kg/m³ | 1450 | SECONDARY | [59,60] |
+| calcium | longitudinal sound speed (transient model) | $c_{Ca}$ | 2000 | m/s |  | VERIFIED | [56] |
+| fibrous tissue | Young's modulus, small strain (neo-Hookean, μ = E/3) | $E_f$ | 2.31 | MPa | 0.927; 4.492 | VERIFIED | [34] |
+| fibrous tissue | bulk-to-shear modulus ratio (wall, fibrous tissue, lipid) | K/μ | 50 | - | 20; 200 | ASSUMPTION | near-incompressibility penalty K/mu for soft tissues |
+| fibrous tissue | density (transient model) | ρ_f | 1080 | kg/m³ |  | SECONDARY | [61] |
+| fibrous tissue | longitudinal sound speed (transient model) | $c_f$ | 1580 | m/s |  | VERIFIED | [57] |
+| lipid | Young's modulus, small strain (neo-Hookean, μ = E/3) | $E_{lip}$ | 0.0055 | MPa |  | PROVISIONAL | [49] |
+| lipid | density (transient model) | ρ_lip | 920 | kg/m³ |  | SECONDARY | [61] |
+| lipid | longitudinal sound speed (transient model) | $c_{lip}$ | 1530 | m/s |  | VERIFIED | [58] |
+| lipid | lipid pool thickness (hold-out lesions) | $t_{lip}$ | 0.2 | mm |  | ASSUMPTION | no verified lipid-core thickness found |
+| wall | Yeoh coefficient c10 | $c10$ | 0.017 | MPa |  | VERIFIED | [47] |
+| wall | Yeoh coefficient c20 | $c20$ | −0.0734 | MPa |  | VERIFIED | [47] |
+| wall | Yeoh coefficient c30 | $c30$ | 0.415 | MPa |  | VERIFIED | [47] |
+| wall | density (transient model) | ρ_w | 1080 | kg/m³ |  | SECONDARY | [61] |
+| wall | longitudinal sound speed (transient model) | $c_w$ | 1610 | m/s |  | VERIFIED | [55] |
+| loads | physiological lumen pressure | $p_{phys}$ | 0.016 | MPa |  | SECONDARY | [51] |
+| loads | IVL balloon pressure (balloon alone, IVL inflation, predictor load) | $p_{bal}$ | 0.405 | MPa |  | VERIFIED | [6,7] |
+| loads | plain balloon pressure (no pulses) | $p_{POBA}$ | 1.01 | MPa |  | VERIFIED | [50] |
+| loads | IVL balloon diameter (radial envelope cap) | $D_{IVL}$ | 3.19 | mm |  | VERIFIED | [39] |
+| loads | IVL peak positive pulse pressure | $p_{peak}$ | 5 | MPa |  | VERIFIED | [5,7] |
+| loads | pulse attenuation factor, emitter to tissue | $s_{pulse}$ | 1 | - | 0.5; 1 | ASSUMPTION | unknown attenuation between emitter and tissue |
+| loads | perivascular support stiffness | $k_f$ | 0.0001 | MPa/mm | 0.001; 0.01; 0.1 | ASSUMPTION | negligible support |
+| loads | IVL pulse width (half sine, transient model) | $t_{pulse}$ | 2 | us |  | SECONDARY | [54] |
+| stent | stent target diameter (expanding rigid cylinder) | $D_{stent}$ | 3.21 | mm |  | VERIFIED | [39] |
+| stent | maximum mean balloon pressure (rated burst pressure) | $p_{rated}$ | 1.62 | MPa |  | VERIFIED | [52] |
+| stent | acute recoil target of the stiffness identification | $r_{rec}$ | 4.3 | % |  | VERIFIED | [53] |
+| stent | malapposition distance threshold | $g_{mal}$ | 0.1 | mm | 0.05; 0.2 | ASSUMPTION | OCT malapposition distance threshold (not verified) |
+| stent | stent radial stiffness (identified) | $K_s$ | 6.07 | MPa/mm |  | CALIBRATED | [53] |
+| fracture/phase field | calcium failure strain (strain-controlled, primary, D5) | ε_f | 0.02 | - |  | DERIVED | [36] |
+| fracture/phase field | calcium failure stress (stress-controlled scenario, D5) | σ_c | 0.179 | MPa |  | VERIFIED | [36] |
+| fracture/phase field | regularisation length / calcium element size | ℓ/h | 2 | - | 1.5; 3 | ASSUMPTION | regularisation length = 2 calcium element sizes |
+| fracture/phase field | crack filler of fully damaged calcium (D9) | – | matrix |  | none | ASSUMPTION | a fully damaged calcium band keeps the small-strain shear modulus of the fibrous matrix around it … |
+| fracture/phase field | damage driving force (D10) | – | energy |  | rankine | ASSUMPTION | force that drives damage in the AT1 damage sub-problem only (the displacement problem always uses g(d) psi+ + … |
+| fracture/phase field | residual stiffness of fully damaged calcium | $k_{res}$ | 0.0001 | - |  | NUMERICAL | residual stiffness of fully damaged calcium |
+| fracture/phase field | cell-average damage of a cracked cell (post-processing) | $d_{crack}$ | 0.9 | - |  | DESIGN | cell-average d above which a cell is cracked (post-processing) |
+| fracture/phase field | crack-filler stiffness floor, max(k_res, μ_f/μ_Ca) | $k$ | 0.00549 | - |  | DERIVED | derived from fracture.crack_filler; fracture.k_residual; materials.fibrous.E; materials.calcium.E; materials.calcium.nu |
+| fracture/phase field | regularisation length, (ℓ/h) h_Ca | ℓ | 0.08 | mm |  | DERIVED | derived from fracture.ell_over_h; discretisation.h_calcium_mm |
+| fracture/phase field | damage-onset energy density, E_Ca ε_f²/2 | ψ_crit | 0.073 | MPa |  | DERIVED | derived from materials.calcium.E; fracture.eps_f |
+| fracture/phase field | implied calcium failure stress, E_Ca ε_f | σ_crit | 7.3 | MPa |  | DERIVED | derived from materials.calcium.E; fracture.eps_f |
+| fracture/phase field | fracture toughness, 16 ℓ (1 − k) ψ_crit / 3 (AT1 onset at ψ_crit) | $G_c$ | 0.031 | N/mm |  | DERIVED | derived from fracture.ell_over_h; discretisation.h_calcium_mm; fracture.crack_filler |
+| numerics | A-lines of the polar label map | n_θ | 360 | - |  | DESIGN | A-lines (1 deg), IVOCT-like polar map |
+| numerics | radial sampling of the polar label map | Δr | 0.01 | mm |  | DESIGN | 10 um radial sampling |
+| numerics | element size in and near calcium | $h_{Ca}$ | 0.04 | mm |  | DESIGN | coarse-mesh defaults (user request); mesh convergence study (results/verification_mesh_convergence.json) |
+| numerics | element size elsewhere | $h_{soft}$ | 0.15 | mm |  | DESIGN | mesh convergence study (results/verification_mesh_convergence.json) |
+| numerics | contact penalty stiffness | $k_{pen}$ | 1000 | MPa/mm |  | NUMERICAL | penalty stiffness |
 
 ### 2.2. Lesion Cohort
 
@@ -102,6 +172,18 @@ Between the default and the finest mesh, the pre-treatment predictors changed by
 
 **Figure 3.** Verification. (a) Hoop stress of the linear solver against the plane-strain Lamé solution of a thick-walled cylinder. (b) Relative error of the radial displacement and the hoop stress at each sample radius, with the tolerance. (c) Pre-treatment predictors at the default and the coarse mesh relative to the finest mesh, with the acceptance band; the raw cell peaks are marked as excluded. (d) Damage onset of the AT1 phase field in homogeneous tension against the analytical onset.
 
+**Table 2.** (a) Verification against analytical solutions and mesh refinement.
+
+| Check | Quantity | Result | Acceptance | Met |
+|---|---|---|---|---|
+| Linear elasticity: thick cylinder under lumen pressure vs Lamé solution | largest relative error of u_r and σθθ (calcium, fibrous) | 0.573% | ≤ 1% | yes |
+| Mesh convergence of the predictors (2 lesions, 3 mesh levels) | largest change, default vs finest mesh (sed_peak_nl); cell-level peaks (sigma1_peak, sed_peak) excluded as mesh-dependent | 2.0002% | ≤ 2% | no (marginally above) |
+| AT1 phase field: damage onset vs the analytical onset (uniform strain, 2D and 3D) | largest relative error of the onset energy and strain | 0.74% | ≤ 5% | yes |
+| Hyperelastic solver: small-load thick cylinder vs Lamé solution | largest relative error of u_r | 0.137% | ≤ 1% | yes |
+| Penalty contact: rigid cylinder in a thick cylinder vs Lamé solution | largest relative error of the contact pressure | 0.73% | ≤ 10% | yes |
+| Penalty contact: penetration | largest penetration / penalty penetration p/k_pen | 1.20 | ≤ 1.5 | yes |
+| Elastic foundation (rigid-body constraint): sensitivity of the predictors | change of the peak σ1 when the foundation stiffness is raised from 0.0001 to 0.001 MPa/mm | 0.038% | ≤ 0.1% | yes |
+
 ### 3.2. Simulated Lesion Outcomes
 
 The core set comprised 34 lesions and the hold-out set 0. Runs that did not complete: the plain balloon (2 not run); IVL (2 not run); stenting without IVL (4 not run); stenting after IVL (2 not run). In 10 of 32 completed IVL runs of the core set, at least one load step was accepted after the staggered iteration reached its iteration limit (Section 2.6). No stent run of the core set was pressure-limited.
@@ -128,7 +210,7 @@ Of the 32 core lesions with a completed IVL run, 16 had through-thickness damage
 
 On the core set, the mechanics predictors with the largest AUC were the non-local peak $\sigma_1$ (AUC 0.96; 95% CI 0.89–1.00), the non-local peak SED (AUC 0.96; 95% CI 0.89–1.00) and the 99th percentile of $\sigma_1$ (AUC 0.95; 95% CI 0.85–1.00). Among the geometric descriptors, the largest AUC was that of the calcium arc (AUC 0.88; 95% CI 0.73–1.00), and the Fujino score had an AUC of 0.62 (95% CI 0.43–0.78). With the threshold re-derived in each leave-one-out fold, the non-local peak $\sigma_1$ classified the core lesions with a sensitivity of 0.94 and a specificity of 0.81; the Fujino score had 0.31 and 0.94.
 
-The rule of Section 2.10 selected the non-local peak $\sigma_1$, the mean $\sigma_1$ and the edge stress concentration factor for LIFT. These predictors were selected in every leave-one-out fold. No selected predictor had a coefficient opposite to its stated direction. LIFT had an apparent AUC of 0.99 and a leave-one-out AUC of 0.95 (95% CI 0.85–1.00), with a leave-one-out log-loss of 0.284 and Brier score of 0.081. Its leave-one-out AUC was not different from that of the non-local peak $\sigma_1$ (difference −0.01; 95% CI −0.06 to 0.02).
+The rule of Section 2.10 selected the non-local peak $\sigma_1$, the mean $\sigma_1$ and the edge stress concentration factor for LIFT (Table 4). These predictors were selected in every leave-one-out fold. No selected predictor had a coefficient opposite to its stated direction. LIFT had an apparent AUC of 0.99 and a leave-one-out AUC of 0.95 (95% CI 0.85–1.00), with a leave-one-out log-loss of 0.284 and Brier score of 0.081. Its leave-one-out AUC was not different from that of the non-local peak $\sigma_1$ (difference −0.01; 95% CI −0.06 to 0.02).
 
 Compared with the Fujino score, the AUC of the non-local peak $\sigma_1$ was higher (difference 0.35; 95% CI 0.18–0.54), and so was the leave-one-out AUC of LIFT (difference 0.34; 95% CI 0.18–0.52). The geometry-only model had a leave-one-out AUC of 0.88, and adding the selected mechanics predictors gave 0.92 (difference 0.04; 95% CI −0.01 to 0.12; Figure 6d). The apparent difference with both models refitted in every resample was 0.04 (95% CI 0.00–0.14). The interval of the AUC difference includes zero, so the AUC gives no evidence of incremental value; whereas the out-of-fold log-loss and Brier score were lower with mechanics (log-loss difference −0.115; 95% CI −0.179 to −0.052; Brier score difference −0.034; 95% CI −0.059 to −0.009).
 
@@ -137,6 +219,54 @@ On the hold-out set, with the core thresholds and models unchanged, the non-loca
 ![Figure 6](../figures/fig6_prediction.png)
 
 **Figure 6.** Prediction of through-thickness calcium damage under IVL. (a) Core set: ROC curves of the best single mechanics predictor and the Fujino score (fixed scores) and of the composite index and the geometry and geometry + mechanics models (leave-one-out predictions). (b) Hold-out set: the same scores and the core-fit models, unchanged. (c) AUC with its bootstrap interval for every candidate on the core set (filled) and on the hold-out set (open). (d) Difference in AUC, geometry + mechanics minus geometry, with its paired bootstrap interval.
+
+**Table 3.** Univariable prediction of through-thickness damage under IVL. Core AUC with bootstrap interval, Youden threshold, sensitivity and specificity (apparent and leave-one-out), and the hold-out AUC, sensitivity and specificity at the core threshold. 'Set on core': direction not stated a priori.
+
+| Predictor | Unit | Damage expected for | Core AUC (95% CI) | Threshold (95% CI) | Sens / spec | LOOCV sens / spec | Hold-out AUC (95% CI) | Hold-out sens / spec |
+|---|---|---|---|---|---|---|---|---|
+| σ1, non-local peak | MPa | higher | 0.96 (0.89–1.00) | 1.9 (1.75–3.41) | 1.00 / 0.88 | 0.94 / 0.81 |  |  |
+| SED, non-local peak | MJ/m³ | higher | 0.96 (0.89–1.00) | 0.00506 (0.00439–0.0157) | 1.00 / 0.88 | 1.00 / 0.88 |  |  |
+| σ1, 99th percentile | MPa | higher | 0.95 (0.85–1.00) | 2.74 (1.81–3.02) | 0.81 / 0.94 | 0.81 / 0.75 |  |  |
+| σ1, 95th percentile | MPa | higher | 0.91 (0.79–0.99) | 2.39 (1.21–2.72) | 0.81 / 0.94 | 0.81 / 0.88 |  |  |
+| Calcium arc | deg | higher | 0.88 (0.73–1.00) | 168 (142–168) | 0.88 / 0.94 | 0.88 / 0.94 |  |  |
+| SED, mean | MJ/m³ | higher | 0.83 (0.68–0.96) | 0.00233 (0.00192–0.00288) | 0.75 / 0.94 | 0.75 / 0.94 |  |  |
+| Area fraction ε1 > εf/2 | – | higher | 0.82 (0.69–0.94) | 0.000597 (0.000597–0.0259) | 0.69 / 0.94 | 0.62 / 0.94 |  |  |
+| Area fraction σ1 > σc/2 | – | higher | 0.81 (0.67–0.94) | 0.00156 (0.00156–0.0272) | 0.69 / 0.94 | 0.62 / 0.94 |  |  |
+| σ1, mean | MPa | higher | 0.76 (0.56–0.91) | 0.848 (0.76–1.3) | 0.81 / 0.69 | 0.75 / 0.62 |  |  |
+| Number of deposits | – | lower (set on core) | 0.75 (0.62–0.88) | 1.5 (1.5–2.5) | 1.00 / 0.50 | 1.00 / 0.50 |  |  |
+| Calcium area | mm² | higher (set on core) | 0.69 (0.50–0.87) | 2.2 (0.756–2.37) | 0.38 / 1.00 | 0.31 / 0.94 |  |  |
+| Edge stress concentration | – | higher | 0.66 (0.46–0.84) | 3.47 (1.45–3.65) | 0.31 / 1.00 | 0.31 / 0.62 |  |  |
+| Fujino score (cross-sectional) | points | higher | 0.62 (0.43–0.78) | 1.5 (0.5–2.5) | 0.31 / 0.94 | 0.31 / 0.94 |  |  |
+| Lumen area | mm² | lower (set on core) | 0.57 (0.41–0.72) | 2.07 (2.07–2.14) | 0.31 / 0.88 | 0.31 / 0.81 |  |  |
+| Plaque eccentricity | – | higher (set on core) | 0.57 (0.43–0.71) | 0.246 (0.115–0.246) | 0.25 / 0.88 | 0.25 / 0.81 |  |  |
+| Calcium thickness | mm | lower | 0.54 (0.35–0.73) | 0.75 (0.3–0.95) | 0.81 / 0.31 | 0.81 / 0.31 |  |  |
+| Area fraction σ1 > σc | – | higher | 0.53 (0.50–0.59) | 0.00015 (0.00015–0.00015) | 0.06 / 1.00 | 0.00 / 1.00 |  |  |
+| Lipid arc | deg |  | 0.50 |  |  |  |  |  |
+| Area fraction ε1 > εf | – |  | 0.50 |  |  |  |  |  |
+| Calcium depth (minimum) | mm | lower | 0.44 (0.31–0.59) | 0.25 (0.25–0.25) | 0.69 / 0.19 | 0.69 / 0.19 |  |  |
+| Minimum thickness under high stress | mm | lower | 0.26 (0.11–0.46) | 0.585 (0.145–0.795) | 0.81 / 0.12 | 0.81 / 0.12 |  |  |
+
+† Degenerate bootstrap interval (an AUC of zero or one, or every resample equal); not a statement of precision.
+
+**Table 4.** (a) Composite index, best single predictor, Fujino score and the geometry models for through-thickness damage under IVL.
+
+| Model | Type | Core AUC, apparent | Core AUC, LOOCV (95% CI) | LOOCV log-loss | LOOCV Brier | Hold-out AUC (95% CI) |
+|---|---|---|---|---|---|---|
+| σ1, non-local peak | single mechanics predictor (best core AUC) | 0.96 |  |  |  |  |
+| Fujino score (cross-sectional) | imaging score | 0.62 |  |  |  |  |
+| LIFT (σ1, non-local peak, σ1, mean, Edge stress concentration) | composite index (penalised logistic) | 0.99 | 0.95 (0.85–1.00) | 0.284 | 0.081 |  |
+| geometry model | penalised logistic | 0.94 | 0.88 | 0.499 | 0.129 |  |
+| geometry + mechanics model | penalised logistic | 0.98 | 0.92 | 0.384 | 0.096 |  |
+
+**Table 4.** (continued) (b) Paired differences: AUC difference with its bootstrap interval, share of resamples with a difference at or below zero (descriptive), and differences in log-loss and Brier score.
+
+| Comparison | Set | AUC a | AUC b | ΔAUC (95% CI) | Share of resamples with ΔAUC ≤ 0 | Δ log-loss (95% CI) | Δ Brier (95% CI) |
+|---|---|---|---|---|---|---|---|
+| LIFT (LOOCV) - Fujino score | core | 0.95 | 0.62 | 0.34 (0.18–0.52) | 0.0 |  |  |
+| σ1, non-local peak - Fujino score | core | 0.96 | 0.62 | 0.35 (0.18–0.54) | 0.0 |  |  |
+| LIFT (LOOCV) - σ1, non-local peak | core | 0.95 | 0.96 | −0.01 (−0.06 to 0.02) | 0.792 |  |  |
+| geometry + mechanics − geometry, apparent (refit in each resample) | core | 0.98 | 0.94 | 0.04 (0.00–0.14) | 0.324 |  |  |
+| geometry + mechanics − geometry, LOOCV | core | 0.92 | 0.88 | 0.04 (−0.01 to 0.12) | 0.099 | −0.115 (−0.179 to −0.052) | −0.034 (−0.059 to −0.009) |
 
 ### 3.4. Secondary Outcomes
 
@@ -158,9 +288,86 @@ Stent expansion without IVL showed no clear association with the cross-sectional
 
 The IVL balloon inflated without pulses produced no through-thickness damage in any core lesion (check C6). This model-internal criterion was used for the calibration on the pilot lesions, three of which share the geometry of core lesions, so it is not independent of the calibration.
 
+**Table 2.** (continued) (b) Consistency of the simulated outcomes with published observations and model-internal criteria. Agreement criteria are stated per check in the results files; hold-out rows are evaluated with core-derived quantities only.
+
+| Check | Set | Observation | Published | Model value (95% CI) | n | Agreement |
+|---|---|---|---|---|---|---|
+| C1 | core | larger calcium arc, more calcium fracture (plain balloon angioplasty, OCT; published arc cutoff) | fracture_angle_cutoff_balloon = 225 deg | 0.77 (0.58–0.90) | 32 | agrees |
+| C2 | core | thinner calcium, more calcium fracture (plain balloon angioplasty, OCT; published thickness cutoff) | fracture_thickness_cutoff_balloon = 0.24 mm [status SECONDARY] | −0.15 (−0.50 to 0.20) | 32 | partial |
+| C3 | core | calcified nodules fracture less often than sheet calcium under IVL (OCT) | nodular_calcium_odds_ratio_for_fracture = 0.24 OR (95% CI 0.08-0.70); fracture_rate_calcified_nodule_sites_IVL = 23.1 % (155 patients (Disrupt CAD III/IV OCT)) | 0.75 (0.14–4.04) | 24 | partial |
+| C4 | core | lesion-level calcium fracture rate after IVL (OCT, Disrupt CAD trials) | fracture_rate_DisruptCAD_III_OCT = 67.4 % of lesions (n=100); fracture_rate_DisruptCAD_II_OCT = 78.7 % of lesions (n=47) | 50.00 (33.63–66.37) | 32 | disagrees |
+| C5 | core | a plain balloon (IVL catheter balloon inflated without lithotripsy pulses) does not fracture calcium (human cadaver coronary lesions, histology) | calcium_fracture_rate_POBA_10atm_cadaver_histology = 0 % of lesions (0 of 7 lesions (POBA) vs IVL 62.5 % of 8 lesions, P = 0.01) | 53.12 (36.45–69.13) | 32 | disagrees |
+| C6 | core | the IVL balloon inflated alone (no pulses) does not fracture calcium; model-internal surrogate of decision D8, calibrated on the pilot lesions only, not a published observation | none (model-internal criterion) | 0.00 (0.00–10.15) | 34 | agrees |
+| C7 | core | stent expansion after IVL (OCT, Disrupt CAD III) | stent_expansion_maxCa_site_DisruptCAD_III = 101.7 SD 28.9 %; stent_expansion_MSA_site_DisruptCAD_III = 78.4 SD 25.8 % | 82.11 | 32 | agrees |
+| C8 | core | acute stent recoil (clinical QCA, cobalt-chromium everolimus-eluting stent) | acute_recoil_EES_CoCr_clinical = 4.3 SD 7.1 % | 4.94 | 32 | agrees |
+| C9 | core | calcium stress magnitude under post-dilation balloon loading in an earlier FE study (in silico) | insilico_postdilation_calcium_stress: not read (literature parameter 'insilico_postdilation_calcium_stress' has no numeric value (value cell '1.5 (10 atm); 8.4 (20 atm)' is not a plain number; not parsed by hand)) | 6.02 | 34 | not computed |
+| C10 | core | number of fractures per lesion and fraction of full-thickness fractures after IVL (pooled OCT analysis) | fractures_per_lesion_pooled_IVL_OCT = 3.1 SD 2.7 count; full_thickness_fracture_fraction_pooled_IVL_OCT = 72 % of fractures | 1.00 | 16 | partial |
+| C11 | core | higher OCT calcium (Fujino) score, lower stent expansion | fujino_score4_stent_expansion = 78 % (96 (score 0-3)) | 0.07 (−0.36 to 0.47) | 30 | disagrees |
+| C12 | cohort | implied plaque burden of the constructed lesions vs CTA plaque burden of calcified plaques and calcified nodules | plaque_burden_calcified_plaque_CTA = 77.05 % (CN 85.40; P=0.005); plaque_burden_calcified_nodule_CTA = 85.4 % (P=0.005 vs calcified plaque without CN) | 80.58 | 72 | partial |
+
 ### 3.6. Sensitivity and Uncertainty
 
 [pending] One-at-a-time, Morris and Sobol results; three-dimensional length series.
+
+## 4. Discussion
+
+In a structured *in silico* cohort of calcified coronary cross-sections, mechanics predictors computed from a linear-elastic analysis of the untreated lesion discriminated through-thickness calcium damage under IVL, which was computed by a separate nonlinear phase-field model. The best single predictor, the non-local peak $\sigma_1$, reached a core-set AUC of 0.96 and discriminated better than the cross-sectional Fujino score (AUC 0.62). The composite index LIFT did not improve on the best single predictor. Geometry alone already carried much of the information: the calcium arc was the strongest geometric descriptor, and the geometry-only model reached a leave-one-out AUC of 0.88. Adding mechanics did not clearly change the leave-one-out AUC, but it lowered the out-of-fold log-loss and Brier score, so its gain lay in calibrated probabilities more than in ranking. The hold-out evaluation (Section 3.3) tests the core thresholds and models on lesions outside the core design.
+
+The Fujino score was built to predict stent underexpansion, and it awards points for a large calcium arc, a thick deposit and a long lesion [2]. For fracture, these factors do not act in the same direction. After plain balloon angioplasty, fracture was associated with a large arc and thin calcium [3]. The model reproduced the arc association (check C1) and partly reproduced the thickness association (check C2). A thick deposit adds to the Fujino score, but in a thick-walled calcium shell the same lumen pressure produces lower stress. A predictor that combines arc, thickness and depth through the stress field can therefore rank lesions for fracture differently from a score that adds them. The non-local stress measures used here were also less sensitive to the mesh than raw cell peaks (Section 3.1), which matters when a single peak value is used as a threshold.
+
+Clinical OCT studies report fewer calcium fractures after IVL in calcified nodules than in other calcium [11,12]. The model partly reproduced this (check C3). Fragmented deposits had no through-thickness damage in any of the 8 core lesions. Separate small deposits do not form a continuous arc that carries hoop stress, so the model predicts that they are unlikely to crack through. The model has no clinical counterpart for this result, and it should be tested with OCT.
+
+The absolute fracture rates of the model should not be compared with clinical rates. The core set is a designed factorial, not a case mix (check C4). More importantly, the calcium modulus was calibrated so that the IVL balloon inflated alone does not fracture calcium (decision D8). With this calibration the plain balloon at its higher pressure produced through-thickness damage in 53% of the core lesions, whereas no lesion fractured under a plain balloon in a human cadaver study [50] (check C5). The model's static fracture load therefore lies between the two balloon pressures, lower than the cadaver data suggest. Because IVL entered the outcome model as an equivalent static pressure, the same bias may affect IVL. The predictors were scored on the ranking of lesions, which is less sensitive to such a shift than absolute rates. The sensitivity analysis to the calcium modulus (Section 3.6) quantifies this dependence.
+
+Stent expansion varied little between lesions and was nearly the same with and without prior IVL (Section 3.2). In the model, stenting alone produced through-thickness damage in 12 of 14 lesions that IVL fractured, and the stent was represented as a rigid cylinder expanded towards a target diameter. The model therefore cannot show a benefit of IVL on expansion, and the narrow spread of expansion (check C7) shows that the stent model does not reproduce the variability seen in patients. The exploratory stent analyses are reported for completeness and should not be read as clinical predictions.
+
+The phase field spread damage over most of the deposit, whereas the element-erosion comparator produced discrete cracks. The phase-field outcome is a statement about through-thickness loss of load-bearing capacity, not about the number or position of cracks, so the fracture counts of OCT studies (check C10) cannot be compared with it [10]. The width of a phase-field damage band scales with the regularisation length, and the thinnest calcium of the core set was only 2.5 such lengths thick, so a single band can span the deposit.
+
+Predictors and outcomes were computed with separate models (Section 2.1): the predictors from a linear-elastic analysis of the undamaged lesion under the IVL balloon pressure, and the outcomes from a nonlinear phase-field analysis under the equivalent IVL load. Both models share the lesion geometry and the calcium constants, so this separation lies in the physics and the load, not in the inputs. A stress predictor that summarises the same geometry and constants is expected to discriminate well within the model. The AUCs therefore measure how much of the nonlinear outcome is already contained in the linear stress state of the untreated lesion; they are not estimates of clinical accuracy. Scoring the same predictors against the erosion comparator, a different fracture model, is a partial check (Section 3.4).
+
+This study has further limitations. No patient outcome data exist for these lesions; the evidence is verification, consistency with published observations, and sensitivity analysis. The lesions are idealised two-dimensional plane-strain cross-sections; the three-dimensional length series covers one cross-section only. IVL was represented by a quasi-static equivalent load from a linear transient analysis of one pulse with an assumed shape; pulse number, fatigue and cavitation were not modelled. The calcium properties are uncertain over a wide range, and the failure criterion rests on few tissue-level data. In 10 of 32 core IVL runs, at least one load step was accepted with an unconverged staggered iteration. The non-local peak SED changed under mesh refinement by slightly more than the acceptance limit. The core set is small, so apparent AUCs are optimistic; the leave-one-out and hold-out estimates are the relevant ones. Directions of some geometric descriptors were set on the core set, and the composite rule was drafted after a test run on preliminary core results.
+
+The next steps are lesions built from patient OCT images with segmentation-to-mesh pipelines [29–31], comparison of the predicted fracture with OCT after IVL in the same lesions, three-dimensional models over the lesion length, and a deformable stent model. Only such a comparison can show whether the pre-treatment mechanics predictors identified here carry information for patients.
+
+## 5. Conclusions
+
+In a structured *in silico* cohort of calcified coronary lesions, stress measures from a linear-elastic analysis of the untreated lesion ranked lesions for through-thickness calcium damage under IVL better than the cross-sectional Fujino score, but added no clear discrimination to geometry alone. The fracture outcome came from a separate nonlinear phase-field model, but both models share the lesion geometry and the calcium constants, and the calcium modulus was calibrated to a model-internal criterion. The results show what a mechanics digital twin can extract from pre-treatment geometry; whether this carries information for patients must be tested against OCT after IVL in patient-derived lesions.
+
+### Supplementary Materials
+
+The source code, configuration, literature parameter table, numbers ledger of this manuscript and all results files are available in the study repository (see Data Availability Statement).
+
+### Author Contributions
+
+[To be completed by the authors (CRediT taxonomy).]
+
+### Funding
+
+[To be completed by the authors.]
+
+### Institutional Review Board Statement
+
+Not applicable. This *in silico* study used no human or animal data.
+
+### Informed Consent Statement
+
+Not applicable.
+
+### Data Availability Statement
+
+All code, inputs and results are available in the study repository [URL and archived release to be added]. A single script (run_all.py) regenerates every result, figure, table and this manuscript.
+
+### Acknowledgments
+
+During the preparation of this work, the authors used Claude (Anthropic), an AI assistant, to write the simulation and analysis code, run the simulations and draft the manuscript text. The authors reviewed and edited the output and take full responsibility for the content of this publication.
+
+### Conflicts of Interest
+
+[To be completed by the authors.]
+
+### Abbreviations
+
+The following abbreviations are used in this manuscript: AT1, phase-field fracture model with linear local dissipation (Ambrosio–Tortorelli-type functional); AUC, area under the receiver operating characteristic curve; CI, confidence interval; EEM, external elastic membrane; FE, finite element; GCI, grid convergence index; IEL, internal elastic lamina; IVL, intravascular lithotripsy; LIFT, Lithotripsy-Induced Fracture Tendency index; LOOCV, leave-one-out cross-validation; OCT, optical coherence tomography; ROC, receiver operating characteristic; SED, strain energy density.
 
 ## References
 
