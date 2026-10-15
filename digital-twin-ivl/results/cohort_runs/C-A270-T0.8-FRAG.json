@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A270-T0.8-FRAG",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 6059,
+  "n_cells": 11896,
+  "n_cells_per_tag": {
+   "1": 1988,
+   "2": 4564,
+   "4": 5344
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 0.7077257965317295,
+  "sigma1_p99": 0.8319228590455716,
+  "sigma1_mean": 0.4668147395527174,
+  "sigma1_peak_nl": 0.8097185968908233,
+  "sed_mean": 0.00048244074660579135,
+  "sed_peak_nl": 0.001175816928805988,
+  "scf_edge_nl": 1.7345609045392658,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.0,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.0,
+  "min_thickness_high_stress": 0.11,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.7388403329996436
+ }
+}
