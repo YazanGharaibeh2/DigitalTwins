@@ -338,3 +338,20 @@ trajectories, censoring counts per input, median onset load step, note).
 Worker lock files are in `locks/` under each run directory. A run record is
 `complete` only if no protocol raised (status `error`); resume runs the
 others again.
+
+Sobol stage (`src/drivers/stage_sobol.py`; study plan: Sobol indices for the
+linear predictors, config `design.sensitivity.sobol`). Model: the cohort
+predictor analysis (`predictor_analysis`, `stage_cohort_runs.PREDICTOR_KEYS`)
+with the sample's `MaterialSet` and `k_found`, over the Morris inputs that
+enter it (per-input decisions in the config; the pulse scale, ℓ and the
+calcium density are excluded). `results/sensitivity_sobol_runs/<lesion>.npz`
+(Saltelli sample matrix, predictor outputs per row, per-row status and wall
+time, baseline outputs, mesh size and design hash, checked on every resume;
+written after every block of `BLOCK_GROUPS` Saltelli groups) and
+`results/sensitivity_sobol.json` (`analyze`: `S1`, `S1_conf`, `ST`, `ST_conf`
+per input, predictor and lesion, mean and variance of each predictor, the
+cross-lesion ranking stability per predictor as Kendall tau-b between the
+lesions' baseline values and their values at each sample (median,
+`tau_range_pct` percentiles, fraction of samples with the order unchanged),
+the baseline row against the lesion's cohort-run predictors, planned and
+measured cost, note).
