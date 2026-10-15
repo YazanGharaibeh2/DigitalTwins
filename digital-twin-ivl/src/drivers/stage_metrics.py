@@ -478,7 +478,8 @@ def _univariable_binary(col, name, oc, core, hold, cfg) -> dict:
         hrow = _holdout_binary(base, yh, xh[mh], s, r["threshold"], cfg, f"{name}|{pred}|holdout")
         hrow["direction_source"] = src
         col.row(**hrow)
-        out[pred]["holdout"] = {k: hrow.get(k) for k in ("n", "n_pos", "n_neg", "sens", "spec", "acc", "auc")}
+        out[pred]["holdout"] = {k: hrow.get(k) for k in ("n", "n_pos", "n_neg", "sens", "spec", "acc", "auc",
+                                                         "auc_ci_lo", "auc_ci_hi", "auc_ci_degenerate")}
     return out
 
 

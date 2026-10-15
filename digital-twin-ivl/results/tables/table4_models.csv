@@ -1,6 +1,6 @@
 Model,Type,n core,"Core AUC, apparent","Core AUC, LOOCV (95% CI)",LOOCV log-loss,LOOCV Brier,Hold-out AUC (95% CI),n hold-out
-"σ1, 95th percentile",single mechanics predictor (best core AUC),20,1.00,,,,,0
-Fujino score (cross-sectional),imaging score,20,0.35,,,,,0
-"LIFT (σ1, 95th percentile, Area fraction ε1 > εf/2)",composite index (penalised logistic),20,1.00,1.00 (1.00–1.00)†,0.237,0.063,,0
-geometry model,penalised logistic,20,1.00,0.96,0.287,0.087,,0
-geometry + mechanics model,penalised logistic,20,1.00,0.99,0.206,0.058,,0
+"σ1, non-local peak",single mechanics predictor (best core AUC),32,0.96,,,,,0
+Fujino score (cross-sectional),imaging score,32,0.62,,,,,0
+"LIFT (σ1, non-local peak, σ1, mean, Edge stress concentration)",composite index (penalised logistic),32,0.99,0.95 (0.85–1.00),0.284,0.081,,0
+geometry model,penalised logistic,32,0.94,0.88,0.499,0.129,,0
+geometry + mechanics model,penalised logistic,32,0.98,0.92,0.384,0.096,,0

@@ -90,6 +90,78 @@ As a cross-model check, the same predictors were scored against through-thicknes
 
 The models were implemented in Python 3.12.15 with DOLFINx 0.11.0 [66] and PETSc 3.25.6 with the direct solver MUMPS 5.8.2. Meshes were generated with Gmsh 4.15.2 [46]. The statistics used scikit-learn 1.9.1 and SciPy 1.18.1, and the global sensitivity analyses used SALib 1.6.0 [64]. A single script regenerates every result, figure, table and this manuscript from the configuration and the literature parameter table, and all random draws are seeded. Every number in the text is read, when the manuscript is built, from a results file, the parameter files, the source code (solver and design constants) or the environment files (software versions). The build lists each number with its source and fails if the text contains a number that was not read from a file.
 
+## 3. Results
+
+### 3.1. Verification
+
+The linear solver reproduced the plane-strain Lamé solution of a thick-walled cylinder with a largest relative error of 0.57% in the hoop stress and 0.018% in the radial displacement (tolerance 1%; Figure 3a,b). The hyperelastic solver reproduced the small-load Lamé displacement within 0.14%. In homogeneous tension, damage onset in the AT1 phase field occurred within 0.57% of the analytical critical energy and 0.74% of the analytical onset strain (tolerance 5%; Figure 3d).
+
+Between the default and the finest mesh, the pre-treatment predictors changed by at most 1.5% (the 95th percentile of $\sigma_1$), within the acceptance limit of 2% (Figure 3c). The exception was the non-local peak SED, which changed by 2.0%, just above the limit, with divergent behaviour of the three-level estimate [62]; it was kept as a candidate and is flagged here. The raw cell peaks of $\sigma_1$ and SED changed by 8.5% and 15.4%, which is why only their non-local versions were used. The verification results are summarised in Table 2.
+
+![Figure 3](../figures/fig3_verification.png)
+
+**Figure 3.** Verification. (a) Hoop stress of the linear solver against the plane-strain Lamé solution of a thick-walled cylinder. (b) Relative error of the radial displacement and the hoop stress at each sample radius, with the tolerance. (c) Pre-treatment predictors at the default and the coarse mesh relative to the finest mesh, with the acceptance band; the raw cell peaks are marked as excluded. (d) Damage onset of the AT1 phase field in homogeneous tension against the analytical onset.
+
+### 3.2. Simulated Lesion Outcomes
+
+The core set comprised 34 lesions and the hold-out set 0. Runs that did not complete: the plain balloon (2 not run); IVL (2 not run); stenting without IVL (4 not run); stenting after IVL (2 not run). In 10 of 32 completed IVL runs of the core set, at least one load step was accepted after the staggered iteration reached its iteration limit (Section 2.6). No stent run of the core set was pressure-limited.
+
+Through-thickness calcium damage occurred, in the core set, in 0 of 34 lesions under physiological pressure, 0 of 34 lesions under the IVL balloon inflated without pulses, 17 of 32 lesions under the plain balloon, 16 of 32 lesions under IVL, 13 of 30 lesions under stenting without IVL and 17 of 32 lesions under stenting after IVL (Figure 4 shows the damage fields of four lesions and Figure 5a the damage class of every core lesion). The plain balloon was inflated to a higher pressure than the IVL balloon (10 atm (1.01 MPa) versus 4 atm (0.405 MPa)); the plain-balloon result is compared with a published cadaver observation in Section 3.5.
+
+Under IVL, through-thickness damage occurred in 2 of 12 at 90°, 9 of 12 at 180° and 5 of 8 at 270° of arc. By thickness it occurred in 7 of 12 at 0.2 mm, 6 of 12 at 0.4 mm and 3 of 8 at 0.8 mm, and by morphology in 6 of 8 superficial sheets, 5 of 8 deep sheets, 5 of 8 nodules and 0 of 8 fragmented deposits.
+
+The phase-field damage was mostly spread over the deposit rather than concentrated in discrete cracks: in 16 of 16 core lesions with through-thickness damage under IVL, damage covered at least half of the damaged calcium region (the diffuse pattern of Section 2.7; Figure 4a). The element-erosion comparator, run on 4 lesions, gave through-thickness cracks in 4 of them, as discrete cracks (median 2.5 per lesion; Figure 4b). The damage after stenting is shown in Figure 4c.
+
+In the 30 core lesions with both stent runs, the median stent expansion was 82.2% (interquartile range 81.2–83.1%) without IVL and 82.4% (81.2–83.1%) after IVL. The paired difference had a median of 0.0 percentage points (Figure 5b). Of the 14 of these lesions with through-thickness damage under IVL, 12 also had it under stenting without IVL. Across the core stent runs, the expansion ranged from 79.1% to 83.4%.
+
+![Figure 4](../figures/fig4_damage_fields.png)
+
+**Figure 4.** Calcium damage fields of one lesion per morphology with the same arc and thickness. (a) IVL with the phase field: damage. (b) IVL with the element-erosion comparator: eroded calcium cells. (c) Stent deployed after IVL: damage, with the lumen outline after stenting and the reference lumen. Deformed configuration, final state of each run.
+
+![Figure 5](../figures/fig5_outcomes.png)
+
+**Figure 5.** Outcomes of the core factorial. (a) Damage class of each lesion for each damage protocol (rows) and morphology (columns), on a grid of calcium arc by thickness: through-thickness damage, partial damage only, no damage onset, or not run; IVL cells give the damage-onset load. (b) Stent expansion without IVL and after IVL for each lesion; open markers: pressure-limited expansion.
+
+### 3.3. Prediction of Through-Thickness Damage under IVL
+
+Of the 32 core lesions with a completed IVL run, 16 had through-thickness damage; of the 0 hold-out lesions, 0 had. AUC intervals are bootstrap percentile intervals. The univariable results are listed in Table 3 and shown in Figure 6.
+
+On the core set, the mechanics predictors with the largest AUC were the non-local peak $\sigma_1$ (AUC 0.96; 95% CI 0.89–1.00), the non-local peak SED (AUC 0.96; 95% CI 0.89–1.00) and the 99th percentile of $\sigma_1$ (AUC 0.95; 95% CI 0.85–1.00). Among the geometric descriptors, the largest AUC was that of the calcium arc (AUC 0.88; 95% CI 0.73–1.00), and the Fujino score had an AUC of 0.62 (95% CI 0.43–0.78). With the threshold re-derived in each leave-one-out fold, the non-local peak $\sigma_1$ classified the core lesions with a sensitivity of 0.94 and a specificity of 0.81; the Fujino score had 0.31 and 0.94.
+
+The rule of Section 2.10 selected the non-local peak $\sigma_1$, the mean $\sigma_1$ and the edge stress concentration factor for LIFT. These predictors were selected in every leave-one-out fold. No selected predictor had a coefficient opposite to its stated direction. LIFT had an apparent AUC of 0.99 and a leave-one-out AUC of 0.95 (95% CI 0.85–1.00), with a leave-one-out log-loss of 0.284 and Brier score of 0.081. Its leave-one-out AUC was not different from that of the non-local peak $\sigma_1$ (difference −0.01; 95% CI −0.06 to 0.02).
+
+Compared with the Fujino score, the AUC of the non-local peak $\sigma_1$ was higher (difference 0.35; 95% CI 0.18–0.54), and so was the leave-one-out AUC of LIFT (difference 0.34; 95% CI 0.18–0.52). The geometry-only model had a leave-one-out AUC of 0.88, and adding the selected mechanics predictors gave 0.92 (difference 0.04; 95% CI −0.01 to 0.12; Figure 6d). The apparent difference with both models refitted in every resample was 0.04 (95% CI 0.00–0.14). The interval of the AUC difference includes zero, so the AUC gives no evidence of incremental value; whereas the out-of-fold log-loss and Brier score were lower with mechanics (log-loss difference −0.115; 95% CI −0.179 to −0.052; Brier score difference −0.034; 95% CI −0.059 to −0.009).
+
+On the hold-out set, with the core thresholds and models unchanged, the non-local peak $\sigma_1$ had an AUC of [pending] (95% CI [pending]–[pending]) and classified the lesions with a sensitivity of [pending] and a specificity of [pending]. LIFT had an AUC of [pending] (95% CI [pending]–[pending]), sensitivity [pending] and specificity [pending], and the Fujino score had an AUC of [pending] (95% CI [pending]–[pending]). The core-fit geometry + mechanics model minus the geometry-only model had a hold-out AUC difference of [pending] (95% CI [pending]–[pending]) (Figure 6b).
+
+![Figure 6](../figures/fig6_prediction.png)
+
+**Figure 6.** Prediction of through-thickness calcium damage under IVL. (a) Core set: ROC curves of the best single mechanics predictor and the Fujino score (fixed scores) and of the composite index and the geometry and geometry + mechanics models (leave-one-out predictions). (b) Hold-out set: the same scores and the core-fit models, unchanged. (c) AUC with its bootstrap interval for every candidate on the core set (filled) and on the hold-out set (open). (d) Difference in AUC, geometry + mechanics minus geometry, with its paired bootstrap interval.
+
+### 3.4. Secondary Outcomes
+
+Damage onset under IVL was recorded in 16 of 32 core lesions; the others were censored at their peak equivalent IVL pressure. The concordance of the onset load with the oriented predictors was highest for the non-local peak $\sigma_1$ (C 0.85; 95% CI 0.74–0.94) and the non-local peak SED (C 0.84; 95% CI 0.75–0.94). Under the plain balloon, the largest AUC among the mechanics predictors was that of the non-local peak $\sigma_1$ (AUC 0.99; 95% CI 0.95–1.00). The erosion subset had too few lesions in one outcome class for a univariable analysis.
+
+In the exploratory analysis of stent expansion after IVL, the strongest rank association was that of the non-local peak $\sigma_1$ (Spearman correlation 0.84; 95% CI 0.68–0.91), larger values going with larger expansion.
+
+### 3.5. Consistency with Published Observations
+
+Of the checks against published observations and model-internal criteria on the core set (Table 2), 4 agreed, 3 agreed partially, 3 disagreed and 1 could not be computed. The checks that agreed were C1, C6, C7 and C8; partial agreement (point estimate on the expected side, interval including the null value) was found for C2, C3 and C10; and C4, C5 and C11 disagreed.
+
+The proportion of core lesions with through-thickness damage under IVL was 50.0% (95% CI 33.6–66.4%), below the lesion-level fracture rates of 67.4% and 78.7% seen by OCT in the Disrupt CAD III and II studies [8,9] (check C4). The core set is a designed factorial, not a clinical case mix, so this proportion follows from the design. The plain balloon produced through-thickness damage in 53.1% (95% CI 36.4–69.1%) of core lesions, whereas no lesion fractured under a plain balloon in human cadaver coronary arteries examined by histology [50] (check C5). This disagreement follows from the calibration of the calcium modulus (decision D8), which was chosen so that the IVL balloon alone does not fracture calcium, at a lower pressure than the plain balloon.
+
+The mean stent expansion after IVL (82.1%, range 79.1–83.4%) lay within one standard deviation of the expansion reported at the site of maximum calcium (101.7%) and at the minimum stent area (78.4%) in Disrupt CAD III [9] (check C7). Its spread was much narrower than the clinical one (standard deviation 1.2 versus 28.9 percentage points).
+
+Under IVL, every fractured core lesion had a single through-thickness damage region, and 100% of the damage regions were full thickness, whereas a pooled OCT analysis of the Disrupt CAD studies reported a mean of 3.1 fractures per lesion, 72% of them full thickness [10] (check C10, partial agreement). The phase field spreads damage over the deposit, so it does not resolve separate cracks (Section 3.2).
+
+Stent expansion without IVL showed no clear association with the cross-sectional Fujino score (Spearman correlation 0.07; 95% CI −0.36 to 0.47; check C11). Clinically, lesions with a score of $4$ had a mean stent expansion of 78%, against 96% for lower scores [2]. The highest score requires a lesion-length criterion that a single cross-section cannot meet, and the model expansion varied little between lesions.
+
+The IVL balloon inflated without pulses produced no through-thickness damage in any core lesion (check C6). This model-internal criterion was used for the calibration on the pilot lesions, three of which share the geometry of core lesions, so it is not independent of the calibration.
+
+### 3.6. Sensitivity and Uncertainty
+
+[pending] One-at-a-time, Morris and Sobol results; three-dimensional length series.
+
 ## References
 
 1. Mintz, G. S. Intravascular Imaging of Coronary Calcification and Its Clinical Implications. *JACC: Cardiovascular Imaging* **2015**, *8*, 461–471.

@@ -1,0 +1,43 @@
+[
+ {
+  "started": "2026-10-15T05:27:57+00:00",
+  "git_commit": "08bbefba38c9bb6b99128bf03da79b8420affb5b",
+  "versions": {
+   "python": "3.12.15",
+   "dolfinx": "0.11.0",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "sklearn": "1.9.1",
+   "SALib": "1.6.0",
+   "matplotlib": "3.11.2",
+   "gmsh": "4.15.2"
+  },
+  "stages": [
+   {
+    "stage": "cohort_outcomes",
+    "started": "2026-10-15T05:27:57+00:00",
+    "status": "ok",
+    "seconds": 1.7
+   },
+   {
+    "stage": "metrics",
+    "started": "2026-10-15T05:27:59+00:00",
+    "status": "ok",
+    "seconds": 46.0
+   },
+   {
+    "stage": "consistency",
+    "started": "2026-10-15T05:28:45+00:00",
+    "status": "ok",
+    "seconds": 0.7
+   },
+   {
+    "stage": "tables",
+    "started": "2026-10-15T05:28:45+00:00",
+    "status": "ok",
+    "seconds": 0.2
+   }
+  ]
+ }
+]

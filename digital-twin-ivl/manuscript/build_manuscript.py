@@ -76,7 +76,11 @@ class BuildError(RuntimeError):
 class Ctx:
     """Data access, numbers ledger, citations and cross-references for the sections."""
 
-    def __init__(self):
+    PENDING = "[pending]"
+
+    def __init__(self, draft: bool = False):
+        self.draft = draft                  # draft: a missing value prints as PENDING (counted), not an error
+        self.pending: list[str] = []
         self.ledger: list[dict] = []
         self._cache: dict = {}
         self.cite_order: list[str] = []
@@ -119,6 +123,9 @@ class Ctx:
             scale: float = 1.0) -> str:
         """Format ``value * scale`` and record it; returns the marked text."""
         if value is None or (isinstance(value, float) and math.isnan(value)):
+            if self.draft:
+                self.pending.append(f"{src}:{key}")
+                return self.PENDING
             raise BuildError(f"no value for {src}:{key} ({label or ''})")
         if isinstance(value, bool):
             raise BuildError(f"boolean printed as a number: {src}:{key}")
@@ -131,13 +138,22 @@ class Ctx:
 
     def v(self, rel: str, key: str, fmt: str = ".3g", **kw) -> str:
         """Number at ``key`` of ``rel`` (json)."""
-        return self.num(self.get(rel, key), src=rel, key=key, fmt=fmt, **kw)
+        return self.num(self.opt(rel, key), src=rel, key=key, fmt=fmt, **kw)
+
+    def opt(self, rel: str, key: str):
+        """:meth:`get`, or None for a missing file or key in a draft build."""
+        try:
+            return self.get(rel, key)
+        except (KeyError, FileNotFoundError, IndexError):
+            if self.draft:
+                return None
+            raise
 
     def count(self, value: int, *, src: str, key: str, label: str | None = None) -> str:
         return self.num(int(value), src=src, key=key, fmt="d", label=label)
 
     def pct(self, rel: str, key: str, nd: int = 1, scale: float = 1.0) -> str:
-        return self.v(rel, key, fmt=f".{nd}f", scale=scale) + " %"
+        return self.v(rel, key, fmt=f".{nd}f", scale=scale) + "%"
 
     def ci(self, lo_text: str, hi_text: str) -> str:
         return f"{lo_text}–{hi_text}"
@@ -248,7 +264,7 @@ _ALLOWED = [
     r"Tables? \d+(?:\s*(?:and|,|–)\s*\d+)*",
     r"Sections? \d+(?:\.\d+)*",
     r"\[\d+(?:[,–]\d+)*\]",
-    r"\b[23]D\b", r"\bD\d{1,2}\b", r"\bAT1\b", r"\bP[12]\b", r"\bL[12]\b", r"\bC\d\b",
+    r"\b[23]D\b", r"\bD\d{1,2}\b", r"\bAT1\b", r"\bP[12]\b", r"\bL[12]\b", r"\bC\d{1,2}\b",
     r"\b[CHPX](?:3D)?-A\d+(?:\.\d+)?-T\d+(?:\.\d+)?(?:-L\d+)?-[A-Z]+\b",
     r"\$[^$]*\$",
 ]
@@ -375,10 +391,11 @@ def references_blocks(ctx: Ctx) -> list:
 
 # ------------------------------------------------------------------ build
 def build(docx: bool = True, draft: bool = False) -> dict:
-    """``draft``: missing figure files are reported instead of failing the build."""
+    """``draft``: missing figure files and missing values (printed as ``[pending]``) are reported instead of
+    failing the build."""
     import sections
 
-    ctx = Ctx()
+    ctx = Ctx(draft=draft)
     blocks = sections.document(ctx)
     body = render_md(ctx, blocks)
     bad = lint(body)                       # the reference list is outside the lint (years, volumes, pages)
@@ -404,7 +421,7 @@ def build(docx: bool = True, draft: bool = False) -> dict:
         render_docx(ctx, blocks, OUT_DOCX)
     return {"md": str(OUT_MD), "docx": str(OUT_DOCX) if docx else None, "n_numbers": len(ctx.ledger),
             "n_references": len(ctx.cite_order), "figures": ctx.figures, "tables": ctx.tables,
-            "missing_figures": missing}
+            "missing_figures": missing, "n_pending": len(ctx.pending), "pending": ctx.pending[:20]}
 
 
 def main(argv=None) -> int:
