@@ -266,6 +266,133 @@
     "ca_measure": 3.5043690544235
    },
    "seconds": 692.123381219
+  },
+  "stent_no_ivl": {
+   "status": "ok",
+   "summary": {
+    "K_s": 6.068239979987641,
+    "R_target": 1.605,
+    "p_rated": 1.6212,
+    "R_min": 0.5344704853110781,
+    "R_dep": 1.605,
+    "P_dep": 0.4678763717146749,
+    "reached_target": true,
+    "expand_status": "ok",
+    "max_contact_pressure_mean": 0.6373976053897373,
+    "R_final": 1.5308065024457234,
+    "P_final": 0.4502317065853284,
+    "recoil_status": "ok",
+    "n_bisection": 14,
+    "recoil_residual": 7.758471351704266e-06,
+    "metrics": {
+     "lumen_area_pre": 2.0615422235715,
+     "lumen_area_post": 7.359395253854149,
+     "lumen_gain": 5.297853030282649,
+     "msa": 7.361909414830609,
+     "stent_expansion_pct": 82.5354999314992,
+     "acute_recoil_pct": 4.622647822696363,
+     "malapposition_area": 0.0,
+     "malapposed_frac": 0.0,
+     "reached_target": true,
+     "max_contact_pressure_mean": 0.6373976053897373,
+     "R_dep": 1.605,
+     "R_final": 1.5308065024457234,
+     "malapposition_gap_mm": 0.1,
+     "reference_diameter_mm": 3.37
+    }
+   },
+   "n_steps": 65,
+   "n_steps_unconverged_stagger": 13,
+   "final": {
+    "p": 0.0,
+    "R_in": 1.5308065024457234,
+    "R_cap": null,
+    "lumen_area": 7.359395253854149,
+    "max_d": 1.0,
+    "n_crack_cells": 5333,
+    "p_contact_mean": 0.4502317065853284
+   },
+   "max_lumen_area": 8.08742841439637,
+   "cracks": {
+    "fracture": true,
+    "n_fractures": 1,
+    "n_partial": 0,
+    "diffuse": true,
+    "n_diffuse": 1,
+    "damaged_fraction": 1.0,
+    "max_depth_frac": 1.0,
+    "pattern": [
+     "diffuse"
+    ],
+    "location_frac": [
+     null
+    ],
+    "onset_load": 1.250387098259295,
+    "onset_phase": "stent_expand",
+    "n_cracked_cells": 5333,
+    "cracked_measure": 3.5043690544235,
+    "ca_measure": 3.5043690544235
+   },
+   "seconds": 3658.2842226309995
+  },
+  "ivl_erosion": {
+   "status": "ok",
+   "summary": {
+    "T": 0.0961527507089589,
+    "p_bal": 0.4053,
+    "p_peak": 5.0,
+    "pulse_scale": 1.0,
+    "p_top": 0.8860637535447945,
+    "cap_radius": 1.595,
+    "max_d": 1.0,
+    "max_p_cap_mean": 0.13149470814871822
+   },
+   "n_steps": 32,
+   "n_steps_unconverged_stagger": 0,
+   "final": {
+    "p": 0.0,
+    "R_in": null,
+    "R_cap": null,
+    "lumen_area": 2.061542223572094,
+    "max_d": 1.0,
+    "n_crack_cells": 446,
+    "p_contact_mean": 0.0
+   },
+   "max_lumen_area": 7.69625836223831,
+   "cracks": {
+    "fracture": true,
+    "n_fractures": 1,
+    "n_partial": 6,
+    "diffuse": false,
+    "n_diffuse": 0,
+    "damaged_fraction": 0.0858993773874262,
+    "max_depth_frac": 1.0,
+    "pattern": [
+     "radial",
+     "radial",
+     "radial",
+     "undetermined",
+     "undetermined",
+     "undetermined",
+     "undetermined"
+    ],
+    "location_frac": [
+     0.30283465985710106,
+     0.29805448543473134,
+     0.2725213881696251,
+     0.3297712729934019,
+     0.27950722536916356,
+     0.34687115592570616,
+     0.2930249671367427
+    ],
+    "onset_load": 0.5976055014179178,
+    "onset_phase": "ivl_pulse",
+    "n_cracked_cells": 446,
+    "cracked_measure": 0.30102311991074215,
+    "ca_measure": 3.5043690544235
+   },
+   "seconds": 253.51102127099966
   }
- }
+ },
+ "complete": true
 }
