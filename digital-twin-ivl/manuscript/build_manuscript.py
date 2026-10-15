@@ -377,7 +377,10 @@ def build(docx: bool = True, draft: bool = False) -> dict:
     missing = [n for n in ctx.figures if not (ROOT / "figures" / f"{n}.png").exists()]
     if missing and not draft:
         raise BuildError(f"figure files missing: {missing}")
-    banned = re.search(r"(?<!cross-)\bvalidat\w*", strip_marks(md), re.I)   # 'cross-validation' is a method name
+    # rule 3 applies to the text written for this study, not to the reference list: a cited title (e.g.
+    # "Verification, Validation and Uncertainty Quantification ...") is reproduced as published;
+    # "cross-validation" is a method name
+    banned = re.search(r"(?<!cross-)\bvalidat\w*", strip_marks(body), re.I)
     if banned:
         raise BuildError(f"rule 3: the word {banned.group(0)!r} appears in the manuscript")
     OUT_MD.write_text(strip_marks(md))
