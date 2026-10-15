@@ -67,3 +67,33 @@ def test_bibtex_markup_is_rendered():
     ref = B.format_reference({"author": "Gharaibeh, Y. and others and Wilson, D. L.", "title": "T", "journal": "J",
                               "year": "2023"})
     assert ref.startswith("Gharaibeh, Y.; et al. T.") and "Wilson" not in ref
+
+
+def test_sensitivity_text_on_synthetic_results(tmp_path, monkeypatch):
+    """Section 3.6 generators run on results files written by the real collectors (synthetic runs) and
+    produce text that passes the numbers lint."""
+    import json
+    import os
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    import test_fig7 as T7
+    import s3_results as R3
+    d = tmp_path / "results"
+    d.mkdir()
+    T7._write_oat(d)
+    T7._write_morris(d)
+    T7._write_sobol_l3d_metrics(d)
+    sob = json.loads((d / "sensitivity_sobol.json").read_text())
+    sob["ranking_stability"] = {"sigma1_peak_nl": {"n_lesions": 2, "tau_median": 1.0, "fraction_order_unchanged": 0.9}}
+    (d / "sensitivity_sobol.json").write_text(json.dumps(sob))
+    files = {R3.OAT: "sensitivity_oat.json", R3.MORRIS: "sensitivity_morris.json",
+             R3.SOBOL: "sensitivity_sobol.json", R3.L3D: "length3d.json"}
+    ctx = B.Ctx()
+    real = ctx.data
+    monkeypatch.setattr(ctx, "data", lambda rel: json.loads((d / files[rel]).read_text()) if rel in files else real(rel))
+    texts = [R3._oat_text(ctx), R3._morris_text(ctx), R3._sobol_text(ctx, "pred_sigma1_peak_nl"), R3._l3d_text(ctx),
+             R3._modulus_window(ctx)]
+    assert all(texts)
+    body = B.render_md(ctx, [B.Para(t) for t in texts])
+    assert B.lint(body) == [], B.lint(body)
+    assert "changed the IVL through-thickness damage outcome" in texts[0]
+    assert "calcium modulus (" in texts[1] and "(log)" not in texts[1] and "unchanged in" in texts[2] and " mm" in texts[3]

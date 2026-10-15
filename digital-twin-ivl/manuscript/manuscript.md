@@ -307,7 +307,19 @@ The IVL balloon inflated without pulses produced no through-thickness damage in 
 
 ### 3.6. Sensitivity and Uncertainty
 
-[pending] One-at-a-time, Morris and Sobol results; three-dimensional length series.
+In the pilot sweep of the calcium modulus (Section 2.4), only 365 MPa gave through-thickness damage under IVL in all 3 pilot lesions without damage under the IVL balloon alone. At the next lower modulus (121.1 MPa) the balloon alone damaged 1 of 3 lesions; at the next higher modulus (1100 MPa) IVL damaged 0 of 3. The fracture outcome of the model is therefore sensitive to the calcium modulus, and the calibrated value lies in a narrow window of the sweep.
+
+[pending] (results/sensitivity_oat.json)
+
+[pending] (results/sensitivity_morris.json)
+
+[pending] (results/sensitivity_sobol.json)
+
+[pending] (three-dimensional length series)
+
+![Figure 7](../figures/fig7_sensitivity.png)
+
+**Figure 7.** Sensitivity and uncertainty. (a) One-at-a-time scenarios on the pilot lesions: change of the IVL damage-onset load from each lesion's baseline run (open marker: onset censored in either run; ring: damage outcome changed). (b, c) Morris screening pooled over the screening lesions: $\mu^*$ of the IVL damage-onset load and of IVL through-thickness damage, with bootstrap intervals. (d) Total-order (filled) and first-order (open) Sobol indices of the best single mechanics predictor per lesion. (e) Damage-onset load of the 3D models relative to the 2D model against model length.
 
 ## 4. Discussion
 

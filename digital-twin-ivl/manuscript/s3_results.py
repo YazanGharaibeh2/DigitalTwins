@@ -591,15 +591,193 @@ def _stent_and_pattern_checks(ctx: Ctx, cons: dict) -> list:
 
 
 # ------------------------------------------------------------------ 3.6
+PILOT = "results/pilot_nonlinear.json"
+OAT = "results/sensitivity_oat.json"
+MORRIS = "results/sensitivity_morris.json"
+SOBOL = "results/sensitivity_sobol.json"
+L3D = "results/length3d.json"
+
+
+def _modulus_window(ctx: Ctx) -> str:
+    """Pilot sweep of the calcium modulus (Section 2.4): balloon-alone and IVL damage per modulus."""
+    les = ctx.data(PILOT)["lesions"]
+    by_e = {}
+    for lid, rows in les.items():
+        for r in rows:
+            if "skipped" in r or (r.get("ivl") or {}).get("status") != "ok":
+                continue
+            e = r["ca_E_MPa"]
+            b = bool(((r.get("balloon_only") or {}).get("cracks") or {}).get("fracture"))
+            v = bool(((r.get("ivl") or {}).get("cracks") or {}).get("fracture"))
+            by_e.setdefault(e, []).append((b, v))
+    es = sorted(by_e)
+    n = len(les)
+    ok = [e for e in es if len(by_e[e]) == n and not any(b for b, _ in by_e[e]) and all(v for _, v in by_e[e])]
+    if not ok:
+        return ("In the pilot sweep of the calcium modulus (Section 2.4), no modulus gave IVL damage in every pilot "
+                "lesion without damage under the IVL balloon alone.")
+    lo_i, hi_i = es.index(ok[0]), es.index(ok[-1])
+    fe = lambda e: ctx.num(e, src=PILOT, key="lesions.*.ca_E_MPa", fmt=".4g")  # noqa: E731
+    cnt = lambda e, j: sum(x[j] for x in by_e[e])  # noqa: E731
+    win = (f"only {fe(ok[0])} MPa" if len(ok) == 1 else f"the moduli from {fe(ok[0])} to {fe(ok[-1])} MPa")
+    txt = (f"In the pilot sweep of the calcium modulus (Section 2.4), {win} gave through-thickness damage under "
+           f"IVL in all {ctx.count(n, src=PILOT, key='len(lesions)')} pilot lesions without damage under the IVL "
+           "balloon alone.")
+    if lo_i > 0:
+        e = es[lo_i - 1]
+        txt += (f" At the next lower modulus ({fe(e)} MPa) the balloon alone damaged "
+                f"{_k_of_n(ctx, cnt(e, 0), len(by_e[e]), key=f'pilot balloon_only fracture at E={e:g}', src=PILOT)} lesions")
+    if hi_i < len(es) - 1:
+        e = es[hi_i + 1]
+        txt += ((";" if lo_i > 0 else " At") + f" at the next higher modulus ({fe(e)} MPa) IVL damaged "
+                f"{_k_of_n(ctx, cnt(e, 1), len(by_e[e]), key=f'pilot ivl fracture at E={e:g}', src=PILOT)}")
+    return txt + ". The fracture outcome of the model is therefore sensitive to the calcium modulus, and the " \
+                 "calibrated value lies in a narrow window of the sweep."
+
+
+def _scen(ctx: Ctx, name: str) -> str:
+    from dtivl.drivers.figs.fig7_sensitivity import SCENARIO_LABELS
+    key, _, val = name.partition("=")
+    lab = SCENARIO_LABELS.get(key, key)
+    try:
+        v = float(val)
+    except ValueError:
+        return f"{lab} = {val}" if val else lab
+    return f"{lab} = {ctx.num(v, src=OAT, key=f'scenario {name}', fmt='g')}"
+
+
+def _oat_text(ctx: Ctx) -> str:
+    oat = ctx.data(OAT)
+    runs = oat.get("runs") or {}
+    lesions = sorted(runs)
+    scen = []
+    for lid in lesions:
+        scen += [sc for sc in runs[lid] if sc != "baseline" and sc not in scen]
+    changed = [sc for sc in scen if any((runs[l].get(sc) or {}).get("ivl_fracture_changed_vs_baseline") for l in lesions)]
+    diffs = [((runs[l].get(sc) or {}).get("ivl_onset_load_minus_baseline"), sc) for sc in scen for l in lesions]
+    diffs = [(d, sc) for d, sc in diffs if d is not None]
+    txt = (f"Of the {ctx.count(len(scen), src=OAT, key='number of scenarios')} one-at-a-time scenarios, "
+           + (f"{ctx.count(len(changed), src=OAT, key='scenarios with ivl_fracture_changed_vs_baseline')} changed the "
+              "IVL through-thickness damage outcome of at least one pilot lesion ("
+              + _and([_scen(ctx, sc) for sc in changed]) + ")" if changed else
+              "none changed the IVL through-thickness damage outcome of any pilot lesion")
+           + f" ({ctx.fig('fig7_sensitivity')}a).")
+    if diffs:
+        dmin, dmax = min(d for d, _ in diffs), max(d for d, _ in diffs)
+        big = max(diffs, key=lambda x: abs(x[0]))
+        txt += (" Where damage onset was observed in both runs, the onset load changed by "
+                f"{_interval(ctx, dmin, dmax, src=OAT, key='ivl_onset_load_minus_baseline range', fmt='.3f')} MPa; "
+                f"the largest change came from {_scen(ctx, big[1])}.")
+    return txt
+
+
+def _inp(name: str) -> str:
+    from dtivl.drivers.figs.fig7_sensitivity import INPUT_LABELS
+    return INPUT_LABELS.get(name, name).replace(" (log)", "")
+
+
+def _morris_text(ctx: Ctx) -> str:
+    m = ctx.data(MORRIS)
+    parts = []
+    for out, what, unit in (("ivl_onset_load", "the IVL damage-onset load", " MPa"),
+                            ("ivl_fracture", "IVL through-thickness damage", "")):
+        idx = ((m.get("pooled") or {}).get(out) or {}).get("indices") or {}
+        if not idx:
+            continue
+        mx = max((idx[n].get("mu_star") or 0.0) for n in idx)
+        if mx <= 0:
+            parts.append(f"no input changed {what}")
+            continue
+        top = [n for n in sorted(idx, key=lambda n: -(idx[n].get("mu_star") or 0.0))[:3]
+               if (idx[n].get("mu_star") or 0.0) >= 0.1 * mx]
+        parts.append(f"for {what}, the input{'s' if len(top) > 1 else ''} with the largest $\\mu^*$ "
+                     f"{'were' if len(top) > 1 else 'was'} "
+                     + _and([f"{_inp(n)} "
+                             f"({ctx.v(MORRIS, f'pooled.{out}.indices.{n}.mu_star', fmt='.3g')}{unit})"
+                             for n in top]))
+    if not parts:
+        return ""
+    return ("In the Morris screening, pooled over the screening lesions, " + "; ".join(parts)
+            + f" ({ctx.fig('fig7_sensitivity')}b,c). $\\mu^*$ is the mean absolute change of the output per "
+            "normalised input range; censored onset loads sit at the peak IVL load, which itself moves with the "
+            "pulse scale and the transfer factor.")
+
+
+def _sobol_text(ctx: Ctx, best: str | None) -> str:
+    sb = ctx.data(SOBOL)
+    key = best[len("pred_"):] if best and best.startswith("pred_") else best
+    lr = sb.get("lesion_results") or {}
+    have = {l: r["predictors"][key]["indices"] for l, r in lr.items()
+            if key in (r.get("predictors") or {}) and (r["predictors"][key] or {}).get("indices")}
+    if not have:
+        return ""
+    names = list(next(iter(have.values())))
+    import numpy as np
+    med = {n: float(np.median([have[l][n]["ST"] for l in have])) for n in names}
+    top = max(med, key=med.get)
+    rs = (sb.get("ranking_stability") or {}).get(key) or {}
+    txt = (f"For {pname(ctx, best)}, the total-order Sobol index was largest for the {_inp(top)} "
+           f"(median over the lesions {ctx.num(med[top], src=SOBOL, key=f'median ST {key} {top}', fmt='.2f')}; "
+           f"{ctx.fig('fig7_sensitivity')}d).")
+    if rs.get("tau_median") is not None:
+        txt += (f" Across the samples of the uncertain inputs, the order of the "
+                f"{ctx.v(SOBOL, f'ranking_stability.{key}.n_lesions', fmt='d')} lesions by this predictor had a "
+                f"median Kendall $\\tau$ of {ctx.v(SOBOL, f'ranking_stability.{key}.tau_median', fmt='.2f')} with "
+                "their baseline order and was unchanged in "
+                f"{ctx.v(SOBOL, f'ranking_stability.{key}.fraction_order_unchanged', fmt='.0f', scale=100.0)}% of "
+                "the samples.")
+    return txt
+
+
+def _l3d_text(ctx: Ctx) -> str:
+    runs = (ctx.data(L3D).get("runs") or {})
+    keys = sorted((k for k, r in runs.items() if r.get("model") == "3d"), key=lambda k: runs[k]["length_mm"])
+    if not keys:
+        if not ctx.draft:
+            raise BuildError(f"no 3D runs in {L3D}")
+        ctx.pending.append(f"{L3D}: 3D runs")
+        return f"{Ctx.PENDING} (three-dimensional length series)"
+    items, no_onset = [], []
+    for k in keys:
+        r = runs[k]
+        ref = runs.get(f"{r['lesion']}|2d") or {}
+        p3, p2 = (r.get("onset") or {}).get("p"), (ref.get("onset") or {}).get("p")
+        L = ctx.num(r["length_mm"], src=L3D, key=f"runs.{k}.length_mm", fmt="g")
+        if p3 and p2:
+            items.append(f"{ctx.num(p3 / p2, src=L3D, key=f'runs.{k}.onset.p / 2d onset.p', fmt='.2f')} at {L} mm")
+        else:
+            no_onset.append(L)
+    txt = ("In the three-dimensional length series, the damage-onset load relative to the 2D model of the same "
+           "cross-section was " + (_and(items) if items else Ctx.PENDING))
+    if no_onset:
+        txt += "; the models of " + _and(no_onset) + " mm did not reach damage onset within the IVL ramp"
+    return txt + f" ({ctx.fig('fig7_sensitivity')}e)."
+
+
 def s36(ctx: Ctx) -> list:
     from build_manuscript import ROOT
-    have = all((ROOT / f).exists() for f in ("results/sensitivity_oat.json", "results/sensitivity_morris.json",
-                                             "results/sensitivity_sobol.json"))
-    if not have and not ctx.draft:
-        raise BuildError("sensitivity results missing")
-    return [Heading("3.6. Sensitivity and Uncertainty", 2),
-            Para(f"{Ctx.PENDING} One-at-a-time, Morris and Sobol results; three-dimensional length series.")
-            if not have else Para(Ctx.PENDING)]
+    best = ctx.opt(MS, f"{PRIMARY}.fujino_comparison.best_single_mechanics")
+    paras = [Heading("3.6. Sensitivity and Uncertainty", 2), Para(_modulus_window(ctx))]
+    texts = []
+    for rel, fn in ((OAT, _oat_text), (MORRIS, _morris_text), (SOBOL, lambda c: _sobol_text(c, best)),
+                    (L3D, _l3d_text)):
+        if (ROOT / rel).exists():
+            texts.append(fn(ctx))
+        elif ctx.draft:
+            ctx.pending.append(rel)
+            texts.append(f"{Ctx.PENDING} ({rel})")
+        else:
+            raise BuildError(f"sensitivity results missing: {rel}")
+    paras += [Para(t) for t in texts if t]
+    paras.append(Figure(
+        "fig7_sensitivity",
+        "Sensitivity and uncertainty. (a) One-at-a-time scenarios on the pilot lesions: change of the IVL "
+        "damage-onset load from each lesion's baseline run (open marker: onset censored in either run; ring: "
+        "damage outcome changed). (b, c) Morris screening pooled over the screening lesions: $\\mu^*$ of the IVL "
+        "damage-onset load and of IVL through-thickness damage, with bootstrap intervals. (d) Total-order "
+        "(filled) and first-order (open) Sobol indices of the best single mechanics predictor per lesion. "
+        "(e) Damage-onset load of the 3D models relative to the 2D model against model length."))
+    return paras
 
 
 def blocks(ctx: Ctx) -> list:

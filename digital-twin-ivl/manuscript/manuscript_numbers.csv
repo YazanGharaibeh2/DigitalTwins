@@ -408,19 +408,27 @@ id,label,value,scale,printed,source,key
 406,checks.20.quantities.0.ci_lo[hi],0.46681196294339516,1.0,0.47,results/consistency.json,checks.20.quantities.0.ci_lo[hi]
 407,fujino_score4_stent_expansion.value,78.0,1.0,78,params/literature_parameters.csv,fujino_score4_stent_expansion.value
 408,fujino_score0to3_stent_expansion.value,96.0,1.0,96,params/literature_parameters.csv,fujino_score0to3_stent_expansion.value
-409,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
-410,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
-411,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
-412,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
-413,checks.8.model_value,53.125,1.0,53,results/consistency.json,checks.8.model_value
-414,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]",12,1.0,12,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]"
-415,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]",14,1.0,14,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]"
-416,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm),2.5,1.0,2.5,results/cohort_outcomes.csv + params/study_config.yaml,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm)
-417,core IVL runs with unconverged_steps > 0 [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [events]
-418,core IVL runs with unconverged_steps > 0 [n],32,1.0,32,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [n]
-419,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
-420,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
-421,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
-422,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
-423,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
-424,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells
+409,lesions.*.ca_E_MPa,365.006198,1.0,365,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
+410,len(lesions),3,1.0,3,results/pilot_nonlinear.json,len(lesions)
+411,lesions.*.ca_E_MPa,121.078487,1.0,121.1,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
+412,pilot balloon_only fracture at E=121.078 [events],1,1.0,1,results/pilot_nonlinear.json,pilot balloon_only fracture at E=121.078 [events]
+413,pilot balloon_only fracture at E=121.078 [n],3,1.0,3,results/pilot_nonlinear.json,pilot balloon_only fracture at E=121.078 [n]
+414,lesions.*.ca_E_MPa,1100.356701,1.0,1100,results/pilot_nonlinear.json,lesions.*.ca_E_MPa
+415,pilot ivl fracture at E=1100.36 [events],0,1.0,0,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [events]
+416,pilot ivl fracture at E=1100.36 [n],3,1.0,3,results/pilot_nonlinear.json,pilot ivl fracture at E=1100.36 [n]
+417,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc,0.96484375,1.0,0.96,results/metrics_summary.json,outcomes.ivl_fracture.univariable.pred_sigma1_peak_nl.auc
+418,outcomes.ivl_fracture.univariable.fujino_score.auc,0.615234375,1.0,0.62,results/metrics_summary.json,outcomes.ivl_fracture.univariable.fujino_score.auc
+419,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b,0.8828125,1.0,0.88,results/metrics_summary.json,outcomes.ivl_fracture.incremental_value.core.loocv.auc_b
+420,"count(core fragmented, ivl ok)",8,1.0,8,results/cohort_outcomes.csv,"count(core fragmented, ivl ok)"
+421,checks.8.model_value,53.125,1.0,53,results/consistency.json,checks.8.model_value
+422,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]",12,1.0,12,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [events]"
+423,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]",14,1.0,14,results/cohort_outcomes.csv,"count(both stent runs, ivl_fracture == 1 and stent_no_ivl_fracture == 1) [n]"
+424,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm),2.5,1.0,2.5,results/cohort_outcomes.csv + params/study_config.yaml,min(core ca_thickness) / (fracture.ell_over_h x discretisation.h_calcium_mm)
+425,core IVL runs with unconverged_steps > 0 [events],10,1.0,10,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [events]
+426,core IVL runs with unconverged_steps > 0 [n],32,1.0,32,results/cohort_outcomes.csv,core IVL runs with unconverged_steps > 0 [n]
+427,table table1_parameters,59 rows,1.0,table cells,results/tables/table1_parameters.csv,all cells
+428,table table2_verification_consistency,7 rows,1.0,table cells,results/tables/table2_verification.csv,all cells
+429,table table3_predictors,21 rows,1.0,table cells,results/tables/table3_predictors.csv,all cells
+430,table table4_models,5 rows,1.0,table cells,results/tables/table4_models.csv,all cells
+431,table table4_models,5 rows,1.0,table cells,results/tables/table4_differences.csv,all cells
+432,table table2_verification_consistency,12 rows,1.0,table cells,results/tables/table2_consistency.csv,all cells
