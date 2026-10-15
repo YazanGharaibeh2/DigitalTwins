@@ -1,0 +1,79 @@
+{
+ "lesion": "C-A270-T0.2-NOD",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 3347,
+  "n_cells": 6458,
+  "n_cells_per_tag": {
+   "1": 1032,
+   "2": 3482,
+   "4": 1944
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 4.3497681637094905,
+  "sigma1_p99": 5.762144415254827,
+  "sigma1_mean": 1.6297376771881067,
+  "sigma1_peak_nl": 4.889260218069241,
+  "sed_mean": 0.005809757051672193,
+  "sed_peak_nl": 0.03230037048159467,
+  "scf_edge_nl": 1.9078105818686295,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.07293926169711275,
+  "frac_sig_gt_sigc": 0.00029910385783362396,
+  "frac_sig_gt_half_sigc": 0.08654819693333332,
+  "min_thickness_high_stress": 0.2,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.2451999650002108
+ },
+ "transient": {
+  "T": 0.0610174173605611,
+  "T_equivalent": 0.07212541116394026,
+  "sigma1_peak_transient": 6.499152048946382,
+  "sigma1_static": 106.513063483856,
+  "sigma1_static_equivalent": 90.10904678482706,
+  "t_peak": 4.40260621650404,
+  "peak_at_window_end": false,
+  "seconds": 16.84814885500009
+ },
+ "protocols": {
+  "physiological": {
+   "status": "ok",
+   "summary": {
+    "p_target": 0.01599864,
+    "p_reached": 0.015998639999999998,
+    "cap_radius": null
+   },
+   "n_steps": 10,
+   "n_steps_unconverged_stagger": 0,
+   "final": {
+    "p": 0.015998639999999998,
+    "R_in": null,
+    "R_cap": null,
+    "lumen_area": 2.080132382084735,
+    "max_d": 0.0,
+    "n_crack_cells": 0,
+    "p_contact_mean": 0.0
+   },
+   "max_lumen_area": 2.080132382084735,
+   "cracks": {
+    "fracture": false,
+    "n_fractures": 0,
+    "n_partial": 0,
+    "diffuse": false,
+    "n_diffuse": 0,
+    "damaged_fraction": 0.0,
+    "max_depth_frac": 0.0,
+    "pattern": [],
+    "location_frac": [],
+    "onset_load": null,
+    "onset_phase": null,
+    "n_cracked_cells": 0,
+    "cracked_measure": 0.0,
+    "ca_measure": 1.1646013993469997
+   },
+   "seconds": 2.643039035000129
+  }
+ }
+}
