@@ -1858,7 +1858,7 @@
     }
    },
    "post_hoc": {
-    "note": "POST HOC (added 2026-10-15 after the draft review, with the outcomes known): sensitivity of the Fujino comparison to the arc cut-off (the label map measures the 180 deg design arc as 179 deg, just below the strict '> 180 deg' criterion: an arc within FUJINO_ARC_TOL_DEG below a cut-off is counted as meeting it), and core AUCs without the core geometries of the pilot lesions used for the calcium-modulus calibration (D8)",
+    "note": "POST HOC (added 2026-10-15 after the draft review, with the outcomes known; D18): sensitivity of the Fujino comparison to the arc cut-off (the label map measures the 180 deg design arc as 179 deg, just below the strict '> 180 deg' criterion: an arc within FUJINO_ARC_TOL_DEG below a cut-off is counted as meeting it), and core AUCs without the core geometries of the pilot lesions used for the calcium-modulus calibration (D8); an outcome-criterion benchmark (linear failure index at the IVL peak load); and a flexible geometry model with a penalty sensitivity of the logistic models",
     "fujino_arc_tolerance": {
      "core": {
       "n": 32,
@@ -1912,6 +1912,112 @@
        0.7901785714285714
       ],
       "auc_ci_degenerate": false
+     }
+    },
+    "outcome_criterion_benchmark": {
+     "definition": "pred_sigma1_peak_nl x ivl_p_top / pred_p_lumen_MPa / sigma_crit (sigma_crit = E_Ca eps_f)",
+     "sigma_crit_MPa": 7.300123960000006,
+     "core": {
+      "n": 32,
+      "n_pos": 16,
+      "n_neg": 16,
+      "index_range": [
+       0.16864727701383816,
+       1.2656794375134706
+      ],
+      "auc": 0.97265625,
+      "auc_ci": [
+       0.89453125,
+       1.0
+      ],
+      "auc_ci_degenerate": false,
+      "at_index_1": {
+       "sens": 0.1875,
+       "sens_ci_lo": 0.06591599071428142,
+       "sens_ci_hi": 0.4300888096197414,
+       "spec": 1.0,
+       "spec_ci_lo": 0.8063923194655637,
+       "spec_ci_hi": 1.0,
+       "acc": 0.59375
+      }
+     },
+     "holdout": {
+      "n": 0,
+      "note": "no rows"
+     }
+    },
+    "penalty_sensitivity": {
+     "flexible_geometry_columns": [
+      "ca_arc_total_deg",
+      "post_hoc_arc_sq",
+      "ca_thickness_max",
+      "ca_depth_min",
+      "n_deposits",
+      "post_hoc_morph_nodule",
+      "post_hoc_morph_deep_sheet",
+      "post_hoc_morph_fragmented"
+     ],
+     "C": [
+      0.1,
+      1.0,
+      10.0
+     ],
+     "n": 32,
+     "n_pos": 16,
+     "n_neg": 16,
+     "rows_dropped_missing": 0,
+     "models": {
+      "geometry": {
+       "0.1": {
+        "loocv_auc": 0.87890625,
+        "loocv_log_loss": 0.5462560522172389,
+        "loocv_brier": 0.17673933304484785
+       },
+       "1": {
+        "loocv_auc": 0.8828125,
+        "loocv_log_loss": 0.4986411444689438,
+        "loocv_brier": 0.12941925963191986
+       },
+       "10": {
+        "loocv_auc": 0.890625,
+        "loocv_log_loss": 0.6916874045283519,
+        "loocv_brier": 0.12275925541585327
+       }
+      },
+      "geometry+mechanics": {
+       "0.1": {
+        "loocv_auc": 0.92578125,
+        "loocv_log_loss": 0.433599801308712,
+        "loocv_brier": 0.12812434063936215
+       },
+       "1": {
+        "loocv_auc": 0.921875,
+        "loocv_log_loss": 0.38374160164518667,
+        "loocv_brier": 0.09580747418272742
+       },
+       "10": {
+        "loocv_auc": 0.9140625,
+        "loocv_log_loss": 0.5801662564073434,
+        "loocv_brier": 0.1073680302933683
+       }
+      },
+      "flexible geometry": {
+       "0.1": {
+        "loocv_auc": 0.8828125,
+        "loocv_log_loss": 0.5205597723412695,
+        "loocv_brier": 0.16382311106302005
+       },
+       "1": {
+        "loocv_auc": 0.87109375,
+        "loocv_log_loss": 0.5609637956236717,
+        "loocv_brier": 0.1408671603140771
+       },
+       "10": {
+        "loocv_auc": 0.8828125,
+        "loocv_log_loss": 0.8257767274564936,
+        "loocv_brier": 0.13208340291894785
+       }
+      }
      }
     }
    }

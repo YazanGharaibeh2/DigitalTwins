@@ -453,6 +453,7 @@ def s33(ctx: Ctx) -> list:
         + _incremental_sentence(ctx, incl)))
     paras.append(_fujino_artefact_para(ctx, best))
     paras.append(_selection_para(ctx, best, rank))
+    paras.append(_benchmark_para(ctx, best))
     paras.append(_holdout_para(ctx, best, name))
     paras.append(Figure(
         "fig6_prediction",
@@ -498,6 +499,44 @@ def _n_below_damaged(ctx: Ctx) -> str:
     arc = t["ca_arc_total_deg"].astype(float)
     sel = t[(arc <= thr) & (arc + FUJINO_ARC_TOL_DEG >= thr)]
     return _k_of_n(ctx, int((sel["ivl_fracture"] == 1).sum()), len(sel), key="core ivl_fracture | arc just below cut-off")
+
+
+def _benchmark_para(ctx: Ctx, best: str) -> Para:
+    """Post hoc (D18): outcome-criterion benchmark and penalty sensitivity of the logistic models."""
+    g = lambda k: ctx.opt(MS, k)  # noqa: E731
+    b = f"{PRIMARY}.post_hoc.outcome_criterion_benchmark.core"
+    ps = f"{PRIMARY}.post_hoc.penalty_sensitivity"
+    if g(f"{b}.auc") is None:
+        return Para(f"{Ctx.PENDING} (post-hoc benchmark)")
+    sens = g(f"{b}.at_index_1.sens")
+    txt = ("Two further analyses were added after the first draft. In an outcome-criterion benchmark, "
+           f"{pname(ctx, best)} was scaled to each lesion's peak equivalent IVL load and divided by the failure stress "
+           "of the outcome model; this linear failure index uses the IVL load, an input of the outcome model, and "
+           f"is a benchmark, not a predictor. It ranked the core lesions with an AUC of {_vci(ctx, MS, f'{b}.auc', f'{b}.auc_ci')}. "
+           "Read as a failure criterion (index of one or more), it had a sensitivity of "
+           f"{ctx.v(MS, f'{b}.at_index_1.sens', fmt='.2f')} and a specificity of "
+           f"{ctx.v(MS, f'{b}.at_index_1.spec', fmt='.2f')}"
+           + (": damage onset in the nonlinear model occurred below the linear failure load in most damaged lesions."
+              if sens is not None and sens < 0.5 else "."))
+    models = g(f"{ps}.models") or {}
+    Cs = [c for c in (models.get("geometry") or {})]
+    if models and Cs:
+        ll = lambda m, c: (models.get(m) or {}).get(c, {}).get("loocv_log_loss")  # noqa: E731
+        lower_all = all((ll("geometry+mechanics", c) or 9) < (ll("geometry", c) or 0) for c in Cs)
+        flex_better = any(((models.get("flexible geometry") or {}).get(c, {}).get("loocv_auc") or 0)
+                          > ((models.get("geometry") or {}).get(c, {}).get("loocv_auc") or 1) + 0.02 for c in Cs)
+        cs_txt = _and([ctx.num(float(c), src=MS, key=f"{ps}.C", fmt="g") for c in Cs])
+        txt += (f" With the inverse penalty of the logistic models set to {cs_txt}, the geometry + mechanics model had "
+                + ("a lower" if lower_all else "not always a lower")
+                + " leave-one-out log-loss than the geometry-only model at every penalty ("
+                + "; ".join(f"{ctx.num(ll('geometry+mechanics', c), src=MS, key=f'{ps}.models[geometry+mechanics][{c}].loocv_log_loss', fmt='.3f')} versus "
+                            f"{ctx.num(ll('geometry', c), src=MS, key=f'{ps}.models[geometry][{c}].loocv_log_loss', fmt='.3f')}" for c in Cs)
+                + "), and a flexible geometry model with a quadratic arc term and morphology indicators "
+                + ("discriminated better than the geometry-only model." if flex_better else
+                   "did not discriminate better than the geometry-only model (leave-one-out AUC "
+                   + "; ".join(ctx.num(models["flexible geometry"][c]["loocv_auc"], src=MS,
+                                       key=f"{ps}.models[flexible geometry][{c}].loocv_auc", fmt=".2f") for c in Cs) + ")."))
+    return Para(txt)
 
 
 def _selection_para(ctx: Ctx, best: str, rank: list) -> Para:

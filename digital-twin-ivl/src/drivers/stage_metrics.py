@@ -838,16 +838,18 @@ def analyse_binary(col: _Collector, name: str, oc: dict, df: pd.DataFrame, cfg: 
     out["fujino_comparison"] = _fujino_comparison(col, name, core, cfg, uni, res["_index"])
     out["incremental_value"] = _incremental(col, name, oc, core, hold, cfg, specs["geometry"],
                                             specs["geometry+mechanics"])
-    out["post_hoc"] = _post_hoc(name, core, hold, cfg, uni, out["fujino_comparison"].get("best_single_mechanics"))
+    out["post_hoc"] = _post_hoc(name, core, hold, cfg, uni, out["fujino_comparison"].get("best_single_mechanics"),
+                                specs)
     return out
 
 
 #: post-hoc analyses added after the review of the first draft (2026-10-15); reported as such
-POST_HOC_NOTE = ("POST HOC (added 2026-10-15 after the draft review, with the outcomes known): sensitivity of the "
+POST_HOC_NOTE = ("POST HOC (added 2026-10-15 after the draft review, with the outcomes known; D18): sensitivity of the "
                  "Fujino comparison to the arc cut-off (the label map measures the 180 deg design arc as 179 deg, "
                  "just below the strict '> 180 deg' criterion: an arc within FUJINO_ARC_TOL_DEG below a cut-off is "
                  "counted as meeting it), and core AUCs without the core geometries of the pilot lesions used for "
-                 "the calcium-modulus calibration (D8)")
+                 "the calcium-modulus calibration (D8); an outcome-criterion benchmark (linear failure index at the IVL peak "
+                 "load); and a flexible geometry model with a penalty sensitivity of the logistic models")
 #: arc measurement tolerance of the post-hoc Fujino sensitivity (deg; rasterisation of the label map)
 FUJINO_ARC_TOL_DEG = 2.0
 
@@ -863,7 +865,80 @@ def _fujino_arc_tolerance(df: pd.DataFrame) -> np.ndarray:
             + c["thickness"].points * (th > c["thickness"].threshold)).astype(float)
 
 
-def _post_hoc(name, core, hold, cfg, uni, best) -> dict:
+#: post-hoc flexible geometry model (D18): arc with a quadratic term, thickness, depth, deposit count and
+#: morphology indicators (superficial sheet = reference)
+FLEX_GEOMETRY = ("ca_arc_total_deg", "post_hoc_arc_sq", "ca_thickness_max", "ca_depth_min", "n_deposits",
+                 "post_hoc_morph_nodule", "post_hoc_morph_deep_sheet", "post_hoc_morph_fragmented")
+#: inverse penalties of the post-hoc penalty sensitivity (D18)
+POST_HOC_C = (0.1, 1.0, 10.0)
+
+
+def _flex_frame(t: pd.DataFrame) -> pd.DataFrame:
+    t = t.copy()
+    a = pd.to_numeric(t["ca_arc_total_deg"], errors="coerce")
+    t["post_hoc_arc_sq"] = a ** 2
+    for m in ("nodule", "deep_sheet", "fragmented"):
+        t[f"post_hoc_morph_{m}"] = (t["morphology"] == m).astype(float) if "morphology" in t else np.nan
+    return t
+
+
+def _benchmark(name, sets, cfg, best) -> dict:
+    """Outcome-criterion benchmark (D18, post hoc; uses the IVL peak load, an outcome-model input, so it is
+    a benchmark, never a predictor): linear failure index = best predictor x (peak IVL load / predictor
+    lumen pressure) / sigma_crit, its AUC and its classification at index >= 1 (no fitted threshold)."""
+    from dtivl.materials.constitutive import MaterialSet
+    sig = MaterialSet.baseline().sigma_crit
+    out = {"definition": f"{best} x ivl_p_top / pred_p_lumen_MPa / sigma_crit (sigma_crit = E_Ca eps_f)",
+           "sigma_crit_MPa": sig}
+    for set_name, t in sets.items():
+        if t is None or len(t) == 0 or "_y" not in t or best not in t or "ivl_p_top" not in t:
+            out[set_name] = {"n": 0, "note": "no rows"}
+            continue
+        x = (pd.to_numeric(t[best], errors="coerce") * pd.to_numeric(t["ivl_p_top"], errors="coerce")
+             / pd.to_numeric(t["pred_p_lumen_MPa"], errors="coerce") / sig).to_numpy(float)
+        y = t["_y"].to_numpy(int)
+        ok = np.isfinite(x)
+        y, x = y[ok], x[ok]
+        e = {**_counts(y), "index_range": [float(np.min(x)), float(np.max(x))] if x.size else None}
+        if e["n_pos"] >= cfg.min_per_class and e["n_neg"] >= cfg.min_per_class:
+            r = R.roc_analysis(y, x, 1, n_boot=cfg.n_boot, rng=R.rng_for(cfg.seed, f"{name}|post_hoc|benchmark|{set_name}"),
+                               level=cfg.level, stratified=cfg.stratified)
+            e.update(auc=r["auc"], auc_ci=[r["auc_ci_lo"], r["auc_ci_hi"]], auc_ci_degenerate=r["auc_ci_degenerate"])
+            perf = R.threshold_performance(y, (x >= 1.0).astype(int), cfg.level)
+            e["at_index_1"] = {k: perf.get(k) for k in ("sens", "sens_ci_lo", "sens_ci_hi", "spec", "spec_ci_lo",
+                                                        "spec_ci_hi", "acc")}
+        out[set_name] = e
+    return out
+
+
+def _penalty_sensitivity(core, cfg, specs) -> dict:
+    """LOOCV AUC, log-loss and Brier score of the geometry, geometry + mechanics and flexible geometry
+    models at the inverse penalties POST_HOC_C (D18, post hoc), on the core rows complete for all three."""
+    from dataclasses import replace as _replace
+    t = _flex_frame(core)
+    models = {"geometry": specs["geometry"], "geometry+mechanics": specs["geometry+mechanics"],
+              "flexible geometry": M.ModelSpec("flexible geometry", fixed=FLEX_GEOMETRY, C=cfg.C)}
+    need = list(dict.fromkeys(c for sp in models.values() for c in sp.columns))
+    mc = _complete_rows(t, need)
+    tc = t[mc]
+    y = tc["_y"].to_numpy(int)
+    X = _model_matrix(tc, need)
+    res = {"flexible_geometry_columns": list(FLEX_GEOMETRY), "C": list(POST_HOC_C), **_counts(y),
+           "rows_dropped_missing": int((~mc).sum()), "models": {}}
+    if res["n_pos"] < cfg.min_per_class or res["n_neg"] < cfg.min_per_class:
+        res["note"] = f"fewer than {cfg.min_per_class} lesions in a class"
+        return res
+    for lbl, sp in models.items():
+        res["models"][lbl] = {}
+        for C in POST_HOC_C:
+            lo = M.loocv_predict(_replace(sp, C=C), X, y)
+            sc = M.prob_scores(y, lo["prob"])
+            res["models"][lbl][f"{C:g}"] = {"loocv_auc": sc["auc"], "loocv_log_loss": sc["log_loss"],
+                                           "loocv_brier": sc["brier"]}
+    return res
+
+
+def _post_hoc(name, core, hold, cfg, uni, best, specs=None) -> dict:
     """(e) Post-hoc analyses (:data:`POST_HOC_NOTE`): (1) Fujino score with the arc tolerance, its AUC and its
     paired AUC difference from the best single mechanics predictor, and the number of lesions whose
     measured arc lies within one design step below the arc cut-off; (2) core AUCs of the best predictor and
@@ -911,6 +986,10 @@ def _post_hoc(name, core, hold, cfg, uni, best) -> dict:
             ex[p] = {"auc": r["auc"], "auc_ci": [r["auc_ci_lo"], r["auc_ci_hi"]],
                      "auc_ci_degenerate": r["auc_ci_degenerate"]}
     out["core_without_calibration_geometries"] = ex
+    if best:
+        out["outcome_criterion_benchmark"] = _benchmark(name, sets, cfg, best)
+    if specs:
+        out["penalty_sensitivity"] = _penalty_sensitivity(core, cfg, specs)
     return out
 
 

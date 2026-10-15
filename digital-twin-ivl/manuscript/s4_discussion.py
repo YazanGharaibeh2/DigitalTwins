@@ -36,6 +36,18 @@ def _whole_deposit_in_diagnostics(ctx: Ctx) -> str:
             "length to the deposit thickness and was not identified.")
 
 
+def _benchmark_sentence(ctx: Ctx, best: str) -> str:
+    b = f"{PRIMARY}.post_hoc.outcome_criterion_benchmark.core"
+    ab, a0 = ctx.opt(MS, f"{b}.auc"), ctx.opt(MS, f"{PRIMARY}.univariable.{best}.auc")
+    if ab is None or a0 is None:
+        return ""
+    rel = "as well as" if abs(ab - a0) < 0.05 else ("better than" if ab > a0 else "less well than")
+    return (" In a post hoc benchmark, the outcome model's failure criterion evaluated with the linear stress at "
+            f"each lesion's peak load ranked the lesions {rel} the best predictor (AUC "
+            f"{ctx.v(MS, f'{b}.auc', fmt='.2f')} versus {ctx.v(MS, f'{PRIMARY}.univariable.{best}.auc', fmt='.2f')}), "
+            "although as an absolute criterion it missed most damaged lesions.")
+
+
 def blocks(ctx: Ctx) -> list:
     from dtivl import params as P
     from dtivl.materials.constitutive import MaterialSet
@@ -94,7 +106,9 @@ def blocks(ctx: Ctx) -> list:
         "length that governs damage nucleation in the AT1 model, and the area-fraction predictors use the outcome "
         "model's own failure strain and stress. A high AUC is therefore partly expected by construction: it "
         "measures how well the linear stress state of the untreated lesion anticipates nonlinear damage onset in "
-        "the same model, not clinical accuracy. Second, all core lesions share one reference geometry and one set "
+        "the same model, not clinical accuracy."
+        + _benchmark_sentence(ctx, best)
+        + " Second, all core lesions share one reference geometry and one set "
         "of material constants, so every mechanics predictor is a deterministic function of the three design "
         "factors. On the core set the comparison with the geometry-only model compares model forms, not "
         f"information content: adding mechanics {inc_auc} the leave-one-out AUC"

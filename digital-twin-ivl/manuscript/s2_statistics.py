@@ -44,6 +44,20 @@ def _directions():
     return pos, neg, core
 
 
+def _post_hoc_C():
+    from dtivl.drivers.stage_metrics import POST_HOC_C
+    return POST_HOC_C
+
+
+def _window_moduli():
+    from dtivl.drivers.stage_modulus_window import window_moduli
+    return window_moduli()
+
+
+def _and_list(items: list[str]) -> str:
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
 def _arc_tol() -> float:
     from dtivl.drivers.stage_metrics import FUJINO_ARC_TOL_DEG
     return FUJINO_ARC_TOL_DEG
@@ -155,7 +169,18 @@ def blocks(ctx: Ctx) -> list:
             "Fujino comparison was repeated with an arc within "
             f"{ctx.num(_arc_tol(), src='src/drivers/stage_metrics.py', key='FUJINO_ARC_TOL_DEG', fmt='g')}° "
             "below the cut-off counted as meeting it. The core AUCs were also recomputed without the core lesions "
-            "that share the geometry of the pilot lesions used to calibrate the calcium modulus."),
+            "that share the geometry of the pilot lesions used to calibrate the calcium modulus. Three further "
+            "analyses were approved after the first draft (decision D18) and are also reported as post hoc: an "
+            "outcome-criterion benchmark, the best predictor scaled to each lesion's peak equivalent IVL load and "
+            "divided by the failure stress of the outcome model (it uses an input of the outcome model and is a "
+            "benchmark, not a predictor), with its AUC and its classification at an index of one; the leave-one-out "
+            "performance of the geometry, geometry + mechanics and a flexible geometry model (quadratic arc term and "
+            "morphology indicators) at inverse penalties of "
+            + _and_list([ctx.num(c, src='src/drivers/stage_metrics.py', key='POST_HOC_C', fmt='g') for c in _post_hoc_C()])
+            + "; and the outcome and predictor analyses of every core lesion repeated at calcium moduli of "
+            + _and_list([ctx.num(e, src='src/drivers/stage_modulus_window.py window_moduli()', key='window modulus (MPa)', fmt='.0f')
+                         for e in _window_moduli()])
+            + " MPa, the log-midpoints between the calibrated modulus and its neighbours in the pilot sweep."),
         Para(
             "For the damage-onset load under IVL, an event was the first load step at which the maximum damage "
             "reached the crack threshold. An onset first recorded after the peak load, during unloading, was "
