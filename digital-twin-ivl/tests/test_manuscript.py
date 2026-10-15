@@ -58,3 +58,12 @@ def test_validation_wording_rule():
     assert pat.search("The model was validated against patients.")
     assert pat.search("Validation of the model")
     assert not pat.search("leave-one-out cross-validation (LOOCV)")
+
+
+def test_bibtex_markup_is_rendered():
+    assert B._clean(r"Tann{\'e}, E. and G{\"u}ltekin, O.") == "Tanné, E. and Gültekin, O."
+    assert B._clean(r"Circular Angle 180\textdegree") == "Circular Angle 180°"
+    assert B._clean(r"A `Digital Twin' for") == "A ‘Digital Twin’ for"
+    ref = B.format_reference({"author": "Gharaibeh, Y. and others and Wilson, D. L.", "title": "T", "journal": "J",
+                              "year": "2023"})
+    assert ref.startswith("Gharaibeh, Y.; et al. T.") and "Wilson" not in ref

@@ -27,7 +27,7 @@ NAMES = {
     "pred_frac_sig_gt_sigc": ("Area fraction σ1 > σc", "–"), "pred_frac_sig_gt_half_sigc": ("Area fraction σ1 > σc/2", "–"),
     "pred_min_thickness_high_stress": ("Minimum thickness under high stress", "mm"),
     "ca_arc_total_deg": ("Calcium arc", "deg"), "ca_thickness_max": ("Calcium thickness", "mm"),
-    "ca_depth": ("Calcium depth", "mm"), "ca_area": ("Calcium area", "mm²"), "n_deposits": ("Number of deposits", "–"),
+    "ca_depth_min": ("Calcium depth (minimum)", "mm"), "ca_area": ("Calcium area", "mm²"), "n_deposits": ("Number of deposits", "–"),
     "lumen_area": ("Lumen area", "mm²"), "lipid_arc_deg": ("Lipid arc", "deg"),
     "plaque_ecc_index": ("Plaque eccentricity", "–"), "fujino_score": ("Fujino score (cross-sectional)", "points"),
 }

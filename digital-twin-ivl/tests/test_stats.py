@@ -58,7 +58,7 @@ def synthetic_cohort(n_hold: int = 24, seed: int = SEED, leak_T: bool = True) ->
     n = len(df)
     df["lesion_id"] = [f"{s[0].upper()}-{k:03d}" for k, s in enumerate(df["set"])]
     deep = df["morphology"] == "deep_sheet"
-    df["ca_depth"] = np.where(deep, 0.34, 0.16)
+    df["ca_depth"] = df["ca_depth_min"] = np.where(deep, 0.34, 0.16)
     df["ca_arc_total_deg"] = df["ca_arc_deg"] - 1.0
     df["ca_thickness_max"] = df["ca_thickness"]
     df["ca_area"] = np.deg2rad(df["ca_arc_deg"]) * df["ca_thickness"] * 1.0

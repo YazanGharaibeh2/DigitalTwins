@@ -36,7 +36,7 @@ LABELS = {
     "pred_frac_eps_gt_epsf": "area $\\varepsilon_1>\\varepsilon_f$", "pred_frac_eps_gt_half_epsf": "area $\\varepsilon_1>\\varepsilon_f/2$",
     "pred_frac_sig_gt_sigc": "area $\\sigma_1>\\sigma_c$", "pred_frac_sig_gt_half_sigc": "area $\\sigma_1>\\sigma_c/2$",
     "pred_min_thickness_high_stress": "min. thickness, high $\\sigma_1$", "ca_arc_total_deg": "calcium arc",
-    "ca_thickness_max": "calcium thickness", "ca_depth": "calcium depth", "ca_area": "calcium area",
+    "ca_thickness_max": "calcium thickness", "ca_depth_min": "calcium depth", "ca_area": "calcium area",
     "n_deposits": "deposits", "lumen_area": "lumen area", "lipid_arc_deg": "lipid arc",
     "plaque_ecc_index": "eccentricity", "fujino_score": "Fujino score",
 }

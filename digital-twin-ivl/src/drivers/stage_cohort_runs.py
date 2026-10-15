@@ -196,7 +196,7 @@ def aggregate() -> pd.DataFrame:
     desc = pd.read_csv(COHORT_DIR / "cohort.csv")
     rows = [_flat(json.loads(p.read_text())) for p in sorted(OUT_DIR.glob("*.json"))]
     out = pd.DataFrame(rows)
-    keep = ["lesion_id", "set", "morphology", "ca_arc_deg", "ca_thickness", "ca_depth", "ca_arc_total_deg",
+    keep = ["lesion_id", "set", "morphology", "ca_arc_deg", "ca_thickness", "ca_depth", "ca_depth_min", "ca_arc_total_deg",
             "ca_thickness_max", "ca_area", "lumen_area", "n_deposits", "lipid_arc_deg", "plaque_ecc_index",
             "fujino_score"]
     df = desc[[c for c in keep if c in desc.columns]].merge(out, on="lesion_id", how="inner")

@@ -204,17 +204,29 @@ def parse_bib(path: Path) -> dict[str, dict]:
     return out
 
 
+_ACCENT = {"'": "\u0301", '"': "\u0308", "`": "\u0300", "^": "\u0302", "~": "\u0303", "c": "\u0327"}
+
+
 def _clean(s: str) -> str:
-    s = re.sub(r"\{\\[\"'`^~](\w)\}", lambda m: m.group(1), s)
-    s = s.replace("{", "").replace("}", "").replace("\\&", "&").replace("--", "–")
+    """BibTeX markup to Unicode text: accents ({\\'e}, \\"u), \\textdegree, ``quotes'', braces, \\&, --."""
+    import unicodedata
+
+    def acc(m):
+        return unicodedata.normalize("NFC", m.group(2) + _ACCENT[m.group(1)])
+    s = re.sub(r"\{?\\([\'\"`^~c])\{?(\w)\}?\}?", acc, s)
+    s = s.replace("\\textdegree", "\u00b0").replace("``", "\u201c").replace("''", "\u201d")
+    s = re.sub(r"`([^`']*)'", "\u2018\\1\u2019", s)
+    s = s.replace("{", "").replace("}", "").replace("\\&", "&").replace("--", "\u2013")
     return s
 
 
 def format_reference(e: dict) -> str:
     """MDPI (ACS-based) style; authors 'Surname, I.; ...'; 'and others' -> 'et al.'."""
     authors = [a.strip() for a in _clean(e.get("author", "")).split(" and ")]
-    etal = bool(authors) and authors[-1] == "others"
-    authors = [a for a in authors if a and a != "others"]
+    etal = "others" in authors                          # an incomplete list, wherever 'others' stands
+    if etal:
+        authors = authors[:authors.index("others")]
+    authors = [a for a in authors if a]
     a_txt = "; ".join(authors) + ("; et al." if etal else "")
     parts = [a_txt + "." if a_txt and not a_txt.endswith(".") else a_txt, _clean(e.get("title", "")) + "."]
     venue = _clean(e.get("journal") or e.get("booktitle") or e.get("publisher") or e.get("howpublished") or "")
