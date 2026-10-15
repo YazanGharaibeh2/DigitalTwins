@@ -73,6 +73,18 @@ def _range(ctx: Ctx, lo: float, hi: float, src: str, key: str, fmt: str = "g") -
     return f"{ctx.num(lo, src=src, key=key + '[lower]', fmt=fmt)}–{ctx.num(hi, src=src, key=key + '[upper]', fmt=fmt)}"
 
 
+def _secondary_inputs() -> str:
+    """Names of the Table 1 inputs with status SECONDARY (results/tables/table1_parameters.csv)."""
+    import pandas as pd
+    from build_manuscript import ROOT
+    t = pd.read_csv(ROOT / "results" / "tables" / "table1_parameters.csv")
+    sec = t[t["status"] == "SECONDARY"]
+    dens = sec["parameter"].str.contains("density")
+    names = (["the tissue densities of the transient model"] if dens.any() else []) + \
+        [p.split(" (")[0] for p in sec.loc[~dens, "parameter"]]
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
 # ------------------------------------------------------------------ 2.1
 def s21(ctx: Ctx) -> list:
     return [
@@ -95,8 +107,9 @@ def s21(ctx: Ctx) -> list:
             f"{ctx.tab('table1_parameters')}, except the sampling ranges of the hold-out set, which are given in "
             "Section 2.2. Inputs with status UNVERIFIED were not used. Most literature values were checked against "
             "text attributed to their source in search results rather than against the full primary article. "
-            "Secondary-source inputs (the tissue densities of the transient model and the physiological pressure, "
-            "decision D15) and one provisional input (the lipid modulus) were used and are flagged in "
+            f"Secondary-source inputs ({_secondary_inputs()}) and one provisional input (the lipid modulus) were "
+            "used; decision D15 approved the densities and the physiological pressure as exceptions, and all are "
+            "flagged in "
             f"{ctx.tab('table1_parameters')}. Decisions taken during the study are numbered D1–D15 and recorded "
             "in the configuration file."),
         tables_ms.table1(ctx),
@@ -263,10 +276,12 @@ def s24(ctx: Ctx) -> list:
             f"{_n(ctx, N_E_SWEEP, 'src/drivers/stage_pilot.py', 'N_E_SWEEP')} log-spaced moduli between "
             f"{ctx.num(sweep[0], src='src/drivers/stage_pilot.py e_sweep()', key='min', fmt='.3g')} MPa and "
             f"{ctx.num(sweep[-1] / 1e3, src='src/drivers/stage_pilot.py e_sweep()', key='max / 1000', fmt='g')} GPa "
-            "were run on the three pilot lesions (whose geometries are core lesions, Section 2.2). The baseline was "
+            f"were set for the three pilot lesions (whose geometries are core lesions, Section 2.2){_sweep_run(ctx)}. "
+            "The baseline was "
             f"set to {ctx.num(ms.ca_E, src=MS_SRC, key='ca_E', fmt='.0f')} MPa (decision D8), the stiffest swept "
             "modulus at which the IVL balloon inflated alone did not damage the pilot lesions while IVL did. This "
-            "is a calibration to a criterion internal to the model, not to a measured property, and the outcome "
+            "is a calibration to a criterion internal to the model, not to a measured property; because calcium "
+            "failure is strain-controlled (below), it also set the calcium strength. The outcome "
             "model's response on three core geometries thereby set the modulus that both models use. With the "
             "failure strain below, it implies a calcium failure stress of "
             f"{ctx.num(ms.sigma_crit, src=MS_SRC, key='sigma_crit = ca_E x eps_f', fmt='.2g')} MPa, about "
@@ -277,6 +292,32 @@ def s24(ctx: Ctx) -> list:
             f"lesions {c('kawai2023cadaver')}. The modulus was therefore varied in the sensitivity analysis "
             "(Section 2.9)."),
     ]
+
+
+def _sweep_run(ctx: Ctx) -> str:
+    """Which swept moduli were not run (results/pilot_nonlinear.json 'skipped') and the extra tissue-level one."""
+    from build_manuscript import ROOT
+    import json
+    les = json.loads((ROOT / "results" / "pilot_nonlinear.json").read_text())["lesions"]
+    rows = next(iter(les.values()))
+    skipped = sorted({r["ca_E_MPa"] for rs in les.values() for r in rs if "skipped" in r})
+    import numpy as np
+    from dtivl import params as P
+    from dtivl.drivers.stage_pilot import N_E_SWEEP
+    lo, hi = (q.value for q in P.get_list("materials.calcium.sens_E"))
+    grid = set(np.round(np.logspace(np.log10(lo), np.log10(hi), N_E_SWEEP), 6).tolist())
+    extra = sorted({round(r["ca_E_MPa"], 6) for r in rows} - grid - set(skipped))
+    src = "results/pilot_nonlinear.json"
+    txt = ""
+    if extra:
+        txt += (", together with the tissue-level secant modulus ("
+                + ", ".join(ctx.num(e, src=src, key="ca_E_MPa not in e_sweep()", fmt=".3g") for e in extra) + " MPa)")
+    if skipped:
+        txt += ("; the lowest modulus ("
+                + ", ".join(ctx.num(e, src=src, key="ca_E_MPa skipped", fmt=".3g") for e in skipped)
+                + " MPa) was not run, because calcium softer in shear than the fibrous matrix leaves the crack filler "
+                  "undefined")
+    return txt
 
 
 # ------------------------------------------------------------------ 2.5
@@ -332,13 +373,33 @@ def s25(ctx: Ctx) -> list:
             f"{c('umb1998acoustic')} ($K = \\rho c^2 - 4\\mu/3$), with densities from earlier modelling studies "
             f"{c('density_drilling2019', 'density_stentfe2014', 'density_thermal2007')} (secondary sources, "
             "decision D15); time integration used the non-dissipative generalised-α scheme and a mixed "
-            "displacement–pressure formulation. $T_{eq}$ is the largest cell value of the maximum principal stress "
-            "in the calcium during the pulse divided by the same quantity in a static linear-elastic solve with "
+            "displacement–pressure formulation, with a time step of the smaller of the pulse width over "
+            f"{_const(ctx, 'dtivl.solvers.transient', 'STEPS_PER_PULSE', fmt='g')} and the stability limit of the mesh. "
+            "$T_{eq}$ is the largest cell value of the maximum principal stress in the calcium over a window of "
+            f"{_const(ctx, 'dtivl.solvers.transient', 'WINDOW_PULSES', fmt='g')} pulse widths from the start of the "
+            f"pulse{_t_peak(ctx)}, divided by the same quantity in a static linear-elastic solve with "
             "the constants of the predictor model under a lumen pressure equal to the pulse peak; in that linear "
             "model, the pulse-equivalent increment reproduces the transient peak. The equivalence represents the "
             "peak tensile response to one pulse; the compressive wavefront, repeated pulses and fatigue were not "
             "modelled."),
     ]
+
+
+def _t_peak(ctx: Ctx) -> str:
+    """When the transient peak occurred (results/cohort_outcomes.csv ivl_load_t_peak, us)."""
+    import pandas as pd
+    from build_manuscript import ROOT
+    from dtivl.solvers.transient import default_pulse_width_us
+    d = pd.read_csv(ROOT / "results" / "cohort_outcomes.csv")
+    tp = pd.to_numeric(d["ivl_load_t_peak"], errors="coerce").dropna()
+    if tp.empty:
+        return ""
+    after = int((tp > default_pulse_width_us()).sum())
+    src = "results/cohort_outcomes.csv"
+    return (f" (in the cohort the peak came {ctx.num(float(tp.min()), src=src, key='min(ivl_load_t_peak)', fmt='.2g')}–"
+            f"{ctx.num(float(tp.max()), src=src, key='max(ivl_load_t_peak)', fmt='.2g')} µs after the pulse start, "
+            f"after the end of the pulse in {ctx.count(after, src=src, key='count(ivl_load_t_peak > pulse width)')} of "
+            f"{ctx.count(len(tp), src=src, key='count(ivl_load_t_peak)')} lesions)")
 
 
 # ------------------------------------------------------------------ 2.6
@@ -365,7 +426,9 @@ def s26(ctx: Ctx) -> list:
             "$\\psi_{crit}$ of a uniaxial failure strain $\\varepsilon_f$ (decision D5). The failure strain "
             f"$\\varepsilon_f$ = {ctx.num(ms.eps_f, src=MS_SRC, key='eps_f = calcification_fracture_stretch - 1', fmt='.3g')} "
             "is the failure stretch of calcified tissue minus one, measured in uniaxial tension of human iliac "
-            f"plaques {c('holzapfel2004plaque')}. The regularisation length was "
+            f"plaques {c('holzapfel2004plaque')}. Because $\\ell$ is tied to the element size (below), $G_c$ is a "
+            "numerical parameter rather than a measured toughness, and the model is in effect a strength-based "
+            "damage-nucleation model. The regularisation length was "
             f"$\\ell$ = {ctx.num(ell * 1e3, src=CFG, key='fracture.ell_over_h x discretisation.h_calcium_mm x 1000', fmt='g')} µm, "
             f"{ctx.param('fracture.ell_over_h', fmt='g')} times the calcium element size. Each load increment was "
             f"solved by alternate minimisation {c('miehe2010phasefield')}: a Newton solve for the displacement with "
@@ -398,7 +461,9 @@ def s27(ctx: Ctx) -> list:
         Para(
             "Calcium was considered damaged where the cell-averaged damage exceeded "
             f"{ctx.raw('fracture.d_crack', fmt='g')}. The damage-onset load of a protocol is the lumen pressure of "
-            "the first load step at which the maximum damage reached this value. A damaged component that connects "
+            "the first load step at which the largest nodal damage in the calcium reached this value (a local "
+            "criterion that can precede any damaged cell); for the stent protocols the load is the stent radius. "
+            "A damaged component that connects "
             "the luminal and abluminal calcium surfaces and cuts its deposit (splits it into pieces of at least "
             f"{_const(ctx, 'dtivl.fracture.cracks', 'MIN_PIECE_CELLS', fmt='d')} cells, opens a closed ring or "
             "removes it entirely) is a through-thickness fracture; other damaged components, including damage "
@@ -437,10 +502,12 @@ def s28(ctx: Ctx) -> list:
             "by the area-weighted mean over the calcium within a radius equal to the phase-field length "
             f"({ctx.num(nl * 1e3, src=CFG, key='fracture.ell_over_h x discretisation.h_calcium_mm x 1000', fmt='g')} µm) "
             "before the maximum is taken; the calcium area fractions with $\\varepsilon_1$ above $\\varepsilon_f$ "
-            "and $\\varepsilon_f/2$ and with $\\sigma_1$ above the failure stress and half of it; an edge stress "
+            "and $\\varepsilon_f/2$ and with $\\sigma_1$ above the implied failure stress "
+            "$\\sigma_{crit} = E_{Ca}\\varepsilon_f$ of the outcome model and half of it; an edge stress "
             "concentration factor (the non-local peak $\\sigma_1$ near deposit ends over the mean $\\sigma_1$ of "
-            "the calcium, within an angular window of at least "
-            f"{_const(ctx, 'dtivl.metrics.predictors', 'EDGE_MIN_WINDOW_DEG', fmt='g')}° around each end); and the "
+            "the calcium, within the larger of "
+            f"{_const(ctx, 'dtivl.metrics.predictors', 'EDGE_MIN_WINDOW_DEG', fmt='g')}° and twice the deposit "
+            "thickness over its mean radius on either side of each end, and set to one for a closed ring); and the "
             "smallest local calcium thickness among the cells above the "
             f"{_const(ctx, 'dtivl.metrics.predictors', 'HIGH_STRESS_PERCENTILE', fmt='g')}th percentile of "
             "$\\sigma_1$. Raw cell peaks were not used as predictors because they changed by more than the "

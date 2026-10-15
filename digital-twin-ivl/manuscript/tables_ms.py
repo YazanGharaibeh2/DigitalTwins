@@ -41,7 +41,7 @@ def _table1(ctx: Ctx, df):
         cites = ctx.cite_lit(*keys) if keys else ""
         return cites or (r["source"] if isinstance(r["source"], str) else "")
     out["Source"] = [src(r) for _, r in out.iterrows()]
-    out["Value"] = [_num(v) for v in out["value"]]
+    out["Value"] = [_num(v, sig=6) for v in out["value"]]
     out["Symbol"] = [_symbol(v) for v in out["symbol"]]
     out["Unit"] = [str(u).replace("^2", "²").replace("^3", "³") if isinstance(u, str) else "" for u in out["unit"]]
     out["Sensitivity range"] = [s if isinstance(s, str) else "" for s in out["sensitivity"]]
@@ -51,11 +51,30 @@ def _table1(ctx: Ctx, df):
     return out
 
 
+STATUS_WORDS = {
+    "VERIFIED": "value seen in text attributed to the cited source in search results (the full primary article "
+                "was not always read)",
+    "SECONDARY": "quoted from a later source",
+    "PROVISIONAL": "verified value with an incomplete citation",
+    "CALIBRATED": "set to a model target (decision D8)",
+    "DERIVED": "computed from other inputs",
+    "DESIGN": "study choice", "ASSUMPTION": "study assumption", "NUMERICAL": "numerical setting",
+}
+
+
+def _status_caption() -> str:
+    import pandas as pd
+    from build_manuscript import ROOT
+    st = pd.read_csv(ROOT / "results" / "tables" / "table1_parameters.csv")["status"].dropna().unique()
+    return "; ".join(f"{k}, {v}" for k, v in STATUS_WORDS.items() if k in st)
+
+
 def table1(ctx: Ctx) -> Table:
     return Table("table1_parameters",
-                 "Model inputs. Literature values with their status (VERIFIED: value confirmed in the cited source; "
-                 "SECONDARY: from a secondary source; DERIVED: computed from other inputs; DESIGN or ASSUMPTION: "
-                 "study choice), the range used in the sensitivity analysis, and the source or basis.",
+                 f"Model inputs with their status ({_status_caption()}), the alternative values listed for "
+                 "sensitivity analysis, and the source or basis. The analyses that were run are described in "
+                 "Section 2.9; not every listed alternative was run, and the lowest calcium modulus of the "
+                 "calibration sweep was not run (Section 2.4).",
                  columns=["Group", "Parameter", "Symbol", "Value", "Unit", "Sensitivity range", "Status", "Source"],
                  prepare=_table1)
 

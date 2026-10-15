@@ -32,30 +32,39 @@ def blocks(ctx: Ctx) -> list:
     agr = {c["id"]: c["agreement"] for c in cons["checks"] if c["set"] == "core"}
     arc = {"agrees": "reproduced", "partial": "partly reproduced"}.get(agr.get("C1"), "did not reproduce")
     rate = "and" if agr.get("C4") == "agrees" else "but not"
+    ph = f"{PRIMARY}.post_hoc.fujino_arc_tolerance.core"
+    dph = f"{ph}.{best} - fujino_arc_tolerance"
+    fj_robust = (g(f"{dph}.delta_ci_lo") or 0) > 0
+    c5 = agr.get("C5")
     abstract = (
         "**Background/Objectives:** Intravascular lithotripsy (IVL) fractures coronary calcium before stenting, "
-        "but which lesions fracture is hard to predict from imaging scores. We asked whether mechanics computed "
-        "before treatment predict calcium fracture under IVL in *in silico* lesions. "
-        "**Methods:** Calcified coronary cross-sections were generated as a designed core set "
-        f"({ctx.count(n_core, src=OUT, key='count(set == core)')} lesions: calcium arc, thickness and morphology) "
-        f"and a sampled hold-out set ({ctx.count(n_hold, src=OUT, key='count(set == holdout)')} lesions). "
-        "Candidate predictors came from a linear-elastic analysis of the untreated lesion. The outcome, "
-        "through-thickness calcium damage, came from a separate nonlinear finite element model with a "
-        "phase-field fracture law under an equivalent IVL load. Thresholds and a composite index were derived on "
-        "the core set and tested unchanged on the hold-out set, against the optical coherence tomography (OCT) "
-        "calcium score of Fujino. "
-        "**Results:** On the core set, "
-        f"{pname(ctx, best)} had an area under the receiver operating characteristic curve (AUC) of "
-        f"{_vci(ctx, MS, f'{U}.{best}.auc', f'{U}.{best}.auc_ci')}, and the "
-        f"Fujino score {_vci(ctx, MS, f'{U}.fujino_score.auc', f'{U}.fujino_score.auc_ci')}. The composite index "
-        f"{name} had a leave-one-out AUC of {_vci(ctx, MS, f'{comp}.core.loocv_auc', f'{comp}.core.loocv_auc_ci')}. "
-        f"A geometry-only model reached {ctx.v(MS, f'{incl}.auc_b', fmt='.2f')}, and adding mechanics gave "
-        f"{ctx.v(MS, f'{incl}.auc_a', fmt='.2f')} ({inc_word}). On the hold-out set, {pname(ctx, best)} had an AUC "
-        f"of {_vci(ctx, MS, f'{hb}.auc', (f'{hb}.auc_ci_lo', f'{hb}.auc_ci_hi'))}. The model {arc} the "
-        f"published association of fracture with calcium arc {rate} the clinical fracture rates. "
-        "**Conclusions:** In this model, pre-treatment mechanics ranked lesions for calcium fracture under IVL "
-        f"{vs_fj} the Fujino score, with {gain} in discrimination over geometry alone. These are *in silico* "
-        "results; they require comparison with OCT after IVL in patient lesions.")
+        "but which lesions fracture is hard to predict from imaging scores. We asked whether stress computed "
+        "before treatment anticipates calcium damage under IVL in *in silico* lesions. "
+        "**Methods:** Calcified coronary cross-sections formed a designed core set "
+        f"({ctx.count(n_core, src=OUT, key='count(set == core)')} lesions: calcium arc, thickness, morphology) and a "
+        f"sampled hold-out set ({ctx.count(n_hold, src=OUT, key='count(set == holdout)')} lesions). Candidate "
+        "predictors came from a linear-elastic analysis of the untreated lesion; through-thickness calcium damage "
+        "came from a separate nonlinear finite element model with a phase-field damage law under a quasi-static "
+        "equivalent IVL load. Thresholds and a composite index were derived on the core set, tested unchanged on "
+        "the hold-out set and compared with the optical coherence tomography (OCT) calcium score of Fujino. "
+        "**Results:** Damage was all or nothing. On the core set, "
+        f"{pname(ctx, best)} had an apparent area under the receiver operating characteristic curve (AUC) of "
+        f"{_vci(ctx, MS, f'{U}.{best}.auc', f'{U}.{best}.auc_ci')}, the cross-sectional Fujino score "
+        f"{ctx.v(MS, f'{U}.fujino_score.auc', fmt='.2f')}, or {ctx.v(MS, f'{ph}.auc', fmt='.2f')} with a measurement "
+        "tolerance at its arc cut-off. Leave-one-out AUCs were "
+        f"{ctx.v(MS, f'{comp}.core.loocv_auc', fmt='.2f')} for the composite index {name}, "
+        f"{ctx.v(MS, f'{incl}.auc_b', fmt='.2f')} for geometry alone and {ctx.v(MS, f'{incl}.auc_a', fmt='.2f')} with "
+        f"mechanics added ({inc_word}). On the hold-out set, {pname(ctx, best)} had an AUC of "
+        f"{_vci(ctx, MS, f'{hb}.auc', (f'{hb}.auc_ci_lo', f'{hb}.auc_ci_hi'))}. The model {arc} the published "
+        "association of fracture with calcium arc; IVL acted as a static load below the plain-balloon pressure"
+        + (", and the plain balloon damaged lesions that did not fracture in cadaver arteries. " if c5 == "disagrees"
+           else ". ")
+        + "**Conclusions:** In this model, linear stress in the untreated lesion anticipated nonlinear damage onset, "
+        "partly by construction, "
+        + ("and ranked lesions better than the Fujino score" if fj_robust else
+           "but did not clearly outperform geometry or a tolerance-corrected Fujino score")
+        + ". The model reproduces no IVL-specific effect; comparison with OCT after IVL in patient lesions is "
+        "required.")
     return [
         Heading(sections.TITLE, 0),
         Para("[Author names and affiliations to be added.]", style="small"),

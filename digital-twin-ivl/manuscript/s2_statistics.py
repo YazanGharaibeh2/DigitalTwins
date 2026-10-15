@@ -44,6 +44,11 @@ def _directions():
     return pos, neg, core
 
 
+def _arc_tol() -> float:
+    from dtivl.drivers.stage_metrics import FUJINO_ARC_TOL_DEG
+    return FUJINO_ARC_TOL_DEG
+
+
 def blocks(ctx: Ctx) -> list:
     import pandas as pd
     from dtivl import params as P
@@ -81,7 +86,8 @@ def blocks(ctx: Ctx) -> list:
             f"Fujino score. {lipid_note} The quantities of the outcome model (the IVL load factor and every outcome "
             "column) were excluded from the candidates by a check in the code."),
         Para(
-            "The expected direction of each association was stated before the analysis. A higher value was "
+            "The expected direction of each association was fixed in the configuration before the final analysis, "
+            "at a time when preliminary core outcomes already existed. A higher value was "
             "expected with damage for the stress, strain-energy, area-fraction and edge-concentration predictors, "
             f"the {w(pos)} and the Fujino score; a lower value was expected for {MECH_NEGATIVE[next(iter(MECH_NEGATIVE))]}, "
             f"the {w(neg)}. No direction was stated for the {w(core_dir)}. For these, the direction was set on the "
@@ -128,6 +134,8 @@ def blocks(ctx: Ctx) -> list:
             "preliminary core results, and amended once after code review to rank the candidates by the oriented "
             "AUC."),
         Para(
+            "The best single mechanics predictor was the one with the largest core AUC; it was chosen on the core "
+            "set, and its intervals and AUC differences do not include this selection. "
             "The composite index and the best single mechanics predictor were compared with the Fujino score by the "
             "paired bootstrap of the AUC difference. The incremental value of mechanics over geometry was tested by "
             "comparing a geometry-only penalised logistic model with the same model plus the mechanics predictors "
@@ -137,7 +145,17 @@ def blocks(ctx: Ctx) -> list:
             "models were compared by the apparent AUC difference, with both models reselected and refitted in every "
             "bootstrap resample, by the LOOCV AUC, log-loss and Brier score (paired bootstrap of the out-of-fold "
             "predictions), and on the hold-out set with the core-fit models evaluated unchanged. A difference whose "
-            "interval includes zero is reported as no evidence of incremental value."),
+            "interval includes zero is reported as no evidence of incremental value. All core lesions share one "
+            "reference geometry and one set of material constants, so on the core set the mechanics predictors "
+            "are functions of the design factors and this comparison contrasts model forms; only the hold-out set, "
+            "in which lumen area, eccentricity and lipid vary, can show added information."),
+        Para(
+            "Two analyses were added after the first draft and are reported as post hoc. The label map measures "
+            "the arc of the middle design level just below the strict arc cut-off of the Fujino score, so the "
+            "Fujino comparison was repeated with an arc within "
+            f"{ctx.num(_arc_tol(), src='src/drivers/stage_metrics.py', key='FUJINO_ARC_TOL_DEG', fmt='g')}° "
+            "below the cut-off counted as meeting it. The core AUCs were also recomputed without the core lesions "
+            "that share the geometry of the pilot lesions used to calibrate the calcium modulus."),
         Para(
             "For the damage-onset load under IVL, an event was the first load step at which the maximum damage "
             "reached the crack threshold. An onset first recorded after the peak load, during unloading, was "

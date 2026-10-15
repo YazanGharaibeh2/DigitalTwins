@@ -16,15 +16,24 @@ def blocks(ctx: Ctx) -> list:
     gain = _diff_word(g(f"{incl}.delta_ci_lo"), g(f"{incl}.delta_ci_hi"),
                       "and added discrimination to geometry alone",
                       "but discriminated less well than geometry alone",
-                      "but added no clear discrimination to geometry alone")
+                      "but added no clear discrimination to geometry alone on the core set")
+    ph = f"{PRIMARY}.post_hoc.fujino_arc_tolerance.core"
+    fj_robust = (g(f"{ph}.{best} - fujino_arc_tolerance.delta_ci_lo") or 0) > 0
     return [
         Heading("5. Conclusions", 1),
         Para(
-            "In a structured *in silico* cohort of calcified coronary lesions, stress measures from a linear-elastic "
-            "analysis of the untreated lesion ranked lesions for through-thickness calcium damage under IVL "
-            f"{vs_fj} the cross-sectional Fujino score, {gain}. The fracture outcome came from a separate "
-            "nonlinear phase-field model, but both models share the lesion geometry and the calcium constants, and "
-            "the calcium modulus was calibrated to a model-internal criterion. The results show what a mechanics "
-            "digital twin can extract from pre-treatment geometry; whether this carries information for patients "
-            "must be tested against OCT after IVL in patient-derived lesions."),
+            "In a designed *in silico* cohort of calcified coronary cross-sections, a stress measure from a "
+            "linear-elastic analysis of the untreated lesion anticipated through-thickness damage onset under an "
+            f"equivalent IVL load in a separate nonlinear phase-field model, {gain}. Part of this agreement is "
+            "expected by construction, because the predictor approximates the damage-nucleation criterion of the "
+            "outcome model and both models share the geometry and the constants. "
+            + ("The predictor ranked lesions better than the cross-sectional Fujino score, also with a measurement "
+               "tolerance at the score's arc cut-off. " if fj_robust else
+               f"Its advantage over the cross-sectional Fujino score {vs_fj.replace('better than', 'was clear only without')} "
+               "a measurement tolerance at the score's arc cut-off. "
+               if vs_fj == "better than" else "")
+            + "The model represents IVL as a static inflation and reproduces no effect specific to lithotripsy, and "
+            "its calcium strength was set by calibration to a model-internal criterion. Whether pre-treatment "
+            "mechanics carry information for patients must be tested against OCT after IVL in patient-derived "
+            "lesions with a model that distinguishes the pulse from static loading."),
     ]
