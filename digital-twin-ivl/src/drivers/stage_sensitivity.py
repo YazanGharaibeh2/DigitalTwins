@@ -726,29 +726,10 @@ def _complete(path: Path) -> bool:
 
 
 def _claim(lock: Path) -> bool:
-    """Atomically claim a run for this process (lock file with the pid); locks of dead processes are
-    taken over (as ``stage_cohort_runs._claim``, for any lock path)."""
-    lock.parent.mkdir(parents=True, exist_ok=True)
-    for _ in range(2):
-        try:
-            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(fd, str(os.getpid()).encode())
-            os.close(fd)
-            return True
-        except FileExistsError:
-            try:
-                pid = int(lock.read_text().strip() or 0)
-                if pid <= 0:
-                    if time.time() - lock.stat().st_mtime < EMPTY_LOCK_GRACE_S:
-                        return False          # being claimed right now (pid not yet written)
-                    raise ValueError("empty lock")
-                os.kill(pid, 0)
-                return False                  # held by a live process
-            except PermissionError:
-                return False                  # live process of another user
-            except (ValueError, ProcessLookupError, FileNotFoundError):
-                lock.unlink(missing_ok=True)  # stale lock: retry once
-    return False
+    """Atomically claim a run for this process (see :func:`dtivl.drivers.common.claim_lock`)."""
+    from dtivl.drivers.common import claim_lock
+
+    return claim_lock(lock, grace_s=EMPTY_LOCK_GRACE_S)
 
 
 def _release(lock: Path) -> None:

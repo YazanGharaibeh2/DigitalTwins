@@ -24,7 +24,7 @@ import json
 import pandas as pd
 
 from dtivl import params as P
-from dtivl.drivers.common import COHORT_DIR, RESULTS_DIR, Timer, _to_jsonable, read_json, write_json
+from dtivl.drivers.common import COHORT_DIR, RESULTS_DIR, Timer, _to_jsonable, claim_lock, read_json, write_json
 from dtivl.drivers.stage_pilot import _protocol_record, mesh2d
 from dtivl.geometry.cohort import MORPH_CODE
 from dtivl.materials.constitutive import MaterialSet
@@ -129,25 +129,8 @@ def run_lesion(lid: str, *, resume: bool = True, erosion: bool | None = None) ->
 
 
 def _claim(lid: str) -> bool:
-    """Atomically claim a lesion for this process (lock file with the pid); stale locks are taken over."""
-    import os
-
-    lock = OUT_DIR / "locks" / f"{lid}.lock"
-    lock.parent.mkdir(parents=True, exist_ok=True)
-    for _ in range(2):
-        try:
-            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(fd, str(os.getpid()).encode())
-            os.close(fd)
-            return True
-        except FileExistsError:
-            try:
-                pid = int(lock.read_text().strip() or 0)
-                os.kill(pid, 0)
-                return False                  # held by a live process
-            except (ValueError, ProcessLookupError, FileNotFoundError):
-                lock.unlink(missing_ok=True)  # stale lock: retry once
-    return False
+    """Atomically claim a lesion for this process (see :func:`dtivl.drivers.common.claim_lock`)."""
+    return claim_lock(OUT_DIR / "locks" / f"{lid}.lock")
 
 
 def _release(lid: str) -> None:
