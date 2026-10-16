@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A360-T0.2-NOD",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 3933,
+  "n_cells": 7616,
+  "n_cells_per_tag": {
+   "1": 1032,
+   "2": 4059,
+   "4": 2525
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 2.318039626925719,
+  "sigma1_p99": 2.532716996678869,
+  "sigma1_mean": 1.7482839558362757,
+  "sigma1_peak_nl": 2.4337312256711674,
+  "sed_mean": 0.004640990253223873,
+  "sed_peak_nl": 0.008242802428659825,
+  "scf_edge_nl": 1.0,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.0,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.0,
+  "min_thickness_high_stress": 0.2,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.4182678010001837
+ }
+}
