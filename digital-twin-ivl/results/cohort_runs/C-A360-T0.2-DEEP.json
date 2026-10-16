@@ -1,0 +1,30 @@
+{
+ "lesion": "C-A360-T0.2-DEEP",
+ "ca_E_MPa": 365.006198,
+ "k_floor": 0.005489587147595048,
+ "mesh": {
+  "n_nodes": 4250,
+  "n_cells": 8308,
+  "n_cells_per_tag": {
+   "1": 1168,
+   "2": 4528,
+   "4": 2612
+  }
+ },
+ "predictors": {
+  "sigma1_p95": 2.4739781929933073,
+  "sigma1_p99": 2.486431176007105,
+  "sigma1_mean": 2.2662623031519584,
+  "sigma1_peak_nl": 2.402550882752839,
+  "sed_mean": 0.006910680138548451,
+  "sed_peak_nl": 0.008099676210382887,
+  "scf_edge_nl": 1.0,
+  "frac_eps_gt_epsf": 0.0,
+  "frac_eps_gt_half_epsf": 0.0,
+  "frac_sig_gt_sigc": 0.0,
+  "frac_sig_gt_half_sigc": 0.0,
+  "min_thickness_high_stress": 0.2,
+  "p_lumen_MPa": 0.4053,
+  "seconds": 0.41950846600047953
+ }
+}
